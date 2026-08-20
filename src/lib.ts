@@ -3,14 +3,23 @@ export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsu
 export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 
-export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'admin';
-export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];is_admin:boolean;admin_role?:string};
+export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
+export type Snapshot={
+  user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];
+  leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string
+};
 
-export const icons={home:'⌂',ads:'▻',tasks:'✓',invite:'♙+',wallet:'▣',admin:'⚙'};
 export const money=(n:any,d=0)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
+export const token=()=> 'WIENER';
+export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
+export function pageFromUrl():Tab{
+  const p=new URLSearchParams(window.location.search).get('page')||'';
+  const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads'};
+  return map[p]||'home';
+}
 export async function api(action:string,body:any={}){
   const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({action,initData:getInitData(),...body})});
   const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));
