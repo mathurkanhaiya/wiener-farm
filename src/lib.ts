@@ -1,5 +1,6 @@
-export const SUPABASE_URL=import.meta.env.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
-export const PUBLISHABLE_KEY=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
+const viteEnv=(import.meta as any).env||{};
+export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
+export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'admin';
