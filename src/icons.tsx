@@ -1,8 +1,56 @@
-import type {CSSProperties} from 'react';
+import {useEffect,useMemo,useRef,type CSSProperties} from 'react';
+import Lottie from 'lottie-react';
+import {ungzip} from 'pako';
+import {TG_TGS,type TgPackIcon} from './tgPack';
 
 export type IconName='logo'|'home'|'ads'|'tasks'|'invite'|'wallet'|'gift'|'ticket'|'bolt'|'gear'|'download'|'check'|'share'|'coins'|'arrowUp'|'arrowDown';
 
+const packMap:Partial<Record<IconName,TgPackIcon>>={
+  logo:'star',
+  home:'home',
+  ads:'ads',
+  tasks:'tasks',
+  invite:'invite',
+  wallet:'wallet',
+  gift:'star',
+  ticket:'star',
+  bolt:'bolt',
+  gear:'gear',
+  download:'withdraw',
+  check:'check',
+  share:'share'
+};
+
+function decodeTgs(name:TgPackIcon){
+  const raw=atob(TG_TGS[name]);
+  const bytes=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+  const text=ungzip(bytes,{to:'string'}) as string;
+  return JSON.parse(text);
+}
+
+function TelegramLottie({packName,name,size,active,className}:{packName:TgPackIcon;name:IconName;size:number;active:boolean;className:string}){
+  const ref=useRef<any>(null);
+  const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const data=useMemo(()=>{try{return decodeTgs(packName)}catch{return null}},[packName]);
+  useEffect(()=>{
+    if(!ref.current||!data)return;
+    if(active&&!reduced)ref.current.goToAndPlay(0,true);
+    else ref.current.goToAndStop(0,true);
+  },[active,reduced,data]);
+  if(!data)return <FallbackIcon name={name} size={size} active={active} className={className}/>;
+  return <span className={`aicon aicon-${name} tg-lottie ${active?'is-active':''} ${className}`} style={{width:size,height:size}} aria-hidden="true">
+    <Lottie lottieRef={ref} animationData={data} autoplay={active&&!reduced} loop={false} style={{width:'100%',height:'100%',display:'block'}}/>
+  </span>
+}
+
 export function AnimatedIcon({name,size=24,active=false,className=''}:{name:IconName;size?:number;active?:boolean;className?:string}){
+  const packName=packMap[name];
+  if(packName)return <TelegramLottie packName={packName} name={name} size={size} active={active} className={className}/>;
+  return <FallbackIcon name={name} size={size} active={active} className={className}/>;
+}
+
+function FallbackIcon({name,size,active,className}:{name:IconName;size:number;active:boolean;className:string}){
   const style={width:size,height:size} as CSSProperties;
   return <svg className={`aicon aicon-${name} ${active?'is-active':''} ${className}`} style={style} viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <g className="aicon-motion">{shape(name)}</g>
