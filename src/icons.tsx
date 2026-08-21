@@ -2,17 +2,21 @@ import {useEffect,useMemo,useRef,type CSSProperties} from 'react';
 import Lottie from 'lottie-react';
 import {ungzip} from 'pako';
 import {TG_TGS,type TgPackIcon} from './tgPack';
+import {SELECTED_TGS,type SelectedPackIcon} from './selectedPack';
 
 export type IconName='logo'|'home'|'ads'|'tasks'|'invite'|'wallet'|'gift'|'ticket'|'bolt'|'gear'|'download'|'check'|'share'|'coins'|'arrowUp'|'arrowDown';
 
-const packMap:Partial<Record<IconName,TgPackIcon>>={
-  logo:'star',
+const selectedPackMap:Partial<Record<IconName,SelectedPackIcon>>={
   home:'home',
   ads:'ads',
   tasks:'tasks',
   invite:'invite',
   wallet:'wallet',
-  gift:'star',
+  gift:'reward'
+};
+
+const packMap:Partial<Record<IconName,TgPackIcon>>={
+  logo:'star',
   bolt:'bolt',
   gear:'gear',
   download:'withdraw',
@@ -20,18 +24,18 @@ const packMap:Partial<Record<IconName,TgPackIcon>>={
   share:'share'
 };
 
-function decodeTgs(name:TgPackIcon){
-  const raw=atob(TG_TGS[name]);
+function decodeTgsBase64(value:string){
+  const raw=atob(value);
   const bytes=new Uint8Array(raw.length);
   for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
   const text=ungzip(bytes,{to:'string'}) as string;
   return JSON.parse(text);
 }
 
-function TelegramLottie({packName,name,size,active,className}:{packName:TgPackIcon;name:IconName;size:number;active:boolean;className:string}){
+function TelegramLottie({data64,name,size,active,className}:{data64:string;name:IconName;size:number;active:boolean;className:string}){
   const ref=useRef<any>(null);
   const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const data=useMemo(()=>{try{return decodeTgs(packName)}catch{return null}},[packName]);
+  const data=useMemo(()=>{try{return decodeTgsBase64(data64)}catch{return null}},[data64]);
   useEffect(()=>{
     if(!ref.current||!data)return;
     if(active&&!reduced)ref.current.goToAndPlay(0,true);
@@ -44,8 +48,10 @@ function TelegramLottie({packName,name,size,active,className}:{packName:TgPackIc
 }
 
 export function AnimatedIcon({name,size=24,active=false,className=''}:{name:IconName;size?:number;active?:boolean;className?:string}){
+  const selected=selectedPackMap[name];
+  if(selected)return <TelegramLottie data64={SELECTED_TGS[selected]} name={name} size={size} active={active} className={className}/>;
   const packName=packMap[name];
-  if(packName)return <TelegramLottie packName={packName} name={name} size={size} active={active} className={className}/>;
+  if(packName)return <TelegramLottie data64={TG_TGS[packName]} name={name} size={size} active={active} className={className}/>;
   return <FallbackIcon name={name} size={size} active={active} className={className}/>;
 }
 
