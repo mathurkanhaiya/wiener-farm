@@ -24,6 +24,7 @@ function App(){
     <main className="content">
       {tab==='home'&&<><Home data={data} run={run} setTab={setTab}/><HomeRaffleCard setTab={setTab}/></>}
       {tab==='ads'&&<><Ads data={data} refresh={refresh} say={say}/><AdsTicketProgress/></>}
+      {tab==='draw'&&<RafflePage/>}
       {tab==='tasks'&&<><Tasks data={data} run={run}/><TasksTicketCard setTab={setTab}/></>}
       {tab==='invite'&&<><Invite data={data} say={say}/><ReferralRaffleCard setTab={setTab}/></>}
       {tab==='wallet'&&<Wallet data={data} run={run} setTab={setTab}/>} 
@@ -31,7 +32,7 @@ function App(){
       {tab==='claim'&&<ClaimPage data={data} run={run}/>} 
       {tab==='leaderboard'&&<LeaderboardPage data={data}/>} 
       {tab==='profile'&&<ProfilePage data={data} setTab={setTab}/>} 
-      {tab==='raffle'&&<RafflePage setTab={setTab}/>} 
+      {tab==='raffle'&&<RafflePage/>} 
       {tab==='tickets'&&<EarnTicketsPage setTab={setTab}/>} 
       {tab==='admin'&&data.is_admin&&<><Admin say={say}/><RaffleAdmin/></>} 
     </main>
