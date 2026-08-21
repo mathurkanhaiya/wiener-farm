@@ -2,88 +2,79 @@ import {useEffect,useState} from 'react';
 import {api,date,money} from './lib';
 import {Splash} from './ui';
 
+type Section='dashboard'|'settings'|'users'|'tasks'|'promos'|'withdrawals'|'admins'|'audit';
+const sections:{key:Section;emoji:string;title:string;desc:string}[]=[
+  {key:'dashboard',emoji:'📊',title:'Overview',desc:'Stats and quick health check'},
+  {key:'settings',emoji:'⚙️',title:'App Settings',desc:'Rewards, ads, referrals and system'},
+  {key:'tasks',emoji:'🎯',title:'Tasks',desc:'Create and manage task listings'},
+  {key:'users',emoji:'👥',title:'Users',desc:'Balances, bans and activity'},
+  {key:'promos',emoji:'🎟️',title:'Promo Codes',desc:'Create and remove promo codes'},
+  {key:'withdrawals',emoji:'💸',title:'Withdrawals',desc:'Approve and settle payouts'},
+  {key:'admins',emoji:'🛡️',title:'Admins',desc:'Manage admin access'},
+  {key:'audit',emoji:'📋',title:'Audit Log',desc:'Review sensitive changes'}
+];
+
 export function Admin({say}:{say:any}){
-  const [d,setD]=useState<any>(null),[section,setSection]=useState('dashboard'),[busy,setBusy]=useState(false);
+  const [d,setD]=useState<any>(null),[section,setSection]=useState<Section>('dashboard'),[busy,setBusy]=useState(false);
   const load=async()=>{try{setBusy(true);setD(await api('admin_get'))}catch(e:any){say(e.message)}finally{setBusy(false)}};
   useEffect(()=>{load()},[]);
   if(!d)return <Splash text="Loading admin console…"/>;
-  const saveSettings=async()=>{try{setBusy(true);await api('admin_settings_save',{settings:d.settings});say('Settings saved');await load()}catch(e:any){say(e.message)}finally{setBusy(false)}};
-  return <div className="admin-panel">
-    <div className="admin-top"><div><span>SECURE CONSOLE</span><h2>WIENER FARM Admin</h2></div><button onClick={load} aria-label="Refresh">↻</button></div>
-    <div className="admin-tabs">{['dashboard','settings','users','tasks','promos','withdrawals','admins','audit'].map(x=><button key={x} className={section===x?'active':''} onClick={()=>setSection(x)}>{x}</button>)}</div>
-    {busy&&<div className="tiny admin-refresh">Refreshing…</div>}
-    {section==='dashboard'&&<AdminDashboard d={d}/>} 
-    {section==='settings'&&<SettingsForm value={d.settings} setValue={(v:any)=>setD({...d,settings:v})} save={saveSettings} busy={busy}/>} 
-    {section==='users'&&<UsersAdmin users={d.users} say={say} reload={load}/>} 
-    {section==='tasks'&&<TasksAdmin tasks={d.tasks} say={say} reload={load}/>} 
-    {section==='promos'&&<PromosAdmin promos={d.promos} say={say} reload={load}/>} 
-    {section==='withdrawals'&&<WithdrawAdmin rows={d.withdrawals} say={say} reload={load}/>} 
-    {section==='admins'&&<AdminsAdmin rows={d.admins} say={say} reload={load}/>} 
-    {section==='audit'&&<Audit rows={d.audit}/>} 
+  const saveSettings=async()=>{try{setBusy(true);await api('admin_settings_save',{settings:d.settings});say('✅ Settings saved');await load()}catch(e:any){say(e.message)}finally{setBusy(false)}};
+  const selected=sections.find(x=>x.key===section)!;
+  return <div className="admin-panel premium-admin">
+    <header className="admin-top"><div><span>🛡️ SECURE CONSOLE</span><h2>WIENER Admin</h2><p>Make one focused change at a time.</p></div><button onClick={load} aria-label="Refresh">↻</button></header>
+    {section==='dashboard'?<><AdminDashboard d={d}/><div className="admin-menu-grid">{sections.filter(x=>x.key!=='dashboard').map(x=><button key={x.key} onClick={()=>setSection(x.key)}><span>{x.emoji}</span><div><b>{x.title}</b><small>{x.desc}</small></div><i>›</i></button>)}</div></>:<>
+      <button className="admin-back" onClick={()=>setSection('dashboard')}>‹ BACK TO OVERVIEW</button>
+      <div className="admin-current"><span>{selected.emoji}</span><div><h3>{selected.title}</h3><p>{selected.desc}</p></div></div>
+      {section==='settings'&&<SettingsForm value={d.settings} setValue={(v:any)=>setD({...d,settings:v})} save={saveSettings} busy={busy}/>} 
+      {section==='users'&&<UsersAdmin users={d.users} say={say} reload={load}/>} 
+      {section==='tasks'&&<TasksAdmin tasks={d.tasks} say={say} reload={load}/>} 
+      {section==='promos'&&<PromosAdmin promos={d.promos} say={say} reload={load}/>} 
+      {section==='withdrawals'&&<WithdrawAdmin rows={d.withdrawals} say={say} reload={load}/>} 
+      {section==='admins'&&<AdminsAdmin rows={d.admins} say={say} reload={load}/>} 
+      {section==='audit'&&<Audit rows={d.audit}/>} 
+    </>}
+    {busy&&<div className="tiny admin-refresh">Updating…</div>}
   </div>
 }
 
-function AdminDashboard({d}:{d:any}){const pending=d.withdrawals.filter((x:any)=>x.status==='pending'),banned=d.users.filter((x:any)=>x.is_banned);return <div className="admin-cards"><div><span>Users</span><b>{d.users.length}</b></div><div><span>Pending payouts</span><b>{pending.length}</b></div><div><span>Active tasks</span><b>{d.tasks.filter((x:any)=>x.enabled).length}</b></div><div><span>Banned</span><b>{banned.length}</b></div></div>}
+function AdminDashboard({d}:{d:any}){const pending=d.withdrawals.filter((x:any)=>x.status==='pending'),banned=d.users.filter((x:any)=>x.is_banned);return <><div className="admin-cards"><div><span>👥 Users</span><b>{d.users.length}</b></div><div><span>💸 Pending</span><b>{pending.length}</b></div><div><span>🎯 Tasks</span><b>{d.tasks.filter((x:any)=>x.enabled).length}</b></div><div><span>🚫 Banned</span><b>{banned.length}</b></div></div><div className="admin-tip">💡 Choose one section below. Changes are grouped into simple steps instead of one large settings screen.</div></>}
 
 function SettingsForm({value,setValue,save,busy}:{value:any;setValue:any;save:any;busy:boolean}){
-  const f=(k:string,v:any)=>setValue({...value,[k]:v});
+  const [step,setStep]=useState(0),f=(k:string,v:any)=>setValue({...value,[k]:v});
   const daily=Array.isArray(value.daily_rewards)?value.daily_rewards:[3,4,5,6,7,8,14];
   const setDaily=(i:number,v:any)=>{const next=[...daily];next[i]=Number(v||0);f('daily_rewards',next)};
-  return <section className="admin-settings">
-    <div className="settings-title"><div><h3>App Settings</h3><p>Control rewards, limits, withdrawals and system switches.</p></div><button className="primary settings-save" disabled={busy} onClick={save}>{busy?'SAVING…':'SAVE SETTINGS'}</button></div>
-
-    <SettingGroup title="General" note="Brand and Telegram configuration">
-      <Field label="App name" value={value.app_name} onChange={(v:any)=>f('app_name',v)}/>
-      <Field label="Token symbol" value={value.token_symbol} onChange={(v:any)=>f('token_symbol',v)}/>
-      <Field label="Bot username" value={value.bot_username} onChange={(v:any)=>f('bot_username',v)}/>
-      <Field label="Telegram Bot ID" value={value.telegram_bot_id||''} onChange={(v:any)=>f('telegram_bot_id',v?Number(v):null)} type="number"/>
-      <Field label="Production app URL" value={value.app_url||''} onChange={(v:any)=>f('app_url',v)}/>
-      <Field label="Support URL" value={value.support_url||''} onChange={(v:any)=>f('support_url',v)}/>
-      <Field label="Payout channel" value={value.payout_channel||''} onChange={(v:any)=>f('payout_channel',v)}/>
-    </SettingGroup>
-
-    <SettingGroup title="Farming & Daily Bonus" note="Rewards and claim frequency">
-      <Field label="Farm reward" value={value.farm_claim_reward} onChange={(v:any)=>f('farm_claim_reward',Number(v))} type="number"/>
-      <Field label="Farm cooldown (seconds)" value={value.farm_claim_cooldown_seconds} onChange={(v:any)=>f('farm_claim_cooldown_seconds',Number(v))} type="number"/>
-      <div className="daily-setting"><span>7-day streak rewards</span><div className="daily-inputs">{daily.map((x:any,i:number)=><label key={i}><small>D{i+1}</small><input type="number" value={x} onChange={e=>setDaily(i,e.target.value)}/></label>)}</div></div>
-    </SettingGroup>
-
-    <SettingGroup title="Ads & Referrals" note="AdsGram and invite economics">
-      <Field label="AdsGram Block ID" value={value.adsgram_block_id||''} onChange={(v:any)=>f('adsgram_block_id',v)}/>
-      <Field label="Ad reward" value={value.ad_reward} onChange={(v:any)=>f('ad_reward',Number(v))} type="number"/>
-      <Field label="Daily ad limit" value={value.daily_ad_limit} onChange={(v:any)=>f('daily_ad_limit',Number(v))} type="number"/>
-      <Field label="Invite reward" value={value.referral_signup_reward} onChange={(v:any)=>f('referral_signup_reward',Number(v))} type="number"/>
-      <Field label="Active invite bonus" value={value.referral_active_reward} onChange={(v:any)=>f('referral_active_reward',Number(v))} type="number"/>
-      <Field label="Ads needed for active" value={value.referral_active_ads_required} onChange={(v:any)=>f('referral_active_ads_required',Number(v))} type="number"/>
-      <Field label="Lifetime commission %" value={value.referral_commission_percent} onChange={(v:any)=>f('referral_commission_percent',Number(v))} type="number"/>
-    </SettingGroup>
-
-    <SettingGroup title="Withdrawals" note="Conversion, limits and payout display">
-      <Field label="FARM per USDT" value={value.token_per_usdt} onChange={(v:any)=>f('token_per_usdt',Number(v))} type="number"/>
-      <Field label="Minimum withdraw FARM" value={value.minimum_withdraw} onChange={(v:any)=>f('minimum_withdraw',Number(v))} type="number"/>
-      <Field label="Withdraw fee USDT" value={value.withdraw_fee_usdt} onChange={(v:any)=>f('withdraw_fee_usdt',Number(v))} type="number" step="0.001"/>
-      <Field label="Withdraw cooldown hours" value={value.withdraw_cooldown_hours} onChange={(v:any)=>f('withdraw_cooldown_hours',Number(v))} type="number"/>
-      <Field label="Asset label" value={value.withdraw_asset_label||''} onChange={(v:any)=>f('withdraw_asset_label',v)}/>
-      <Field label="Network" value={value.withdraw_network||''} onChange={(v:any)=>f('withdraw_network',v)}/>
-    </SettingGroup>
-
-    <SettingGroup title="System Controls" note="Turn app modules on or off">
-      <div className="switches setting-switches">{[
-        ['maintenance_enabled','Maintenance mode'],['withdrawals_enabled','Withdrawals'],['ads_enabled','Ads'],['tasks_enabled','Tasks'],['promo_enabled','Promo codes'],['referrals_enabled','Referrals'],['refund_rejected_withdrawals','Refund rejected withdrawals']
-      ].map(([k,l])=><label key={k}><input type="checkbox" checked={!!value[k]} onChange={e=>f(k,e.target.checked)}/><span>{l}</span></label>)}</div>
-      <Field label="Maintenance message" value={value.maintenance_message||''} onChange={(v:any)=>f('maintenance_message',v)}/>
-    </SettingGroup>
-
-    <button className="primary mobile-save" disabled={busy} onClick={save}>{busy?'SAVING…':'SAVE ALL SETTINGS'}</button>
+  const steps=['General','Rewards','Ads & Referrals','Withdrawals','System'];
+  return <section className="admin-settings step-settings"><div className="admin-stepper">{steps.map((x,i)=><button key={x} className={step===i?'active':step>i?'done':''} onClick={()=>setStep(i)}><span>{i+1}</span>{x}</button>)}</div>
+    {step===0&&<SettingGroup title="🏠 General" note="Brand and Telegram configuration"><Field label="App name" value={value.app_name} onChange={(v:any)=>f('app_name',v)}/><Field label="Token symbol" value={value.token_symbol} onChange={(v:any)=>f('token_symbol',v)}/><Field label="Bot username" value={value.bot_username} onChange={(v:any)=>f('bot_username',v)}/><Field label="Production app URL" value={value.app_url||''} onChange={(v:any)=>f('app_url',v)}/><Field label="Support URL" value={value.support_url||''} onChange={(v:any)=>f('support_url',v)}/><Field label="Payout channel" value={value.payout_channel||''} onChange={(v:any)=>f('payout_channel',v)}/></SettingGroup>}
+    {step===1&&<SettingGroup title="🎁 Rewards & Daily" note="WIENER earning and streak values"><Field label="WIENER earning reward" value={value.farm_claim_reward} onChange={(v:any)=>f('farm_claim_reward',Number(v))} type="number"/><Field label="Earning cooldown (seconds)" value={value.farm_claim_cooldown_seconds} onChange={(v:any)=>f('farm_claim_cooldown_seconds',Number(v))} type="number"/><div className="daily-setting"><span>🔥 7-day streak rewards</span><div className="daily-inputs">{daily.map((x:any,i:number)=><label key={i}><small>D{i+1}</small><input type="number" value={x} onChange={e=>setDaily(i,e.target.value)}/></label>)}</div></div></SettingGroup>}
+    {step===2&&<SettingGroup title="📺 Ads & Referrals" note="Ad rewards and invite qualification"><Field label="AdsGram Block ID" value={value.adsgram_block_id||''} onChange={(v:any)=>f('adsgram_block_id',v)}/><Field label="Ad reward (WIENER)" value={value.ad_reward} onChange={(v:any)=>f('ad_reward',Number(v))} type="number"/><Field label="Daily ad limit" value={value.daily_ad_limit} onChange={(v:any)=>f('daily_ad_limit',Number(v))} type="number"/><Field label="Invite reward (WIENER)" value={value.referral_signup_reward} onChange={(v:any)=>f('referral_signup_reward',Number(v))} type="number"/><Field label="Verified referral bonus" value={value.referral_active_reward} onChange={(v:any)=>f('referral_active_reward',Number(v))} type="number"/><Field label="Ads required to qualify" value={value.referral_active_ads_required} onChange={(v:any)=>f('referral_active_ads_required',Number(v))} type="number"/></SettingGroup>}
+    {step===3&&<SettingGroup title="💸 Withdrawals" note="Conversion and payout limits"><Field label="WIENER per USDT" value={value.token_per_usdt} onChange={(v:any)=>f('token_per_usdt',Number(v))} type="number"/><Field label="Minimum withdraw WIENER" value={value.minimum_withdraw} onChange={(v:any)=>f('minimum_withdraw',Number(v))} type="number"/><Field label="Withdraw fee USDT" value={value.withdraw_fee_usdt} onChange={(v:any)=>f('withdraw_fee_usdt',Number(v))} type="number" step="0.001"/><Field label="Cooldown hours" value={value.withdraw_cooldown_hours} onChange={(v:any)=>f('withdraw_cooldown_hours',Number(v))} type="number"/><Field label="Asset label" value={value.withdraw_asset_label||''} onChange={(v:any)=>f('withdraw_asset_label',v)}/><Field label="Network" value={value.withdraw_network||''} onChange={(v:any)=>f('withdraw_network',v)}/></SettingGroup>}
+    {step===4&&<SettingGroup title="🛡️ System Controls" note="Enable or pause major modules"><div className="switches setting-switches">{[['maintenance_enabled','🛠️ Maintenance'],['withdrawals_enabled','💸 Withdrawals'],['ads_enabled','📺 Ads'],['tasks_enabled','🎯 Tasks'],['promo_enabled','🎟️ Promo Codes'],['referrals_enabled','👥 Referrals']].map(([k,l])=><label key={k}><input type="checkbox" checked={!!value[k]} onChange={e=>f(k,e.target.checked)}/><span>{l}</span></label>)}</div><Field label="Maintenance message" value={value.maintenance_message||''} onChange={(v:any)=>f('maintenance_message',v)}/></SettingGroup>}
+    <div className="admin-step-actions"><button disabled={step===0} onClick={()=>setStep(Math.max(0,step-1))}>← PREVIOUS</button>{step<steps.length-1?<button className="primary" onClick={()=>setStep(step+1)}>NEXT →</button>:<button className="primary" disabled={busy} onClick={save}>{busy?'SAVING…':'✅ SAVE SETTINGS'}</button>}</div>
   </section>
 }
-
 function SettingGroup({title,note,children}:{title:string;note:string;children:any}){return <div className="setting-group"><div className="setting-group-head"><h4>{title}</h4><span>{note}</span></div><div className="form-grid">{children}</div></div>}
 function Field({label,value,onChange,type='text',step}:{label:string;value:any;onChange:any;type?:string;step?:string}){return <label className="field"><span>{label}</span><input type={type} step={step} value={value??''} onChange={e=>onChange(e.target.value)}/></label>}
 
-function UsersAdmin({users,say,reload}:{users:any[];say:any;reload:any}){return <section className="admin-section"><h3>Users</h3>{users.map(u=><div className="admin-row" key={u.telegram_id}><div className="grow"><b>{u.first_name||u.username||u.telegram_id}</b><small>{u.telegram_id} · {money(u.balance)} FARM · {u.total_ads} ads</small></div><button onClick={async()=>{const a=prompt('Balance adjustment (+/- FARM)','0');if(!a)return;try{await api('admin_user_update',{telegram_id:u.telegram_id,amount:Number(a),reason:'Admin adjustment'});say('Balance updated');reload()}catch(e:any){say(e.message)}}}>±</button><button className={u.is_banned?'good':'danger'} onClick={async()=>{try{await api('admin_user_update',{telegram_id:u.telegram_id,is_banned:!u.is_banned,ban_reason:!u.is_banned?'Banned by admin':null});say(u.is_banned?'Unbanned':'Banned');reload()}catch(e:any){say(e.message)}}}>{u.is_banned?'UNBAN':'BAN'}</button></div>)}</section>}
-function TasksAdmin({tasks,say,reload}:{tasks:any[];say:any;reload:any}){const add=async(t:any={})=>{const title=prompt('Task title',t.title||'');if(!title)return;const reward=Number(prompt('Reward FARM',String(t.reward||10)));const url=prompt('Task URL',t.url||'')||null;const chat=prompt('Telegram chat ID / @username (for member verification)',t.telegram_chat_id||'')||null;try{await api('admin_task_save',{task:{...t,title,reward,url,telegram_chat_id:chat,category:t.category||'official',task_type:'telegram',verification:chat?'telegram_member':'none',enabled:true}});say('Task saved');reload()}catch(e:any){say(e.message)}};return <section className="admin-section"><div className="admin-section-head"><div><h3>Tasks</h3><small>Create only real tasks. No sample tasks are preloaded.</small></div><button onClick={()=>add()}>+ ADD</button></div>{tasks.length?tasks.map(t=><div className="admin-row" key={t.id}><div className="grow"><b>{t.title}</b><small>{t.category} · +{t.reward} FARM · {t.enabled?'ON':'OFF'}</small></div><button onClick={()=>add(t)}>EDIT</button><button className="danger" onClick={async()=>{if(confirm('Delete task?')){await api('admin_task_delete',{id:t.id});reload()}}}>DEL</button></div>):<div className="admin-empty">No tasks yet. Tap + ADD to create one.</div>}</section>}
-function PromosAdmin({promos,say,reload}:{promos:any[];say:any;reload:any}){const add=async()=>{const code=(prompt('Promo code (leave blank to generate)')||Math.random().toString(36).slice(2,10)).toUpperCase(),reward=Number(prompt('Reward FARM','50')),max=prompt('Total claim limit (blank = unlimited)','100');try{await api('admin_promo_save',{promo:{code,reward,max_claims:max===''?null:Number(max),enabled:true}});say(`Promo ${code} created`);reload()}catch(e:any){say(e.message)}};return <section className="admin-section"><div className="admin-section-head"><h3>Promo codes</h3><button onClick={add}>+ GENERATE</button></div>{promos.map(p=><div className="admin-row" key={p.code}><div className="grow"><b>{p.code}</b><small>+{p.reward} FARM · {p.claims_count}/{p.max_claims??'∞'} claims · {p.enabled?'ON':'OFF'}</small></div><button className="danger" onClick={async()=>{await api('admin_promo_delete',{code:p.code});reload()}}>DEL</button></div>)}</section>}
-function WithdrawAdmin({rows,say,reload}:{rows:any[];say:any;reload:any}){return <section className="admin-section"><h3>Withdrawals</h3>{rows.map(w=><div className="admin-row stack" key={w.id}><div><b>{money(w.amount_farm)} FARM → {Number(w.receive_usdt).toFixed(4)} USDT</b><small>{w.wallet_address}<br/>{w.status.toUpperCase()} · {date(w.created_at)}</small></div>{w.status==='pending'&&<div className="row-actions"><button onClick={async()=>{await api('admin_withdraw_update',{id:w.id,status:'approved'});reload()}}>APPROVE</button><button className="good" onClick={async()=>{const tx=prompt('Transaction hash')||'';await api('admin_withdraw_update',{id:w.id,status:'paid',tx_hash:tx});say('Marked paid');reload()}}>PAID</button><button className="danger" onClick={async()=>{await api('admin_withdraw_update',{id:w.id,status:'rejected',note:'Rejected by admin'});reload()}}>REJECT</button></div>}</div>)}</section>}
-function AdminsAdmin({rows,say,reload}:{rows:any[];say:any;reload:any}){const add=async()=>{const id=Number(prompt('Telegram ID (user must open app first)'));if(!id)return;try{await api('admin_admin_save',{telegram_id:id,role:'admin',enabled:true,permissions:{}});say('Admin added');reload()}catch(e:any){say(e.message)}};return <section className="admin-section"><div className="admin-section-head"><h3>Admins</h3><button onClick={add}>+ ADD</button></div>{rows.map(a=><div className="admin-row" key={a.telegram_id}><div className="grow"><b>{a.telegram_id}</b><small>{a.role} · {a.enabled?'enabled':'disabled'}</small></div>{a.role!=='owner'&&<button className="danger" onClick={async()=>{await api('admin_admin_delete',{telegram_id:a.telegram_id});reload()}}>REMOVE</button>}</div>)}</section>}
-function Audit({rows}:{rows:any[]}){return <section className="admin-section"><h3>Audit log</h3>{rows.map(a=><div className="audit" key={a.id}><b>{a.action}</b><span>{a.actor_telegram_id||'system'} · {date(a.created_at)}</span><code>{JSON.stringify(a.details)}</code></div>)}</section>}
+function UsersAdmin({users,say,reload}:{users:any[];say:any;reload:any}){return <section className="admin-section"><div className="admin-section-head"><div><h3>👥 Users</h3><small>Balance changes and bans are deliberate one-user actions.</small></div></div>{users.map(u=><div className="admin-row" key={u.telegram_id}><div className="grow"><b>{u.first_name||u.username||u.telegram_id}</b><small>{u.username?`@${u.username} · `:''}UID {u.telegram_id} · {money(u.balance)} WIENER · {u.total_ads} ads</small></div><button onClick={async()=>{const a=prompt('WIENER balance adjustment (+/-)','0');if(!a)return;try{await api('admin_user_update',{telegram_id:u.telegram_id,amount:Number(a),reason:'Admin adjustment'});say('✅ Balance updated');reload()}catch(e:any){say(e.message)}}}>± BALANCE</button><button className={u.is_banned?'good':'danger'} onClick={async()=>{if(!confirm(u.is_banned?'Unban this user?':'Ban this user?'))return;try{await api('admin_user_update',{telegram_id:u.telegram_id,is_banned:!u.is_banned,ban_reason:!u.is_banned?'Banned by admin':null});say(u.is_banned?'✅ Unbanned':'🚫 Banned');reload()}catch(e:any){say(e.message)}}}>{u.is_banned?'UNBAN':'BAN'}</button></div>)}</section>}
+
+function TasksAdmin({tasks,say,reload}:{tasks:any[];say:any;reload:any}){
+  const [wizard,setWizard]=useState<any>(null),[step,setStep]=useState(1);
+  const start=(t:any=null)=>{setWizard(t?{...t}:{category:'',title:'',reward:10,url:'',telegram_chat_id:'',task_type:'telegram',verification:'none',enabled:true});setStep(t?2:1)};
+  const save=async()=>{try{const task={...wizard,reward:Number(wizard.reward||0),telegram_chat_id:wizard.telegram_chat_id||null,url:wizard.url||null,verification:wizard.telegram_chat_id?'telegram_member':'none'};await api('admin_task_save',{task});say('✅ Task saved');setWizard(null);reload()}catch(e:any){say(e.message)}};
+  return <section className="admin-section"><div className="admin-section-head"><div><h3>🎯 Tasks</h3><small>New tasks are created with a simple 3-step flow.</small></div><button onClick={()=>start()}>+ ADD TASK</button></div>
+    {wizard&&<div className="task-wizard"><div className="wizard-progress"><span className={step>=1?'active':''}>1</span><i/><span className={step>=2?'active':''}>2</span><i/><span className={step>=3?'active':''}>3</span></div>
+      {step===1&&<div className="wizard-step"><span className="wizard-kicker">STEP 1 OF 3</span><h4>Where should this task appear?</h4><p>Select one of the three Task tab lists.</p><div className="category-choices">{[['official','✅','Official'],['exclusive','⭐','Exclusive'],['partner','🤝','Partner']].map(([k,e,l])=><button key={k} className={wizard.category===k?'active':''} onClick={()=>setWizard({...wizard,category:k})}><span>{e}</span><b>{l}</b><small>{k} list</small></button>)}</div><button className="primary" disabled={!wizard.category} onClick={()=>setStep(2)}>CONTINUE →</button></div>}
+      {step===2&&<div className="wizard-step"><span className="wizard-kicker">STEP 2 OF 3 · {String(wizard.category).toUpperCase()}</span><h4>Task details</h4><div className="form-grid"><Field label="Task title" value={wizard.title} onChange={(v:any)=>setWizard({...wizard,title:v})}/><Field label="Reward WIENER" value={wizard.reward} onChange={(v:any)=>setWizard({...wizard,reward:Number(v)})} type="number"/><Field label="Task URL" value={wizard.url} onChange={(v:any)=>setWizard({...wizard,url:v})}/><Field label="Telegram @username / chat ID" value={wizard.telegram_chat_id} onChange={(v:any)=>setWizard({...wizard,telegram_chat_id:v})}/></div><div className="admin-step-actions"><button onClick={()=>setStep(1)}>← BACK</button><button className="primary" disabled={!wizard.title||!wizard.reward} onClick={()=>setStep(3)}>REVIEW →</button></div></div>}
+      {step===3&&<div className="wizard-step review-step"><span className="wizard-kicker">STEP 3 OF 3</span><h4>Review before publishing</h4><div className="review-grid"><div><span>List</span><b>{wizard.category}</b></div><div><span>Title</span><b>{wizard.title}</b></div><div><span>Reward</span><b>+{wizard.reward} WIENER</b></div><div><span>Verification</span><b>{wizard.telegram_chat_id?'Telegram Member':'Manual/None'}</b></div></div><div className="admin-step-actions"><button onClick={()=>setStep(2)}>← EDIT</button><button className="primary" onClick={save}>✅ SAVE TASK</button></div></div>}
+      <button className="wizard-cancel" onClick={()=>setWizard(null)}>CANCEL</button>
+    </div>}
+    {!wizard&&(tasks.length?tasks.map(t=><div className="admin-row" key={t.id}><div className="grow"><b>{t.title}</b><small>{t.category.toUpperCase()} · +{t.reward} WIENER · {t.enabled?'ON':'OFF'}</small></div><button onClick={()=>start(t)}>EDIT</button><button className="danger" onClick={async()=>{if(confirm('Delete this task?')){await api('admin_task_delete',{id:t.id});reload()}}}>DELETE</button></div>):<div className="admin-empty">No tasks yet. Tap + ADD TASK.</div>)}
+  </section>
+}
+
+function PromosAdmin({promos,say,reload}:{promos:any[];say:any;reload:any}){const add=async()=>{const code=(prompt('Promo code (leave blank to generate)')||Math.random().toString(36).slice(2,10)).toUpperCase(),reward=Number(prompt('Reward WIENER','50')),max=prompt('Total claim limit (blank = unlimited)','100');try{await api('admin_promo_save',{promo:{code,reward,max_claims:max===''?null:Number(max),enabled:true}});say(`✅ Promo ${code} created`);reload()}catch(e:any){say(e.message)}};return <section className="admin-section"><div className="admin-section-head"><h3>🎟️ Promo Codes</h3><button onClick={add}>+ CREATE</button></div>{promos.map(p=><div className="admin-row" key={p.code}><div className="grow"><b>{p.code}</b><small>+{p.reward} WIENER · {p.claims_count}/{p.max_claims??'∞'} claims · {p.enabled?'ON':'OFF'}</small></div><button className="danger" onClick={async()=>{if(confirm('Delete promo?')){await api('admin_promo_delete',{code:p.code});reload()}}}>DELETE</button></div>)}</section>}
+function WithdrawAdmin({rows,say,reload}:{rows:any[];say:any;reload:any}){return <section className="admin-section"><h3>💸 Withdrawals</h3>{rows.map(w=><div className="admin-row stack" key={w.id}><div><b>{money(w.amount_farm)} WIENER → {Number(w.receive_usdt).toFixed(4)} USDT</b><small>{w.wallet_address}<br/>{w.status.toUpperCase()} · {date(w.created_at)}</small></div>{w.status==='pending'&&<div className="row-actions"><button onClick={async()=>{if(confirm('Approve withdrawal?')){await api('admin_withdraw_update',{id:w.id,status:'approved'});reload()}}}>APPROVE</button><button className="good" onClick={async()=>{const tx=prompt('Transaction hash')||'';await api('admin_withdraw_update',{id:w.id,status:'paid',tx_hash:tx});say('✅ Marked paid');reload()}}>PAID</button><button className="danger" onClick={async()=>{if(confirm('Reject withdrawal?')){await api('admin_withdraw_update',{id:w.id,status:'rejected',note:'Rejected by admin'});reload()}}}>REJECT</button></div>}</div>)}</section>}
+function AdminsAdmin({rows,say,reload}:{rows:any[];say:any;reload:any}){const add=async()=>{const id=Number(prompt('Telegram UID (user must open app first)'));if(!id)return;try{await api('admin_admin_save',{telegram_id:id,role:'admin',enabled:true,permissions:{}});say('✅ Admin added');reload()}catch(e:any){say(e.message)}};return <section className="admin-section"><div className="admin-section-head"><h3>🛡️ Admins</h3><button onClick={add}>+ ADD</button></div>{rows.map(a=><div className="admin-row" key={a.telegram_id}><div className="grow"><b>UID {a.telegram_id}</b><small>{a.role} · {a.enabled?'enabled':'disabled'}</small></div>{a.role!=='owner'&&<button className="danger" onClick={async()=>{if(confirm('Remove admin access?')){await api('admin_admin_delete',{telegram_id:a.telegram_id});reload()}}}>REMOVE</button>}</div>)}</section>}
+function Audit({rows}:{rows:any[]}){return <section className="admin-section"><h3>📋 Audit Log</h3>{rows.map(a=><div className="audit" key={a.id}><b>{a.action}</b><span>{a.actor_telegram_id||'system'} · {date(a.created_at)}</span><code>{JSON.stringify(a.details)}</code></div>)}</section>}
