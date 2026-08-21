@@ -6,13 +6,13 @@ export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={
   user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];
-  leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string
+  leaderboard?:any[];rank?:number;tasks_completed_total?:number;notification_settings?:any;is_admin:boolean;admin_role?:string
 };
 
 export const money=(n:any,d=0)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
-export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
+export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'Earning').replace(/\bFarm Reward\b/gi,'WIENER Reward').replace(/\bFarm Ready\b/gi,'WIENER Ready').replace(/\bStart Farming\b/gi,'Start Earning').replace(/\bClaim Farm\b/gi,'Claim WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
 export function pageFromUrl():Tab{
