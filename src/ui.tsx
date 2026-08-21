@@ -7,6 +7,6 @@ export function OpenTelegram(){return <div className="center-screen"><div classN
 export function StateScreen({icon,title,text}:{icon:string;title:string;text:string}){return <div className="center-screen"><div className="state-icon">{icon}</div><h2>{title}</h2><p>{text}</p></div>}
 export function Brand({data}:{data:Snapshot}){return <header className="brand"><div className="brand-star"><AnimatedIcon name="logo" size={34} active/></div><div className="brand-copy"><b>WIENER</b><span>Earn · Invite · Win</span></div><div className="balance-pill"><span className="mini-coin">W</span>{money(data.user.balance)}</div><div className="avatar">{data.user.photo_url?<img src={data.user.photo_url}/>:String(data.user.first_name||'W')[0]}</div></header>}
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
-  const list:[Tab,string,IconName][]=[['home','Home','home'],['ads','Ads','ads'],['tasks','Tasks','tasks'],['invite','Invite','invite'],['wallet','Wallet','wallet']];
+  const list:[Tab,string,IconName][]=[['home','Home','home'],['ads','Ads','ads'],['draw','Draw','ticket'],['tasks','Task','tasks'],['invite','Invite','invite'],['wallet','Wallet','wallet']];
   return <nav className="bottom-nav">{list.map(([k,l,icon])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><AnimatedIcon name={icon} active={tab===k}/><span>{l}</span></button>)}{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>
 }
