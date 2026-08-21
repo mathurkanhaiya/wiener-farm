@@ -13,7 +13,6 @@ const packMap:Partial<Record<IconName,TgPackIcon>>={
   invite:'invite',
   wallet:'wallet',
   gift:'star',
-  ticket:'star',
   bolt:'bolt',
   gear:'gear',
   download:'withdraw',
