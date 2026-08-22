@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
 import {Ads} from './AdsPage';
+import {MandatoryAdmin,MandatoryGate} from './MandatoryJoin';
 import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Wallet} from './pages';
 import {Tasks} from './TasksPage';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
@@ -21,6 +22,7 @@ function App(){
   if(data?.settings?.maintenance_enabled)return <StateScreen icon="🛠" title="Maintenance" text={data.settings.maintenance_message}/>;
   if(!data)return null;
   return <div className="app-shell">
+    <MandatoryGate disabled={data.is_admin}/>
     <Brand data={data}/>
     <main className="content">
       {tab==='home'&&<Home data={data} run={run} setTab={setTab}/>} 
@@ -32,7 +34,7 @@ function App(){
       {tab==='claim'&&<ClaimPage data={data} run={run}/>} 
       {tab==='leaderboard'&&<LeaderboardPage data={data}/>} 
       {tab==='profile'&&<ProfilePage data={data} setTab={setTab}/>} 
-      {tab==='admin'&&data.is_admin&&<Admin say={say}/>} 
+      {tab==='admin'&&data.is_admin&&<><MandatoryAdmin say={say}/><Admin say={say}/></>} 
     </main>
     <Nav tab={tab} setTab={setTab} admin={data.is_admin}/>
     {toast&&<div className="toast">{toast}</div>}
