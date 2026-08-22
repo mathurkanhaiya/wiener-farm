@@ -20,6 +20,7 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
   const target=data.tasks.find(t=>t.id===targetId);
   const [cat,setCat]=useState(target?.category||'official');
   const [botStates,setBotStates]=useState<Record<string,BotState>>({});
+  const [opened,setOpened]=useState<Record<string,boolean>>({});
   const [busy,setBusy]=useState<string>('');
   const done=new Set(data.completed.map(x=>x.task_id));
   const items=data.tasks.filter(t=>t.category===cat);
@@ -32,8 +33,18 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
   },[data.tasks.length,data.completed.length]);
 
   const normalTask=async(t:any)=>{
-    if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);
-    setTimeout(()=>run('task_claim',{task_id:t.id},`+${t.reward} WIENER`),800);
+    if(busy)return;
+    if(!opened[t.id]){
+      if(t.url){
+        const url=String(t.url);
+        if(/^(https?:\/\/)?t\.me\//i.test(url)||/^tg:\/\//i.test(url)) window.Telegram?.WebApp?.openTelegramLink?.(url.startsWith('http')||url.startsWith('tg:')?url:`https://${url}`);
+        else window.Telegram?.WebApp?.openLink?.(url);
+      }
+      setOpened(v=>({...v,[t.id]:true}));
+      say(t.verification==='telegram_member'?'Join the channel/group, then return and tap CHECK':'Open the task, then return and tap CHECK');
+      return;
+    }
+    try{setBusy(t.id);await run('task_claim',{task_id:t.id},`+${t.reward} WIENER`)}finally{setBusy('')}
   };
 
   const botAction=async(t:any)=>{
@@ -65,10 +76,11 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
     <section className="card task-list">{items.length?items.map(t=>{
       const isBot=t.verification==='bot_forward';
       const state=botStates[t.id]||'not_started';
-      const label=done.has(t.id)?'DONE':busy===t.id?'WAIT':isBot?(state==='verified'?'CLAIM':state==='pending'?'CHECK':'START BOT'):'JOIN';
+      const normalLabel=opened[t.id]?'CHECK':'JOIN';
+      const label=done.has(t.id)?'DONE':busy===t.id?'WAIT':isBot?(state==='verified'?'CLAIM':state==='pending'?'CHECK':'START BOT'):normalLabel;
       return <div className={`task ${targetId===t.id?'target-task':''}`} id={`task-${t.id}`} key={t.id}>
         <div className="square check"><AnimatedIcon name={isBot?'ads':'check'} active={done.has(t.id)||state==='verified'}/></div>
-        <div className="grow"><h3>{t.title}{t.is_daily&&<span className="tag">DAILY</span>}{isBot&&<span className="tag">BOT</span>}</h3><p>+{t.reward} WIENER · {isBot?`Start @${String(t.telegram_chat_id||'bot').replace('@','')} and forward one bot message`:t.description||t.category}{t.expires_at?` · Ends ${date(t.expires_at)}`:''}</p>{isBot&&state==='pending'&&<small className="bot-verify-status">Forward sent? Tap CHECK anytime.</small>}{isBot&&state==='verified'&&<small className="bot-verify-status verified">✓ Forward verified — reward ready</small>}</div>
+        <div className="grow"><h3>{t.title}{t.is_daily&&<span className="tag">DAILY</span>}{isBot&&<span className="tag">BOT</span>}</h3><p>+{t.reward} WIENER · {isBot?`Start @${String(t.telegram_chat_id||'bot').replace('@','')} and forward one bot message`:t.description||t.category}{t.expires_at?` · Ends ${date(t.expires_at)}`:''}</p>{isBot&&state==='pending'&&<small className="bot-verify-status">Forward sent? Tap CHECK anytime.</small>}{isBot&&state==='verified'&&<small className="bot-verify-status verified">✓ Forward verified — reward ready</small>}{!isBot&&opened[t.id]&&!done.has(t.id)&&<small className="bot-verify-status">Joined? Tap CHECK to verify membership.</small>}</div>
         <button className="primary small" disabled={done.has(t.id)||busy===t.id} onClick={()=>isBot?botAction(t):normalTask(t)}>{label}</button>
       </div>
     }):<div className="empty">No {cat} tasks right now.</div>}</section>
