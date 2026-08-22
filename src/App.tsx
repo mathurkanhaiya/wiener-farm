@@ -3,8 +3,9 @@ import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
 import {Ads} from './AdsPage';
 import {MandatoryAdmin,MandatoryGate} from './MandatoryJoin';
-import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Wallet} from './pages';
+import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage} from './pages';
 import {Tasks} from './TasksPage';
+import {WalletV2,AdminWithdrawUpgrade} from './WithdrawV2';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
 
 function App(){
@@ -29,12 +30,12 @@ function App(){
       {tab==='ads'&&<Ads data={data} refresh={refresh} say={say}/>} 
       {tab==='tasks'&&<Tasks data={data} run={run} say={say}/>} 
       {tab==='invite'&&<Invite data={data} say={say}/>} 
-      {tab==='wallet'&&<Wallet data={data} run={run} setTab={setTab}/>} 
+      {tab==='wallet'&&<WalletV2 data={data} setTab={setTab}/>} 
       {tab==='daily'&&<DailyPage data={data} run={run}/>} 
       {tab==='claim'&&<ClaimPage data={data} run={run}/>} 
       {tab==='leaderboard'&&<LeaderboardPage data={data}/>} 
       {tab==='profile'&&<ProfilePage data={data} setTab={setTab}/>} 
-      {tab==='admin'&&data.is_admin&&<><MandatoryAdmin say={say}/><Admin say={say}/></>} 
+      {tab==='admin'&&data.is_admin&&<><MandatoryAdmin say={say}/><AdminWithdrawUpgrade say={say}/><Admin say={say}/></>} 
     </main>
     <Nav tab={tab} setTab={setTab} admin={data.is_admin}/>
     {toast&&<div className="toast">{toast}</div>}
