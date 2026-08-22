@@ -2,6 +2,7 @@ const viteEnv=(import.meta as any).env||{};
 export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
 export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
+export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
 
 export type Tab='home'|'ads'|'draw'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'raffle'|'tickets'|'admin';
 export type Snapshot={
@@ -20,9 +21,11 @@ export function pageFromUrl():Tab{
   const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',draw:'draw',raffle:'draw',tickets:'tickets'};
   return map[p]||'home';
 }
-export async function api(action:string,body:any={}){
-  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({action,initData:getInitData(),...body})});
+async function post(url:string,action:string,body:any={}){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({action,initData:getInitData(),...body})});
   const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));
   if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');
   return x.data??x;
 }
+export async function api(action:string,body:any={}){return post(API,action,body)}
+export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
