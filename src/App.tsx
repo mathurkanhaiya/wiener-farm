@@ -2,7 +2,8 @@ import {useEffect,useRef,useState} from 'react';
 import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
 import {Ads} from './AdsPage';
-import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Tasks,Wallet} from './pages';
+import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Wallet} from './pages';
+import {Tasks} from './TasksPage';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
 
 function App(){
@@ -24,7 +25,7 @@ function App(){
     <main className="content">
       {tab==='home'&&<Home data={data} run={run} setTab={setTab}/>} 
       {tab==='ads'&&<Ads data={data} refresh={refresh} say={say}/>} 
-      {tab==='tasks'&&<Tasks data={data} run={run}/>} 
+      {tab==='tasks'&&<Tasks data={data} run={run} say={say}/>} 
       {tab==='invite'&&<Invite data={data} say={say}/>} 
       {tab==='wallet'&&<Wallet data={data} run={run} setTab={setTab}/>} 
       {tab==='daily'&&<DailyPage data={data} run={run}/>} 
