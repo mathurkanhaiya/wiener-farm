@@ -1,7 +1,8 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
-import {Ads,ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Tasks,Wallet} from './pages';
+import {Ads} from './AdsPage';
+import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage,Tasks,Wallet} from './pages';
 import {AdsTicketProgress,EarnTicketsPage,HomeRaffleCard,RaffleAdmin,RafflePage,ReferralRaffleCard,TasksTicketCard} from './Raffle';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
 
