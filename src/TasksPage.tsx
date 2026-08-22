@@ -88,7 +88,7 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
   return <>
     <section className="card progress-card"><div className="section-head"><div className="square check"><AnimatedIcon name="tasks" active/></div><div><h3>Your Progress</h3><p>{count} current tasks completed</p></div></div><div className="progress"><span style={{width:`${data.tasks.length?Math.min(100,count/data.tasks.length*100):0}%`}}/></div></section>
     <div className="tabs">{['official','exclusive','partner'].map(x=><button className={cat===x?'active':''} onClick={()=>setCat(x)} key={x}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div>
-    {cat==='exclusive'&&<ExclusivePromote say={say}/>} 
+    {cat==='exclusive'&&<ExclusivePromote say={say} isAdmin={data.is_admin}/>} 
     <section className="card task-list">{items.length?items.map(t=>{
       const isBot=t.verification==='bot_forward';
       const state=botStates[t.id]||'not_started';
