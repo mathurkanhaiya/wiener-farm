@@ -3,6 +3,7 @@ export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsu
 export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
+export const TASK_API=`${SUPABASE_URL}/functions/v1/wiener-task-api`;
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={
@@ -27,5 +28,6 @@ async function post(url:string,action:string,body:any={}){
   if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');
   return x.data??x;
 }
-export async function api(action:string,body:any={}){return post(API,action,body)}
+export async function api(action:string,body:any={}){return post(action==='task_claim'?TASK_API:API,action==='task_claim'?'claim':action,body)}
+export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
