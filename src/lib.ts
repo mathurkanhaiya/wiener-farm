@@ -4,7 +4,7 @@ export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publisha
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
 
-export type Tab='home'|'ads'|'draw'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'raffle'|'tickets'|'admin';
+export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={
   user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];
   leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string
@@ -18,7 +18,7 @@ export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/g
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
 export function pageFromUrl():Tab{
   const p=new URLSearchParams(window.location.search).get('page')||'';
-  const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',draw:'draw',raffle:'draw',tickets:'tickets'};
+  const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads'};
   return map[p]||'home';
 }
 async function post(url:string,action:string,body:any={}){
