@@ -4,6 +4,7 @@ export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publisha
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
 export const TASK_API=`${SUPABASE_URL}/functions/v1/wiener-task-api`;
+export const MANDATORY_API=`${SUPABASE_URL}/functions/v1/wiener-mandatory`;
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={
@@ -31,3 +32,4 @@ async function post(url:string,action:string,body:any={}){
 export async function api(action:string,body:any={}){return post(action==='task_claim'?TASK_API:API,action==='task_claim'?'claim':action,body)}
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
+export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}
