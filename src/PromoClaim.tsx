@@ -13,57 +13,55 @@ async function promoApi(action:string,body:any={}){
 
 function PromoBox({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
   const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[retry,setRetry]=useState(false);
-  const claim=async()=>{
-    const c=code.trim().toUpperCase(); if(!c||busy)return;
-    try{
-      setBusy(true);setRetry(false);
 
-      // Validate promo first and create a one-time claim session.
+  const claim=async()=>{
+    const c=code.trim().toUpperCase();
+    if(!c||busy)return;
+
+    try{
+      setBusy(true);
+      setRetry(false);
+
+      // Validate the promo on the backend before an ad is shown.
       const start=await promoApi('start',{code:c});
 
-      // Show a normal AdsGram Rewarded ad using the official SDK.
-      const controller=window.Adsgram?.init({blockId:String(start.block_id)});
-      if(!controller)throw new Error('AdsGram rewarded ad unavailable');
+      // Use the exact same AdsGram rewarded flow as the working Ads page.
+      const controller=window.Adsgram?.init({blockId:String(start.block_id||data.settings.adsgram_block_id)});
+      if(!controller)throw new Error('AdsGram SDK unavailable');
 
-      let rewarded=false;
-      const onReward=()=>{rewarded=true};
-      controller.addEventListener?.('onReward',onReward);
+      const result=await controller.show();
+      if(result&&result.done===false)throw new Error(result.description||'Ad was not completed');
 
-      try{
-        const result=await controller.show();
-        rewarded=rewarded||result?.done===true;
-      } finally {
-        controller.removeEventListener?.('onReward',onReward);
-      }
+      // show() resolves only after a rewarded banner is successfully completed.
+      const credited=await promoApi('client_complete',{session_id:start.session_id});
+      if(credited?.status!=='credited')throw new Error('Promo reward confirmation failed');
 
-      if(!rewarded){
-        setRetry(true);
-        say('Watch the full ad to unlock this promo reward.');
-        return;
-      }
-
-      // Tell the backend only after AdsGram confirms the rewarded view client-side.
-      await promoApi('client_complete',{session_id:start.session_id});
-
-      let credited:any=null;
-      for(let i=0;i<12;i++){
-        const st=await promoApi('status',{session_id:start.session_id});
-        if(st?.status==='credited'){credited=st;break}
-        await new Promise(r=>setTimeout(r,1250));
-      }
-      if(!credited){setRetry(true);say('Ad completed — reward verification is still pending.');return}
-
-      say(`Promo claimed · +${Number(credited.reward_snapshot||credited.result?.reward||start.reward)} WIENER`);
-      setCode(''); await refresh();
+      say(`Promo claimed · +${Number(credited.reward||start.reward)} WIENER`);
+      setCode('');
+      await refresh();
     }catch(e:any){
-      const m=String(e?.message||'Promo claim failed');
+      const m=String(e?.message||e?.description||'Promo claim failed');
       if(/already_claimed/i.test(m))say('Promo already claimed');
       else if(/invalid_code/i.test(m))say('Invalid promo code');
-      else {setRetry(true);say(m)}
-    }finally{setBusy(false)}
+      else if(/skip|not completed/i.test(m))say('Complete the rewarded ad to claim this promo.');
+      else say(m);
+      setRetry(true);
+    }finally{
+      setBusy(false);
+    }
   };
 
-  return <section className="card promo promo-v2"><div className="section-head"><div className="square mint"><AnimatedIcon name="ticket" active/></div><div><h3>Promo Code</h3><p>Watch one rewarded ad to claim</p></div></div><div className="promo-row"><input placeholder="ENTER CODE" value={code} disabled={busy} onChange={e=>setCode(e.target.value.toUpperCase())}/><button className="primary small" disabled={busy||!code.trim()} onClick={claim}>{busy?'SHOWING AD…':retry?'CLAIM AGAIN':'CLAIM'}</button></div>{retry&&<div className="tiny center">Complete the rewarded ad, then your promo reward will be credited.</div>}</section>
+  return <section className="card promo promo-v2">
+    <div className="section-head">
+      <div className="square mint"><AnimatedIcon name="ticket" active/></div>
+      <div><h3>Promo Code</h3><p>Watch one rewarded ad to claim</p></div>
+    </div>
+    <div className="promo-row">
+      <input placeholder="ENTER CODE" value={code} disabled={busy} onChange={e=>setCode(e.target.value.toUpperCase())}/>
+      <button className="primary small" disabled={busy||!code.trim()} onClick={claim}>{busy?'SHOWING AD…':retry?'CLAIM AGAIN':'CLAIM'}</button>
+    </div>
+    {retry&&<div className="tiny center">Complete the rewarded ad to unlock your promo reward.</div>}
+  </section>;
 }
 
 export function HomeWithPromo({data,run,setTab,refresh,say}:{data:Snapshot;run:any;setTab:any;refresh:any;say:any}){
