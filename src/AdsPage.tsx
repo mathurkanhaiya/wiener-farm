@@ -3,6 +3,7 @@ import {adApi,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 
 const today=()=>new Date().toISOString().slice(0,10);
+const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 
 export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
   const [busy,setBusy]=useState(false),[session,setSession]=useState(''),[cooldownUntil,setCooldownUntil]=useState(0),[now,setNow]=useState(Date.now());
@@ -15,6 +16,15 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
     return()=>clearInterval(id);
   },[cooldownUntil]);
 
+  const waitForVerification=async(sessionId:string)=>{
+    for(let i=0;i<12;i++){
+      const st=await adApi('status',{session_id:sessionId});
+      if(st?.status==='verified'||st?.status==='credited')return st;
+      await sleep(750);
+    }
+    throw new Error('AdsGram verification not received. Please try again.');
+  };
+
   const watch=async()=>{
     if(!s.adsgram_block_id){say('Add AdsGram Block ID in Admin Settings');return}
     if(cooldown>0){say(`Next ad in ${cooldown}s`);return}
@@ -26,6 +36,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       if(!c)throw Error('AdsGram SDK unavailable');
       const result=await c.show();
       if(result&&result.done===false)throw Error(result.description||'Ad was not completed');
+      await waitForVerification(x.session_id);
       const st=await adApi('complete',{session_id:x.session_id});
       if(st?.status!=='credited')throw Error('Reward confirmation failed');
       say(`+${st.reward||s.ad_reward} WIENER`);
@@ -40,7 +51,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
   };
 
   const disabled=busy||used>=s.daily_ad_limit||cooldown>0;
-  const buttonText=busy?'WAIT':cooldown>0?`${cooldown}s`:'WATCH';
+  const buttonText=busy?'VERIFYING…':cooldown>0?`${cooldown}s`:'WATCH';
 
   return <>
     <div className="page-title"><h2>ADS TASK <span>{used}/{s.daily_ad_limit}</span></h2></div>
@@ -49,7 +60,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       <div className="grow"><h3>AdsGram — {s.daily_ad_limit} ads</h3><p>+{s.ad_reward} WIENER each · {used}/{s.daily_ad_limit} today</p></div>
       <button className="primary small" disabled={disabled} onClick={watch}>{buttonText}</button>
     </section>
-    <div className="info-box">ⓘ Reward is credited only after AdsGram reports the rewarded ad as successfully completed. After a successful ad, the next ad unlocks in 20 seconds.</div>
+    <div className="info-box">ⓘ Reward is credited only after the server receives AdsGram verification. After a successful ad, the next ad unlocks in 20 seconds.</div>
     {session&&<div className="tiny center">Ad session: {session.slice(0,8)}…</div>}
   </>;
 }
