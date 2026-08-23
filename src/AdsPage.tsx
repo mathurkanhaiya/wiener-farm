@@ -6,7 +6,7 @@ import {AnimatedIcon} from './icons';
 const today=()=>new Date().toISOString().slice(0,10);
 const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 const TADS_API=`${SUPABASE_URL}/functions/v1/wiener-tads`;
-const TADS_WIDGET='11690';
+const TADS_WIDGET='11691';
 
 async function tadsApi(action:string,body:any={}){
   const r=await fetch(TADS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,initData:getInitData(),...body})});
@@ -72,7 +72,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       setTadsBusy(true);
       const x=await tadsApi('start');
       tadsSession.current=String(x.session_id);
-      renderTadsWidget({id:TADS_WIDGET,type:'fullscreen'});
+      renderTadsWidget({id:TADS_WIDGET,type:'tgb'});
     }catch(e:any){
       setTadsBusy(false);
       const m=String(e?.message||'TADS unavailable');
@@ -115,10 +115,10 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
 
     <section className="card ad-card">
       <div className="square play"><AnimatedIcon name="ads" active={!tadsBusy&&tadsUsed<10}/></div>
-      <div className="grow"><h3>TADS — 10 ads</h3><p>+5 WIENER each · {tadsUsed}/10 today</p></div>
-      <button className="primary small" disabled={tadsBusy||tadsUsed>=10} onClick={watchTads}>{tadsBusy?'WATCHING…':tadsUsed>=10?'DONE':'WATCH'}</button>
+      <div className="grow"><h3>TADS TGB — 10 ads</h3><p>+5 WIENER each · {tadsUsed}/10 today</p></div>
+      <button className="primary small" disabled={tadsBusy||tadsUsed>=10} onClick={watchTads}>{tadsBusy?'OPENING…':tadsUsed>=10?'DONE':'WATCH'}</button>
     </section>
-    <TadsWidget id={TADS_WIDGET} type="fullscreen" debug={false} onShowReward={rewardTads} onAdsNotFound={noTads}/>
-    <div className="info-box">ⓘ TADS fullscreen reward · Widget #11690 · 5 WIENER after a completed rewarded view · maximum 10 per day.</div>
+    <TadsWidget id={TADS_WIDGET} type="tgb" debug={false} onShowReward={rewardTads} onAdsNotFound={noTads}/>
+    <div className="info-box">ⓘ TADS TGB · Widget #11691 · 5 WIENER per rewarded ad · maximum 10 per day.</div>
   </>;
 }
