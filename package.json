@@ -4,6 +4,6 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {"dev":"vite","build":"vite build","typecheck":"tsc -b","preview":"vite preview"},
-  "dependencies": {"lottie-react":"^2.4.1","pako":"^2.1.0","react":"^19.1.1","react-dom":"^19.1.1"},
+  "dependencies": {"lottie-react":"^2.4.1","pako":"^2.1.0","react":"^19.1.1","react-dom":"^19.1.1","react-tads-widget":"^0.1.0"},
   "devDependencies": {"@types/react":"^19.1.10","@types/react-dom":"^19.1.7","@vitejs/plugin-react":"^5.0.2","typescript":"^5.9.2","vite":"^7.1.3"}
 }
