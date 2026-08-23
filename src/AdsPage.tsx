@@ -72,7 +72,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       setTadsBusy(true);
       const x=await tadsApi('start');
       tadsSession.current=String(x.session_id);
-      renderTadsWidget({id:TADS_WIDGET,type:'tgb'});
+      renderTadsWidget({id:TADS_WIDGET,type:'static'});
     }catch(e:any){
       setTadsBusy(false);
       const m=String(e?.message||'TADS unavailable');
@@ -115,10 +115,10 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
 
     <section className="card ad-card">
       <div className="square play"><AnimatedIcon name="ads" active={!tadsBusy&&tadsUsed<10}/></div>
-      <div className="grow"><h3>TADS TGB — 10 ads</h3><p>+5 WIENER each · {tadsUsed}/10 today</p></div>
-      <button className="primary small" disabled={tadsBusy||tadsUsed>=10} onClick={watchTads}>{tadsBusy?'OPENING…':tadsUsed>=10?'DONE':'WATCH'}</button>
+      <div className="grow"><h3>TADS TGB — 10 ads</h3><p>+5 WIENER per click · {tadsUsed}/10 today</p></div>
+      <button className="primary small" disabled={tadsBusy||tadsUsed>=10} onClick={watchTads}>{tadsBusy?'LOADING…':tadsUsed>=10?'DONE':'SHOW AD'}</button>
     </section>
-    <TadsWidget id={TADS_WIDGET} type="tgb" debug={false} onShowReward={rewardTads} onAdsNotFound={noTads}/>
-    <div className="info-box">ⓘ TADS TGB · Widget #11691 · 5 WIENER per rewarded ad · maximum 10 per day.</div>
+    <TadsWidget id={TADS_WIDGET} type="static" debug={false} onClickReward={rewardTads} onAdsNotFound={noTads}/>
+    <div className="info-box">ⓘ TADS TGB · Widget #11691 · 5 WIENER after a rewarded ad click · maximum 10 per day.</div>
   </>;
 }
