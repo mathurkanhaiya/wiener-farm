@@ -3,7 +3,8 @@ import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
 import {Ads} from './AdsPage';
 import {MandatoryAdmin,MandatoryGate} from './MandatoryJoin';
-import {ClaimPage,DailyPage,Home,Invite,LeaderboardPage,ProfilePage} from './pages';
+import {ClaimPage,DailyPage,Invite,LeaderboardPage,ProfilePage} from './pages';
+import {HomeWithPromo} from './PromoClaim';
 import {Tasks} from './TasksPage';
 import {WalletV2,AdminWithdrawUpgrade} from './WithdrawV2';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
@@ -26,7 +27,7 @@ function App(){
     <MandatoryGate disabled={data.is_admin}/>
     <Brand data={data}/>
     <main className="content">
-      {tab==='home'&&<Home data={data} run={run} setTab={setTab}/>} 
+      {tab==='home'&&<HomeWithPromo data={data} run={run} setTab={setTab} refresh={refresh} say={say}/>} 
       {tab==='ads'&&<Ads data={data} refresh={refresh} say={say}/>} 
       {tab==='tasks'&&<Tasks data={data} run={run} say={say}/>} 
       {tab==='invite'&&<Invite data={data} say={say}/>} 
