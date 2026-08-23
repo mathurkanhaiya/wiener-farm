@@ -1,5 +1,4 @@
 import {useEffect,useRef,useState} from 'react';
-import {TadsWidget,renderTadsWidget} from 'react-tads-widget';
 import {adApi,getInitData,SUPABASE_URL,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 
@@ -66,20 +65,6 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
     }
   };
 
-  const watchTads=async()=>{
-    if(tadsBusy||tadsUsed>=10)return;
-    try{
-      setTadsBusy(true);
-      const x=await tadsApi('start');
-      tadsSession.current=String(x.session_id);
-      renderTadsWidget({id:TADS_WIDGET,type:'static'});
-    }catch(e:any){
-      setTadsBusy(false);
-      const m=String(e?.message||'TADS unavailable');
-      say(/daily_limit/i.test(m)?'TADS daily limit reached':m);
-    }
-  };
-
   const rewardTads=async()=>{
     const sid=tadsSession.current;
     if(!sid){setTadsBusy(false);return}
@@ -100,6 +85,23 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
     say('No TADS ad available right now');
   };
 
+  const watchTads=async()=>{
+    if(tadsBusy||tadsUsed>=10)return;
+    try{
+      setTadsBusy(true);
+      const x=await tadsApi('start');
+      tadsSession.current=String(x.session_id);
+      const sdk:any=await import('react-tads-widget');
+      if(typeof sdk.renderTadsWidget!=='function')throw new Error('TADS SDK unavailable');
+      sdk.renderTadsWidget({id:TADS_WIDGET,type:'static',debug:false,onClickReward:rewardTads,onAdsNotFound:noTads});
+    }catch(e:any){
+      tadsSession.current='';
+      setTadsBusy(false);
+      const m=String(e?.message||'TADS unavailable');
+      say(/daily_limit/i.test(m)?'TADS daily limit reached':m);
+    }
+  };
+
   const disabled=busy||used>=s.daily_ad_limit||cooldown>0;
   const buttonText=busy?'VERIFYING…':cooldown>0?`${cooldown}s`:'WATCH';
 
@@ -118,7 +120,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       <div className="grow"><h3>TADS TGB — 10 ads</h3><p>+5 WIENER per click · {tadsUsed}/10 today</p></div>
       <button className="primary small" disabled={tadsBusy||tadsUsed>=10} onClick={watchTads}>{tadsBusy?'LOADING…':tadsUsed>=10?'DONE':'SHOW AD'}</button>
     </section>
-    <TadsWidget id={TADS_WIDGET} type="static" debug={false} onClickReward={rewardTads} onAdsNotFound={noTads}/>
+    <div id="tads-container-11691" />
     <div className="info-box">ⓘ TADS TGB · Widget #11691 · 5 WIENER after a rewarded ad click · maximum 10 per day.</div>
   </>;
 }
