@@ -13,30 +13,40 @@ function openTelegram(url:string){
 }
 
 export function MandatoryGate({disabled=false}:{disabled?:boolean}){
-  const [items,setItems]=useState<JoinItem[]>([]),[loading,setLoading]=useState(!disabled),[checking,setChecking]=useState(false),[ready,setReady]=useState(disabled),[error,setError]=useState('');
-  const check=useCallback(async(silent=false)=>{
+  const [items,setItems]=useState<JoinItem[]>([]),[checking,setChecking]=useState(false),[resolved,setResolved]=useState(disabled),[ready,setReady]=useState(disabled),[error,setError]=useState('');
+  const check=useCallback(async(manual=false)=>{
     if(disabled)return;
     try{
-      if(!silent)setChecking(true);
+      if(manual)setChecking(true);
       setError('');
       const r=await mandatoryApi('check');
       setItems(r.items||[]);
       setReady(!!r.all_joined);
-    }catch(e:any){setError(e.message||'Unable to verify membership')}finally{setLoading(false);setChecking(false)}
+      setResolved(true);
+    }catch(e:any){
+      setError(e.message||'Unable to verify membership');
+      setResolved(true);
+    }finally{
+      setChecking(false);
+    }
   },[disabled]);
 
-  useEffect(()=>{if(disabled){setReady(true);setLoading(false);return}check();},[check,disabled]);
+  /* Initial check is always silent. The user sees the app normally unless a missing membership is actually found. */
+  useEffect(()=>{if(disabled){setReady(true);setResolved(true);return}check(false);},[check,disabled]);
+
   useEffect(()=>{
     if(disabled)return;
     const delay=ready?45000:7000;
-    const id=window.setInterval(()=>check(true),delay);
-    const onFocus=()=>check(true);
-    const onVisible=()=>{if(document.visibilityState==='visible')check(true)};
+    const id=window.setInterval(()=>check(false),delay);
+    const onFocus=()=>check(false);
+    const onVisible=()=>{if(document.visibilityState==='visible')check(false)};
     window.addEventListener('focus',onFocus);document.addEventListener('visibilitychange',onVisible);
     return()=>{clearInterval(id);window.removeEventListener('focus',onFocus);document.removeEventListener('visibilitychange',onVisible)};
   },[check,disabled,ready]);
 
-  if(disabled||(!loading&&ready))return null;
+  /* Never flash the access gate while the background membership check is still running. */
+  if(disabled||!resolved||ready)return null;
+
   const missing=items.filter(x=>!x.joined);
   return <div className="mandatory-overlay" role="dialog" aria-modal="true" aria-label="Required Telegram communities">
     <div className="mandatory-orb mandatory-orb-a"/><div className="mandatory-orb mandatory-orb-b"/>
@@ -46,17 +56,17 @@ export function MandatoryGate({disabled=false}:{disabled?:boolean}){
       <h1>One Last Step</h1>
       <p className="mandatory-copy">Join the required communities to unlock WIENER. Membership is checked live.</p>
 
-      {loading?<div className="mandatory-loading"><i/>Checking your memberships…</div>:<div className="mandatory-list">
+      <div className="mandatory-list">
         {items.map((x,i)=><div className={`mandatory-row ${x.joined?'is-joined':''}`} key={x.id} style={{'--delay':`${i*80}ms`} as any}>
           <div className="mandatory-row-icon">{x.joined?'✓':x.join_type==='group'?'👥':'✦'}</div>
           <div className="mandatory-row-copy"><b>{x.title}</b><small>{x.subtitle||`${x.join_type==='group'?'Community group':'Official channel'} · Required`}</small>{x.check_error&&<em>Bot cannot verify this chat yet</em>}</div>
           {x.joined?<button className="mandatory-joined" disabled>✓ JOINED</button>:<button className="mandatory-join" onClick={()=>openTelegram(x.join_url)}>JOIN</button>}
         </div>)}
         {!items.length&&!error&&<div className="mandatory-empty">No mandatory communities are active.</div>}
-      </div>}
+      </div>
 
       {error&&<div className="mandatory-error">{error}</div>}
-      <button className="mandatory-check" disabled={checking||loading} onClick={()=>check()}><span>{checking?'CHECKING…':'CHECK & CONTINUE'}</span></button>
+      <button className="mandatory-check" disabled={checking} onClick={()=>check(true)}><span>{checking?'CHECKING…':'CHECK & CONTINUE'}</span></button>
       <small className="mandatory-hint">Already joined? Return here — status updates automatically.</small>
       {!!missing.length&&missing.some(x=>x.check_error)&&<small className="mandatory-bot-note">Admin note: WIENER bot must be an admin/member with permission to check members in every required chat.</small>}
     </section>
