@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {api,getInitData,pageFromUrl,type Snapshot,type Tab} from './lib';
+import {api,getInitData,pageFromUrl,registerDevice,type Snapshot,type Tab} from './lib';
 import {Admin} from './Admin';
 import {Ads} from './AdsPage';
 import {MandatoryAdmin,MandatoryGate,checkMandatoryAccess} from './MandatoryJoin';
@@ -13,7 +13,7 @@ function App(){
   const [tab,setTab]=useState<Tab>(()=>pageFromUrl()),[data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[toast,setToast]=useState(''),[mandatory,setMandatory]=useState<any>(null);
   const openedSent=useRef(false);
   const refresh=async()=>{try{setError('');const d=await api('bootstrap');setData(d);return d}catch(e:any){setError(e.message);return null}};
-  useEffect(()=>{const t=window.Telegram?.WebApp;t?.ready?.();t?.expand?.();(async()=>{const d=await refresh();if(d&&!d.is_admin){try{setMandatory(await checkMandatoryAccess())}catch{setMandatory({all_joined:true,items:[]})}}else if(d)setMandatory({all_joined:true,items:[]});setLoading(false)})()},[]);
+  useEffect(()=>{const t=window.Telegram?.WebApp;t?.ready?.();t?.expand?.();(async()=>{const d=await refresh();if(d){try{await registerDevice()}catch{}if(!d.is_admin){try{setMandatory(await checkMandatoryAccess())}catch{setMandatory({all_joined:true,items:[]})}}else setMandatory({all_joined:true,items:[]})}setLoading(false)})()},[]);
   useEffect(()=>{if(data&&!openedSent.current){openedSent.current=true;api('app_opened').catch(()=>{})}},[data]);
   const say=(s:string)=>{setToast(s);setTimeout(()=>setToast(''),2200)};
   const run=async(action:string,b:any={},ok='Done')=>{try{await api(action,b);say(ok);await refresh()}catch(e:any){say(e.message)}};
