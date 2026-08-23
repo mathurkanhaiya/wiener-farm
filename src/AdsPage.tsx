@@ -145,7 +145,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
             <p>Watch the rewarded ad to receive your WIENER.</p>
           </div>
           <div className="ad-claim-reward"><span>REWARD</span><strong>+{claimReward} WIENER</strong></div>
-          <div className="ad-claim-note"><div className="ad-claim-hand">▶️</div><div><strong>Complete the ad</strong><small>Keep the ad open until AdsGram reports it as completed.</small></div></div>
+          <div className="ad-claim-note"><div className="ad-claim-hand">☝️</div><div><strong>Support WIENER</strong><small>Tap the ad / CTA (Visit, Play or Open) before finishing.</small></div></div>
           <div className="ad-claim-actions">
             <button className="primary" disabled={busy} onClick={watch}>{busy?'SHOWING AD…':'WATCH AD TO CLAIM'}</button>
             <button className="ad-claim-cancel" disabled={busy} onClick={closeClaim}>Cancel</button>
