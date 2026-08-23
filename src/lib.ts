@@ -4,6 +4,7 @@ export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publisha
 export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
 export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
 export const SECONDARY_AD_API=`${SUPABASE_URL}/functions/v1/wiener-tads`;
+export const ADSGRAM_TASK_API=`${SUPABASE_URL}/functions/v1/wiener-adsgram-task`;
 export const TASK_API=`${SUPABASE_URL}/functions/v1/wiener-task-api`;
 export const MANDATORY_API=`${SUPABASE_URL}/functions/v1/wiener-mandatory`;
 export const WITHDRAW_API=`${SUPABASE_URL}/functions/v1/wiener-withdraw`;
@@ -26,5 +27,6 @@ export async function api(action:string,body:any={}){return post(action==='task_
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
 export async function secondaryAdApi(action:'stats'|'start'|'reward',body:any={}){return post(SECONDARY_AD_API,action,body)}
+export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={}){return post(ADSGRAM_TASK_API,action,body)}
 export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}
 export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){return post(WITHDRAW_API,action,body)}
