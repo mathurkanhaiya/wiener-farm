@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {api,getInitData,pageFromUrl,registerDevice,type Snapshot,type Tab} from './lib';
-import {Admin} from './Admin';
+import {Admin} from './AdminV2';
 import {Ads} from './AdsPage';
 import {FarmClaimModal} from './FarmClaimModal';
 import {MandatoryAdmin,MandatoryGate,checkMandatoryAccess} from './MandatoryJoin';
