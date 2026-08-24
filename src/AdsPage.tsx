@@ -1,28 +1,136 @@
 import {useEffect,useState} from 'react';
 import {adApi,secondaryAdApi,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
-const today=()=>new Date().toISOString().slice(0,10),COOLDOWN_KEY='wiener_adsgram_cooldown_until_v1',SECOND_COOLDOWN_KEY='wiener_bonus_ads_cooldown_until_v1';
+
+const today=()=>new Date().toISOString().slice(0,10);
+const COOLDOWN_KEY='wiener_adsgram_cooldown_until_v1';
+const SECOND_COOLDOWN_KEY='wiener_bonus_ads_cooldown_until_v1';
 const saved=(key:string)=>{try{return Number(localStorage.getItem(key)||0)}catch{return 0}};
-type ClaimState='ready'|'showing'|'crediting'|'success'|'failed';type Source='main'|'secondary';
+
+type ClaimState='ready'|'showing'|'crediting'|'success'|'failed';
+type Source='main'|'secondary';
+
 export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
- const [busy,setBusy]=useState(false),[cooldownUntil,setCooldownUntil]=useState(()=>saved(COOLDOWN_KEY)),[secondCooldownUntil,setSecondCooldownUntil]=useState(()=>saved(SECOND_COOLDOWN_KEY)),[now,setNow]=useState(Date.now()),[claimOpen,setClaimOpen]=useState(false),[claimState,setClaimState]=useState<ClaimState>('ready'),[source,setSource]=useState<Source>('main'),[claimReward,setClaimReward]=useState(0),[claimBalance,setClaimBalance]=useState<number|null>(null),[claimError,setClaimError]=useState(''),[second,setSecond]=useState({used:0,limit:10,reward:5,block_id:'int-44228'}),[secondLoaded,setSecondLoaded]=useState(false);
- const s=data.settings,u=data.user,used=u.ads_day===today()?Number(u.ads_watched_today):0,cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000)),secondCooldown=Math.max(0,Math.ceil((secondCooldownUntil-now)/1000));
- useEffect(()=>{let active=true;adApi('status').then((x:any)=>{if(!active)return;const left=Number(x?.cooldown_seconds||0);if(left>0){const until=Date.now()+left*1000;setCooldownUntil(until);try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}}else if(saved(COOLDOWN_KEY)<=Date.now()){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}}).catch(()=>{});secondaryAdApi('stats').then((x:any)=>{if(!active)return;setSecond(x);setSecondLoaded(true)}).catch(()=>{if(active)setSecondLoaded(true)});return()=>{active=false}},[]);
- useEffect(()=>{if(!cooldownUntil&&!secondCooldownUntil)return;const id=setInterval(()=>{const t=Date.now();setNow(t);if(cooldownUntil&&t>=cooldownUntil){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}if(secondCooldownUntil&&t>=secondCooldownUntil){setSecondCooldownUntil(0);try{localStorage.removeItem(SECOND_COOLDOWN_KEY)}catch{}}},500);return()=>clearInterval(id)},[cooldownUntil,secondCooldownUntil]);
+ const [busy,setBusy]=useState(false);
+ const [cooldownUntil,setCooldownUntil]=useState(()=>saved(COOLDOWN_KEY));
+ const [secondCooldownUntil,setSecondCooldownUntil]=useState(()=>saved(SECOND_COOLDOWN_KEY));
+ const [now,setNow]=useState(Date.now());
+ const [claimOpen,setClaimOpen]=useState(false);
+ const [claimState,setClaimState]=useState<ClaimState>('ready');
+ const [source,setSource]=useState<Source>('main');
+ const [claimReward,setClaimReward]=useState(0);
+ const [claimBalance,setClaimBalance]=useState<number|null>(null);
+ const [claimError,setClaimError]=useState('');
+ const [second,setSecond]=useState({used:0,limit:10,reward:5,block_id:'int-44228'});
+ const [adsReady,setAdsReady]=useState(false);
+
+ const s=data.settings,u=data.user;
+ const used=u.ads_day===today()?Number(u.ads_watched_today):0;
+ const cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000));
+ const secondCooldown=Math.max(0,Math.ceil((secondCooldownUntil-now)/1000));
+
+ useEffect(()=>{
+   let active=true;
+   Promise.all([
+     adApi('status').catch(()=>({cooldown_seconds:0})),
+     secondaryAdApi('stats')
+   ]).then(([mainStatus,bonus]:any[])=>{
+     if(!active)return;
+     const left=Number(mainStatus?.cooldown_seconds||0);
+     if(left>0){
+       const until=Date.now()+left*1000;
+       setCooldownUntil(until);
+       try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}
+     }else if(saved(COOLDOWN_KEY)<=Date.now()){
+       setCooldownUntil(0);
+       try{localStorage.removeItem(COOLDOWN_KEY)}catch{}
+     }
+     setSecond(bonus);
+     setAdsReady(true);
+   }).catch(()=>{
+     if(active){say('Unable to load ad progress');setAdsReady(true)}
+   });
+   return()=>{active=false};
+ },[]);
+
+ useEffect(()=>{
+   if(!cooldownUntil&&!secondCooldownUntil)return;
+   const id=setInterval(()=>{
+     const t=Date.now();setNow(t);
+     if(cooldownUntil&&t>=cooldownUntil){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}
+     if(secondCooldownUntil&&t>=secondCooldownUntil){setSecondCooldownUntil(0);try{localStorage.removeItem(SECOND_COOLDOWN_KEY)}catch{}}
+   },500);
+   return()=>clearInterval(id);
+ },[cooldownUntil,secondCooldownUntil]);
+
  const setCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}};
  const setSecondCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setSecondCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(SECOND_COOLDOWN_KEY,String(until))}catch{}};
- const openClaim=(src:Source)=>{if(src==='main'&&!s.adsgram_block_id){say('Add AdsGram Block ID in Admin Settings');return}if(src==='main'&&cooldown>0){say(`Next ad in ${cooldown}s`);return}if(src==='secondary'&&!secondLoaded){say('Loading bonus ad status…');return}if(src==='secondary'&&secondCooldown>0){say(`Next ad in ${secondCooldown}s`);return}if(src==='main'&&used>=Number(s.daily_ad_limit||0)){say('Daily ad limit reached');return}if(src==='secondary'&&second.used>=second.limit){say('Daily ad limit reached');return}setSource(src);setClaimState('ready');setClaimError('');setClaimBalance(null);setClaimReward(src==='main'?Number(s.ad_reward||0):Number(second.reward||5));setClaimOpen(true)};
+
+ const openClaim=(src:Source)=>{
+   if(src==='main'&&!s.adsgram_block_id){say('Add AdsGram Block ID in Admin Settings');return}
+   if(src==='main'&&cooldown>0){say(`Next ad in ${cooldown}s`);return}
+   if(src==='secondary'&&secondCooldown>0){say(`Next ad in ${secondCooldown}s`);return}
+   if(src==='main'&&used>=Number(s.daily_ad_limit||0)){say('Daily ad limit reached');return}
+   if(src==='secondary'&&second.used>=second.limit){say('Daily ad limit reached');return}
+   setSource(src);setClaimState('ready');setClaimError('');setClaimBalance(null);
+   setClaimReward(src==='main'?Number(s.ad_reward||0):Number(second.reward||5));
+   setClaimOpen(true);
+ };
+
  const closeClaim=()=>{if(busy)return;setClaimOpen(false);setClaimState('ready');setClaimError('')};
- const watch=async()=>{if(busy)return;try{setBusy(true);setClaimError('');setClaimState('showing');if(source==='main'){const x=await adApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||s.adsgram_block_id)});if(!c)throw Error('AdsGram SDK unavailable');const result=await c.show();if(result&&result.done===false)throw Error(result.description||'Ad was not completed');setClaimState('crediting');const st=await adApi('complete',{session_id:x.session_id});if(st?.status!=='credited')throw Error('Reward could not be credited');setClaimReward(Number(st.reward||s.ad_reward||0));setClaimBalance(st.balance==null?null:Number(st.balance));setCooldown(Number(st.cooldown_seconds||20))}else{const x=await secondaryAdApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||'int-44228')});if(!c)throw Error('AdsGram SDK unavailable');await c.show();setClaimState('crediting');const st:any=await secondaryAdApi('reward',{session_id:x.session_id});setClaimReward(Number(st?.reward||5));setClaimBalance(st?.balance==null?null:Number(st.balance));const stats:any=await secondaryAdApi('stats');setSecond(stats);setSecondLoaded(true);setSecondCooldown(20)}setClaimState('success');await refresh()}catch(e:any){setClaimError(String(e?.message||'Ad was not completed'));setClaimState('failed')}finally{setBusy(false)}};
+
+ const watch=async()=>{
+   if(busy)return;
+   try{
+     setBusy(true);setClaimError('');setClaimState('showing');
+     if(source==='main'){
+       const x=await adApi('start');
+       const c=window.Adsgram?.init({blockId:String(x.block_id||s.adsgram_block_id)});
+       if(!c)throw Error('AdsGram SDK unavailable');
+       const result=await c.show();
+       if(result&&result.done===false)throw Error(result.description||'Ad was not completed');
+       setClaimState('crediting');
+       const st=await adApi('complete',{session_id:x.session_id});
+       if(st?.status!=='credited')throw Error('Reward could not be credited');
+       setClaimReward(Number(st.reward||s.ad_reward||0));
+       setClaimBalance(st.balance==null?null:Number(st.balance));
+       setCooldown(Number(st.cooldown_seconds||20));
+     }else{
+       const x=await secondaryAdApi('start');
+       const c=window.Adsgram?.init({blockId:String(x.block_id||'int-44228')});
+       if(!c)throw Error('AdsGram SDK unavailable');
+       await c.show();
+       setClaimState('crediting');
+       const st:any=await secondaryAdApi('reward',{session_id:x.session_id});
+       setClaimReward(Number(st?.reward||5));
+       setClaimBalance(st?.balance==null?null:Number(st.balance));
+       const stats:any=await secondaryAdApi('stats');
+       setSecond(stats);
+       setSecondCooldown(20);
+     }
+     setClaimState('success');
+     await refresh();
+   }catch(e:any){setClaimError(String(e?.message||'Ad was not completed'));setClaimState('failed')}
+   finally{setBusy(false)}
+ };
+
  const retry=()=>{if(!busy){setClaimError('');setClaimState('ready')}};
- const mainDisabled=busy||used>=s.daily_ad_limit||cooldown>0,secondDisabled=busy||!secondLoaded||second.used>=second.limit||secondCooldown>0;
- return <><div className="page-title"><h2>ADS TASK</h2></div>
- <section className="card ad-card"><div className="square play"><AnimatedIcon name="ads" active={!mainDisabled}/></div><div className="grow"><h3>AdsGram — {s.daily_ad_limit} ads</h3><p>+{s.ad_reward} WIENER each · {used}/{s.daily_ad_limit} today</p></div><button className="primary small" disabled={mainDisabled} onClick={()=>openClaim('main')}>{cooldown>0?`${cooldown}s`:'WATCH'}</button></section>
- <section className="card ad-card"><div className="square play"><AnimatedIcon name="ads" active={secondLoaded&&!secondDisabled}/></div><div className="grow"><h3>Bonus Ads — {second.limit} ads</h3><p>{secondLoaded?`+5 WIENER each · ${second.used}/${second.limit} today`:'Loading your bonus ad progress…'}</p></div><button className="primary small" disabled={secondDisabled} onClick={()=>openClaim('secondary')}>{!secondLoaded?'…':secondCooldown>0?`${secondCooldown}s`:'WATCH'}</button></section>
- <div className="info-box">ⓘ Complete rewarded ads to receive WIENER.</div>
- {claimOpen&&<div className="ad-claim-overlay" role="dialog" aria-modal="true"><style>{`.ad-claim-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(4,8,10,.72);backdrop-filter:blur(12px)}.ad-claim-modal{width:min(100%,400px);padding:20px;border:1px solid rgba(255,255,255,.12);border-radius:26px;background:linear-gradient(155deg,rgba(20,28,30,.95),rgba(8,13,15,.93));box-shadow:0 22px 70px rgba(0,0,0,.48)}.ad-claim-head{text-align:center;margin-bottom:13px}.ad-claim-icon{width:58px;height:58px;margin:0 auto 10px;display:grid;place-items:center;border-radius:19px;background:rgba(255,255,255,.06)}.ad-claim-head h3{margin:0;font-size:21px}.ad-claim-head p{margin:6px 0 0;font-size:12px;opacity:.62}.ad-claim-reward{margin:12px 0;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.035)}.ad-claim-reward span{display:block;font-size:10px;opacity:.55}.ad-claim-reward strong{font-size:24px}.ad-claim-note{display:flex;gap:10px;margin:12px 0;padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.045)}.ad-claim-note strong{display:block;font-size:13px;margin-bottom:3px}.ad-claim-note small{display:block;font-size:11px;line-height:1.4;opacity:.62}.ad-claim-actions{display:grid;gap:9px}.ad-claim-actions button{width:100%;min-height:46px;border-radius:15px}.ad-claim-cancel{border:1px solid rgba(255,255,255,.1);background:transparent;color:inherit;opacity:.75}.ad-claim-status{text-align:center;padding:20px 7px 8px}.ad-claim-status .big{font-size:34px}.ad-claim-status p{font-size:12px;opacity:.65}.ad-claim-success strong{display:block;font-size:27px;margin:6px}.ad-claim-success small{opacity:.6}.ad-claim-spinner{width:40px;height:40px;margin:4px auto 14px;border:3px solid rgba(255,255,255,.12);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style><div className="ad-claim-modal">
- {(claimState==='ready'||claimState==='showing')&&<><div className="ad-claim-head"><div className="ad-claim-icon"><AnimatedIcon name="ads" active/></div><h3>CLAIM AD REWARD</h3><p>Watch the rewarded ad to receive your WIENER.</p></div><div className="ad-claim-reward"><span>REWARD</span><strong>+{claimReward} WIENER</strong></div><div className="ad-claim-note"><div>☝️</div><div><strong>Support WIENER</strong><small>Tap the ad / CTA (Visit, Play or Open) if you're interested, then finish the ad.</small></div></div><div className="ad-claim-actions"><button className="primary" disabled={busy} onClick={watch}>{busy?'SHOWING AD…':'WATCH AD TO CLAIM'}</button><button className="ad-claim-cancel" disabled={busy} onClick={closeClaim}>Cancel</button></div></>}
- {claimState==='crediting'&&<div className="ad-claim-status"><div className="ad-claim-spinner"/><h3>CREDITING REWARD…</h3><p>Adding your completed ad reward.</p></div>}
- {claimState==='success'&&<div className="ad-claim-status ad-claim-success"><div className="big">✅</div><h3>REWARD CLAIMED</h3><strong>+{claimReward} WIENER</strong>{claimBalance!=null&&<small>Balance: {claimBalance.toLocaleString()} WIENER</small>}<div className="ad-claim-actions" style={{marginTop:16}}><button className="primary" onClick={closeClaim}>DONE</button></div></div>}
- {claimState==='failed'&&<div className="ad-claim-status"><div className="big">⚠️</div><h3>AD NOT COMPLETED</h3><p>{claimError||'Complete the rewarded ad and try again.'}</p><div className="ad-claim-actions"><button className="primary" onClick={retry}>TRY AGAIN</button><button className="ad-claim-cancel" onClick={closeClaim}>Cancel</button></div></div>}</div></div>}</>;
+ const mainDisabled=busy||used>=s.daily_ad_limit||cooldown>0;
+ const secondDisabled=busy||second.used>=second.limit||secondCooldown>0;
+
+ if(!adsReady)return <><div className="page-title"><h2>ADS TASK</h2></div><div className="ads-unified-loading"><div className="card ad-card ad-skeleton"/><div className="card ad-card ad-skeleton"/></div><style>{`.ads-unified-loading{display:grid;gap:10px}.ad-skeleton{min-height:74px;position:relative;overflow:hidden}.ad-skeleton:after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);animation:adShimmer 1s infinite}@keyframes adShimmer{to{transform:translateX(100%)}}`}</style></>;
+
+ return <>
+   <div className="page-title"><h2>ADS TASK</h2></div>
+   <section className="card ad-card"><div className="square play"><AnimatedIcon name="ads" active={!mainDisabled}/></div><div className="grow"><h3>AdsGram — {s.daily_ad_limit} ads</h3><p>+{s.ad_reward} WIENER each · {used}/{s.daily_ad_limit} today</p></div><button className="primary small" disabled={mainDisabled} onClick={()=>openClaim('main')}>{cooldown>0?`${cooldown}s`:'WATCH'}</button></section>
+   <section className="card ad-card"><div className="square play"><AnimatedIcon name="ads" active={!secondDisabled}/></div><div className="grow"><h3>Bonus Ads — {second.limit} ads</h3><p>+5 WIENER each · {second.used}/{second.limit} today</p></div><button className="primary small" disabled={secondDisabled} onClick={()=>openClaim('secondary')}>{secondCooldown>0?`${secondCooldown}s`:'WATCH'}</button></section>
+   <div className="info-box">ⓘ Complete rewarded ads to receive WIENER.</div>
+
+   {claimOpen&&<div className="ad-claim-overlay" role="dialog" aria-modal="true"><style>{`.ad-claim-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(4,8,10,.72);backdrop-filter:blur(12px)}.ad-claim-modal{width:min(100%,400px);padding:20px;border:1px solid rgba(255,255,255,.12);border-radius:26px;background:linear-gradient(155deg,rgba(20,28,30,.95),rgba(8,13,15,.93));box-shadow:0 22px 70px rgba(0,0,0,.48)}.ad-claim-head{text-align:center;margin-bottom:13px}.ad-claim-icon{width:58px;height:58px;margin:0 auto 10px;display:grid;place-items:center;border-radius:19px;background:rgba(255,255,255,.06)}.ad-claim-head h3{margin:0;font-size:21px}.ad-claim-head p{margin:6px 0 0;font-size:12px;opacity:.62}.ad-claim-reward{margin:12px 0;padding:14px;text-align:center;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(255,255,255,.035)}.ad-claim-reward span{display:block;font-size:10px;opacity:.55}.ad-claim-reward strong{font-size:24px}.ad-claim-note{display:flex;gap:10px;margin:12px 0;padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:rgba(255,255,255,.045)}.ad-claim-note strong{display:block;font-size:13px;margin-bottom:3px}.ad-claim-note small{display:block;font-size:11px;line-height:1.4;opacity:.62}.ad-claim-actions{display:grid;gap:9px}.ad-claim-actions button{width:100%;min-height:46px;border-radius:15px}.ad-claim-cancel{border:1px solid rgba(255,255,255,.1);background:transparent;color:inherit;opacity:.75}.ad-claim-status{text-align:center;padding:20px 7px 8px}.ad-claim-status .big{font-size:34px}.ad-claim-status p{font-size:12px;opacity:.65}.ad-claim-success strong{display:block;font-size:27px;margin:6px}.ad-claim-success small{opacity:.6}.ad-claim-spinner{width:40px;height:40px;margin:4px auto 14px;border:3px solid rgba(255,255,255,.12);border-top-color:currentColor;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}`}</style><div className="ad-claim-modal">
+     {(claimState==='ready'||claimState==='showing')&&<><div className="ad-claim-head"><div className="ad-claim-icon"><AnimatedIcon name="ads" active/></div><h3>CLAIM AD REWARD</h3><p>Watch the rewarded ad to receive your WIENER.</p></div><div className="ad-claim-reward"><span>REWARD</span><strong>+{claimReward} WIENER</strong></div><div className="ad-claim-note"><div>☝️</div><div><strong>Support WIENER</strong><small>Tap the ad / CTA (Visit, Play or Open) if you're interested, then finish the ad.</small></div></div><div className="ad-claim-actions"><button className="primary" disabled={busy} onClick={watch}>{busy?'SHOWING AD…':'WATCH AD TO CLAIM'}</button><button className="ad-claim-cancel" disabled={busy} onClick={closeClaim}>Cancel</button></div></>}
+     {claimState==='crediting'&&<div className="ad-claim-status"><div className="ad-claim-spinner"/><h3>CREDITING REWARD…</h3><p>Adding your completed ad reward.</p></div>}
+     {claimState==='success'&&<div className="ad-claim-status ad-claim-success"><div className="big">✅</div><h3>REWARD CLAIMED</h3><strong>+{claimReward} WIENER</strong>{claimBalance!=null&&<small>Balance: {claimBalance.toLocaleString()} WIENER</small>}<div className="ad-claim-actions" style={{marginTop:16}}><button className="primary" onClick={closeClaim}>DONE</button></div></div>}
+     {claimState==='failed'&&<div className="ad-claim-status"><div className="big">⚠️</div><h3>AD NOT COMPLETED</h3><p>{claimError||'Complete the rewarded ad and try again.'}</p><div className="ad-claim-actions"><button className="primary" onClick={retry}>TRY AGAIN</button><button className="ad-claim-cancel" onClick={closeClaim}>Cancel</button></div></div>}
+   </div></div>}
+ </>;
 }
