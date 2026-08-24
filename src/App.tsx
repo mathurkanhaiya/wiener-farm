@@ -3,8 +3,9 @@ import {api,getInitData,pageFromUrl,registerDevice,type Snapshot,type Tab} from 
 import {Admin} from './AdminV2';
 import {Ads} from './AdsPage';
 import {FarmClaimModal} from './FarmClaimModal';
+import {Invite} from './InviteShare';
 import {MandatoryAdmin,MandatoryGate,checkMandatoryAccess} from './MandatoryJoin';
-import {ClaimPage,DailyPage,Invite,LeaderboardPage,ProfilePage} from './pages';
+import {ClaimPage,DailyPage,LeaderboardPage,ProfilePage} from './pages';
 import {HomeWithPromo} from './PromoClaim';
 import {Tasks} from './TasksPage';
 import {WalletV2,AdminWithdrawUpgrade} from './WithdrawV2';
