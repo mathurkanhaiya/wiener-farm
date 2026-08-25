@@ -11,6 +11,7 @@ export const WITHDRAW_API=`${SUPABASE_URL}/functions/v1/wiener-withdraw`;
 export const DEVICE_API=`${SUPABASE_URL}/functions/v1/wiener-device`;
 export const PROMO_CHANNEL_API=`${SUPABASE_URL}/functions/v1/wiener-promo-channel`;
 export const SHARE_API=`${SUPABASE_URL}/functions/v1/wiener-share`;
+export const MISSION_API=`${SUPABASE_URL}/functions/v1/wiener-missions`;
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string};
@@ -33,3 +34,4 @@ export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={
 export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}
 export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){return post(WITHDRAW_API,action,body)}
 export async function shareApi(){return post(SHARE_API,'prepare')}
+export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
