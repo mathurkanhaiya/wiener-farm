@@ -5,8 +5,7 @@ import {AnimatedIcon} from './icons';
 export function Invite({data,say}:{data:Snapshot;say:any}){
   const s=data.settings,u=data.user,[busy,setBusy]=useState(false),[refs,setRefs]=useState<any[]>([]),[qualified,setQualified]=useState<number|null>(null),[refsReady,setRefsReady]=useState(false);
   const link=`https://t.me/${String(s.bot_username||'@WienerDogeFarmBot').replace('@','')}?startapp=ref_${u.telegram_id}`;
-  const inviter=String(u.username||u.first_name||'A friend');
-  const shareText=`${inviter} invited you to WIENER Farm 🌭\n\nEarn WIENER by watching ads, completing tasks & inviting friends.\n\n💰 Earn up to $1 USDT daily\n💸 Withdraw in USDT\n\n🎁 Join now & start earning`;
+  const shareText=`💰 Earn up to $0.01 per referral\n💸 Min withdraw $0.05\n\n👇 Click below to join WIENER Farm`;
   useEffect(()=>{let active=true;setRefsReady(false);fetch(`${SUPABASE_URL}/functions/v1/wiener-referral-status`,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData()})}).then(r=>r.json()).then(x=>{if(!active)return;if(x?.ok){setRefs(x.data?.referrals||[]);setQualified(Number(x.data?.qualified||0))}else{setRefs([]);setQualified(0)}}).catch(()=>{if(active){setRefs([]);setQualified(0)}}).finally(()=>{if(active)setRefsReady(true)});return()=>{active=false}},[]);
   const fallback=()=>window.Telegram?.WebApp?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
   const share=async()=>{if(busy)return;try{setBusy(true);const wa:any=window.Telegram?.WebApp;if(typeof wa?.shareMessage!=='function'){fallback();return}const prepared=await shareApi();if(!prepared?.id)throw new Error('Share message unavailable');wa.shareMessage(prepared.id)}catch(e:any){say(String(e?.message||'Unable to prepare share message'));fallback()}finally{setBusy(false)}};
