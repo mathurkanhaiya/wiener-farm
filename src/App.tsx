@@ -37,7 +37,7 @@ function App(){
   if(multiBlocked)return <MultiAccountBlocked/>;
   if(error.includes('banned'))return <StateScreen icon="⛔" title="Account restricted" text="Your WIENER account is currently unavailable."/>;
   if(error&&!data)return <StateScreen icon="⚠" title="Unable to open" text={error}/>;
-  if(data?.settings?.maintenance_enabled)return <StateScreen icon="🛠" title="Maintenance" text={data.settings.maintenance_message}/>;
+  if(data?.settings?.maintenance_enabled&&!data.is_admin)return <StateScreen icon="🛠" title="Maintenance" text={data.settings.maintenance_message}/>;
   if(!data)return null;
   if(!data.is_admin&&mandatory&&!mandatory.all_joined)return <MandatoryGate initial={mandatory} onUnlocked={()=>setMandatory((x:any)=>({...x,all_joined:true}))}/>;
   return <div className="app-shell"><Brand data={data}/><main className="content">{tab==='home'&&<HomeWithPromo data={data} run={runWithFarmAd} setTab={setTab} refresh={refresh} say={say}/>} {tab==='ads'&&<Ads data={data} refresh={refresh} say={say}/>} {tab==='tasks'&&<Tasks data={data} run={run} say={say} refresh={refresh}/>} {tab==='invite'&&<Invite data={data} say={say}/>} {tab==='wallet'&&<WalletV2 data={data} setTab={setTab}/>} {tab==='daily'&&<DailyPage data={data} run={run}/>} {tab==='claim'&&<ClaimPage data={data} run={runWithFarmAd}/>} {tab==='leaderboard'&&<LeaderboardPage data={data}/>} {tab==='profile'&&<ProfilePage data={data} setTab={setTab}/>} {tab==='admin'&&data.is_admin&&<><MandatoryAdmin say={say}/><AdminWithdrawUpgrade say={say}/><Admin say={say}/></>}</main><Nav tab={tab} setTab={setTab} admin={data.is_admin}/>{toast&&<div className="toast">{toast}</div>}</div>
