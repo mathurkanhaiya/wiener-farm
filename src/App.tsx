@@ -11,17 +11,19 @@ import {Tasks} from './TasksPage';
 import {WalletV2,AdminWithdrawUpgrade} from './WithdrawV2';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
 
+function MultiAccountBlocked(){const support=()=>window.Telegram?.WebApp?.openTelegramLink?.('https://t.me/WienerSupport');return <div style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:'24px',background:'radial-gradient(circle at 50% 42%,rgba(24,108,63,.28),transparent 36%),#002b18'}}><div style={{width:'min(100%,400px)',padding:'42px 28px',textAlign:'center',borderRadius:'36px',border:'1px solid rgba(255,255,255,.16)',background:'linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.045))',boxShadow:'inset 0 1px 0 rgba(255,255,255,.12),0 28px 70px rgba(0,0,0,.28)',backdropFilter:'blur(26px)',WebkitBackdropFilter:'blur(26px)'}}><div style={{fontSize:'70px',lineHeight:1}}>🚫</div><h1 style={{margin:'26px 0 8px',fontSize:'30px',letterSpacing:'-.7px'}}>Account Blocked</h1><p style={{margin:'0 auto',maxWidth:'290px',fontSize:'15px',lineHeight:1.55,opacity:.62}}>Multiple accounts detected on this device.<br/>Only one WIENER Farm account is allowed per device.</p><p style={{margin:'22px 0 14px',fontSize:'12px',opacity:.55}}>Think this is a mistake?</p><button onClick={support} style={{width:'100%',height:'58px',border:0,borderRadius:'18px',background:'linear-gradient(180deg,#fff05d,#ffd20b 64%,#eeb900)',boxShadow:'0 12px 28px rgba(255,211,12,.23),inset 0 1px 0 rgba(255,255,255,.65)',color:'#211b00',fontSize:'14px',fontWeight:950,letterSpacing:'.7px'}}>CONTACT SUPPORT</button></div></div>}
 function App(){
-  const [tab,setTab]=useState<Tab>(()=>pageFromUrl()),[data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[toast,setToast]=useState(''),[mandatory,setMandatory]=useState<any>(null),[farmClaimOpen,setFarmClaimOpen]=useState(false);
+  const [tab,setTab]=useState<Tab>(()=>pageFromUrl()),[data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[toast,setToast]=useState(''),[mandatory,setMandatory]=useState<any>(null),[farmClaimOpen,setFarmClaimOpen]=useState(false),[multiBlocked,setMultiBlocked]=useState(false);
   const openedSent=useRef(false);
   const refresh=async()=>{try{setError('');const d=await api('bootstrap');setData(d);return d}catch(e:any){setError(e.message);return null}};
-  useEffect(()=>{const t=window.Telegram?.WebApp;t?.ready?.();t?.expand?.();(async()=>{const d=await refresh();if(d){try{await registerDevice()}catch{}if(!d.is_admin){try{setMandatory(await checkMandatoryAccess())}catch{setMandatory({all_joined:true,items:[]})}}else setMandatory({all_joined:true,items:[]})}setLoading(false)})()},[]);
+  useEffect(()=>{const t=window.Telegram?.WebApp;t?.ready?.();t?.expand?.();(async()=>{const d=await refresh();if(d){try{const device:any=await registerDevice();if(device?.blocked||device?.duplicate||device?.reason==='same_or_reused_device'||device?.multiple_accounts)setMultiBlocked(true)}catch(e:any){const m=String(e?.message||'');if(/multiple|same_or_reused_device|device.*linked|device.*account/i.test(m))setMultiBlocked(true)}if(!d.is_admin){try{setMandatory(await checkMandatoryAccess())}catch{setMandatory({all_joined:true,items:[]})}}else setMandatory({all_joined:true,items:[]})}setLoading(false)})()},[]);
   useEffect(()=>{if(data&&!openedSent.current){openedSent.current=true;api('app_opened').catch(()=>{})}},[data]);
   const say=(s:string)=>{setToast(s);setTimeout(()=>setToast(''),2200)};
   const run=async(action:string,b:any={},ok='Done')=>{try{await api(action,b);say(ok);await refresh()}catch(e:any){say(e.message)}};
   const runWithFarmModal=async(action:string,b:any={},ok='Done')=>{if(action==='farm_claim'){setFarmClaimOpen(true);return}return run(action,b,ok)};
   if(loading)return <Splash text="Securing WIENER…"/>;
   if(!getInitData())return <OpenTelegram/>;
+  if(multiBlocked)return <MultiAccountBlocked/>;
   if(error.includes('banned'))return <StateScreen icon="⛔" title="Account restricted" text="Your WIENER account is currently unavailable."/>;
   if(error&&!data)return <StateScreen icon="⚠" title="Unable to open" text={error}/>;
   if(data?.settings?.maintenance_enabled)return <StateScreen icon="🛠" title="Maintenance" text={data.settings.maintenance_message}/>;
