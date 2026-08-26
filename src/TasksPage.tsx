@@ -12,100 +12,39 @@ async function taskApi(taskId:string,action='claim'){const r=await fetch(`${SUPA
 async function ensureAdsGramTaskSdk(){
   if(customElements.get('adsgram-task'))return;
   let script=document.querySelector<HTMLScriptElement>('script[src*="sad.adsgram.ai/js/sad.min.js"]');
-  if(!script){
-    script=document.createElement('script');
-    script.src='https://sad.adsgram.ai/js/sad.min.js';
-    script.async=true;
-    document.head.appendChild(script);
-  }
-  await Promise.race([
-    customElements.whenDefined('adsgram-task'),
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error('AdsGram Task SDK did not load')),12000))
-  ]);
+  if(!script){script=document.createElement('script');script.src='https://sad.adsgram.ai/js/sad.min.js';script.async=true;document.head.appendChild(script)}
+  await Promise.race([customElements.whenDefined('adsgram-task'),new Promise((_,reject)=>setTimeout(()=>reject(new Error('AdsGram Task SDK did not load')),12000))]);
 }
 
 function AdsGramTaskBlock({say}:{say:(s:string)=>void}){
-  const mount=useRef<HTMLDivElement|null>(null);
-  const [cycle,setCycle]=useState(0);
-  const [state,setState]=useState<AdsTaskState>('loading');
-
+  const mount=useRef<HTMLDivElement|null>(null),[cycle,setCycle]=useState(0),[state,setState]=useState<AdsTaskState>('loading');
   useEffect(()=>{
-    let active=true,rewarded=false,retry:any=null;
-    const root=mount.current;
-    if(!root)return;
-    root.innerHTML='';
-    setState('loading');
-
-    (async()=>{
-      try{
-        await ensureAdsGramTaskSdk();
-        if(!active)return;
-
-        // Start our credit session in parallel. Do NOT block AdsGram rendering on the backend.
-        let sessionPromise=adsgramTaskApi('start');
-        const el=document.createElement('adsgram-task') as HTMLElement;
-        el.className='adsgram-native-task';
-        el.setAttribute('data-block-id','task-44148');
-        el.setAttribute('data-debug','false');
-        el.setAttribute('data-debug-console','false');
-
-        const reward=document.createElement('span');reward.slot='reward';reward.className='adsgram-task-reward';reward.textContent='+2 WIENER';
-        const button=document.createElement('span');button.slot='button';button.className='adsgram-task-button';button.textContent='START';
-        const claim=document.createElement('span');claim.slot='claim';claim.className='adsgram-task-button';claim.textContent='CLAIM';
-        const done=document.createElement('span');done.slot='done';done.className='adsgram-task-button done';done.textContent='DONE';
-        el.append(reward,button,claim,done);
-
-        const onReward=async()=>{
-          if(rewarded||!active)return;
-          rewarded=true;setState('crediting');
-          try{
-            let session:any;
-            try{session=await sessionPromise}catch{session=await adsgramTaskApi('start')}
-            if(!active)return;
-            const x=await adsgramTaskApi('reward',{session_id:session.session_id});
-            if(!active)return;
-            say(`+${Number(x?.reward||2)} WIENER`);
-            setState('waiting');
-          }catch(e:any){rewarded=false;setState('error');say(e?.message||'Task reward failed')}
-        };
-        const scheduleRetry=(next:AdsTaskState)=>{if(!active||rewarded)return;setState(next);retry=window.setTimeout(()=>active&&setCycle(v=>v+1),5000)};
-        const onMissing=()=>scheduleRetry('unavailable');
-        const onError=()=>scheduleRetry('error');
-        const onTooLong=()=>{if(!active)return;setState('restart')};
-
-        el.addEventListener('reward',onReward as EventListener);
-        el.addEventListener('onBannerNotFound',onMissing as EventListener);
-        el.addEventListener('onError',onError as EventListener);
-        el.addEventListener('onTooLongSession',onTooLong as EventListener);
-        root.appendChild(el);
-        setState('ready');
-      }catch(e:any){
-        if(active){setState('error');retry=window.setTimeout(()=>active&&setCycle(v=>v+1),5000)}
-      }
-    })();
-
-    return()=>{active=false;if(retry)clearTimeout(retry);if(root)root.innerHTML=''};
+    let active=true,rewarded=false,retry:any=null,nextTaskTimer:any=null;const root=mount.current;if(!root)return;root.innerHTML='';setState('loading');
+    (async()=>{try{
+      await ensureAdsGramTaskSdk();if(!active)return;
+      let sessionPromise=adsgramTaskApi('start');
+      const el=document.createElement('adsgram-task') as HTMLElement;el.className='adsgram-native-task';el.setAttribute('data-block-id','task-44148');el.setAttribute('data-debug','false');el.setAttribute('data-debug-console','false');
+      const reward=document.createElement('span');reward.slot='reward';reward.className='adsgram-task-reward';reward.textContent='+2 WIENER';
+      const button=document.createElement('span');button.slot='button';button.className='adsgram-task-button';button.textContent='START';
+      const claim=document.createElement('span');claim.slot='claim';claim.className='adsgram-task-button';claim.textContent='CLAIM';
+      const done=document.createElement('span');done.slot='done';done.className='adsgram-task-button done';done.textContent='DONE';el.append(reward,button,claim,done);
+      const onReward=async()=>{if(rewarded||!active)return;rewarded=true;setState('crediting');try{let session:any;try{session=await sessionPromise}catch{session=await adsgramTaskApi('start')}if(!active)return;const x=await adsgramTaskApi('reward',{session_id:session.session_id});if(!active)return;say(`+${Number(x?.reward||2)} WIENER`);setState('waiting');nextTaskTimer=window.setTimeout(()=>{if(active)setCycle(v=>v+1)},1200)}catch(e:any){rewarded=false;setState('error');say(e?.message||'Task reward failed')}};
+      const scheduleRetry=(next:AdsTaskState)=>{if(!active||rewarded)return;setState(next);retry=window.setTimeout(()=>active&&setCycle(v=>v+1),5000)};
+      el.addEventListener('reward',onReward as EventListener);el.addEventListener('onBannerNotFound',(()=>scheduleRetry('unavailable')) as EventListener);el.addEventListener('onError',(()=>scheduleRetry('error')) as EventListener);el.addEventListener('onTooLongSession',(()=>{if(active){setState('restart');retry=window.setTimeout(()=>active&&setCycle(v=>v+1),1200)}}) as EventListener);root.appendChild(el);setState('ready');
+    }catch{if(active){setState('error');retry=window.setTimeout(()=>active&&setCycle(v=>v+1),5000)}}})();
+    return()=>{active=false;if(retry)clearTimeout(retry);if(nextTaskTimer)clearTimeout(nextTaskTimer);if(root)root.innerHTML=''};
   },[cycle]);
-
   const covered=state!=='ready';
-  return <div className={`adsgram-task-shell ${state}`}><style>{`.adsgram-task-shell{position:relative;border-bottom:1px solid rgba(255,255,255,.08);min-height:82px}.adsgram-task-shell:last-child{border-bottom:0}.adsgram-task-mount{min-height:82px}.adsgram-native-task{--adsgram-task-font-size:14px;--adsgram-task-icon-size:46px;--adsgram-task-icon-title-gap:14px;--adsgram-task-button-width:76px;--adsgram-task-icon-border-radius:15px;display:block;width:100%;padding:18px 0;background:transparent;color:#fff;font-family:inherit}.adsgram-task-reward{display:block;margin-top:4px;color:#a3b5a6;font-size:13px;font-weight:800}.adsgram-task-button{display:inline-flex;align-items:center;justify-content:center;min-width:76px;min-height:40px;padding:0 14px;border-radius:14px;background:linear-gradient(180deg,#fff05f,#ffd20b 63%,#edb900);color:#272000;font-size:12px;font-weight:950;letter-spacing:.5px}.adsgram-task-button.done{filter:saturate(.45);opacity:.7}.adsgram-task-status{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:18px 0;background:linear-gradient(155deg,rgba(25,92,55,.98),rgba(15,73,43,.98));z-index:2}.adsgram-task-status .square{width:50px;height:50px;border-radius:16px}.adsgram-task-status b{display:block;font-size:15px}.adsgram-task-status small{display:block;margin-top:3px;color:#a3b5a6;font-size:12px;font-weight:700}.adsgram-task-dot{width:8px;height:8px;border-radius:50%;background:#ffe025;box-shadow:0 0 0 5px rgba(255,224,37,.12)}`}</style><div className="adsgram-task-mount" ref={mount}/>{covered&&<div className="adsgram-task-status"><div className="square check"><AnimatedIcon name="ads" active={state==='crediting'||state==='waiting'}/></div><div className="grow"><b>{state==='crediting'?'Claiming sponsored reward':state==='waiting'?'Task completed':state==='unavailable'?'No sponsored task right now':state==='restart'?'Refresh Mini App':state==='error'?'Refreshing sponsored task':'Loading sponsored task'}</b><small>{state==='waiting'?'Reward received.':state==='restart'?'AdsGram session expired. Close and reopen the Mini App.':state==='unavailable'||state==='error'?'Checking again automatically…':'Please wait…'}</small></div><span className="adsgram-task-dot"/></div>}</div>
+  return <div className={`adsgram-task-shell ${state}`}><style>{`.adsgram-task-shell{position:relative;border-bottom:1px solid rgba(255,255,255,.08);min-height:82px}.adsgram-task-shell:last-child{border-bottom:0}.adsgram-task-mount{min-height:82px}.adsgram-native-task{--adsgram-task-font-size:14px;--adsgram-task-icon-size:46px;--adsgram-task-icon-title-gap:14px;--adsgram-task-button-width:76px;--adsgram-task-icon-border-radius:15px;display:block;width:100%;padding:18px 0;background:transparent;color:#fff;font-family:inherit}.adsgram-task-reward{display:block;margin-top:4px;color:#a3b5a6;font-size:13px;font-weight:800}.adsgram-task-button{display:inline-flex;align-items:center;justify-content:center;min-width:76px;min-height:40px;padding:0 14px;border-radius:14px;background:linear-gradient(180deg,#fff05f,#ffd20b 63%,#edb900);color:#272000;font-size:12px;font-weight:950;letter-spacing:.5px}.adsgram-task-button.done{filter:saturate(.45);opacity:.7}.adsgram-task-status{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:18px 0;background:linear-gradient(155deg,rgba(25,92,55,.98),rgba(15,73,43,.98));z-index:2}.adsgram-task-status .square{width:50px;height:50px;border-radius:16px}.adsgram-task-status b{display:block;font-size:15px}.adsgram-task-status small{display:block;margin-top:3px;color:#a3b5a6;font-size:12px;font-weight:700}.adsgram-task-dot{width:8px;height:8px;border-radius:50%;background:#ffe025;box-shadow:0 0 0 5px rgba(255,224,37,.12)}`}</style><div className="adsgram-task-mount" ref={mount}/>{covered&&<div className="adsgram-task-status"><div className="square check"><AnimatedIcon name="ads" active={state==='crediting'||state==='waiting'}/></div><div className="grow"><b>{state==='crediting'?'Claiming sponsored reward':state==='waiting'?'Loading next task':state==='unavailable'?'No sponsored task right now':state==='restart'?'Refreshing sponsored task':state==='error'?'Refreshing sponsored task':'Loading sponsored task'}</b><small>{state==='waiting'?'Reward received · fetching another task…':state==='unavailable'||state==='error'||state==='restart'?'Checking again automatically…':'Please wait…'}</small></div><span className="adsgram-task-dot"/></div>}</div>
 }
 
 export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void;refresh?:()=>Promise<any>}){
-  const targetId=new URLSearchParams(window.location.search).get('task');
-  const target=data.tasks.find(t=>t.id===targetId);
-  const initialCat=(target?.category==='partner'?'partner':'official');
+  const targetId=new URLSearchParams(window.location.search).get('task'),target=data.tasks.find(t=>t.id===targetId),initialCat=(target?.category==='partner'?'partner':'official');
   const [cat,setCat]=useState(initialCat),[botStates,setBotStates]=useState<Record<string,BotState>>({}),[normalStates,setNormalStates]=useState<Record<string,NormalState>>({}),[busy,setBusy]=useState('');
-  const done=new Set(data.completed.map(x=>x.task_id));
-  const visibleTasks=data.tasks.filter(t=>t.category!=='exclusive');
-  const items=visibleTasks.filter(t=>(t.category||'official')===cat);
-  const count=data.completed.filter(x=>visibleTasks.some(t=>t.id===x.task_id)).length;
-
+  const done=new Set(data.completed.map(x=>x.task_id)),visibleTasks=data.tasks.filter(t=>t.category!=='exclusive'),items=visibleTasks.filter(t=>(t.category||'official')===cat),count=data.completed.filter(x=>visibleTasks.some(t=>t.id===x.task_id)).length;
   useEffect(()=>{if(target){setCat(target.category==='partner'?'partner':'official');setTimeout(()=>document.getElementById(`task-${target.id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),120)}},[targetId]);
   useEffect(()=>{const bots=visibleTasks.filter(t=>t.verification==='bot_forward'&&!done.has(t.id));Promise.all(bots.map(async t=>{try{const s=await botTask('status',t.id);return [t.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [t.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
-
   const normalTask=async(t:any)=>{if(busy)return;const opened=normalStates[t.id]==='opened',external=t.verification==='external_visit';try{if(!opened){setBusy(t.id);if(external)await taskApi(t.id,'begin_external');if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setNormalStates(v=>({...v,[t.id]:'opened'}));say(external?'Task opened. Stay at least 15 seconds, then return and tap CHECK.':t.verification==='telegram_member'?'Join the channel/group, then return and tap CHECK':'Open the task, then tap CHECK');return}setBusy(t.id);await taskApi(t.id,'claim');say(`+${t.reward} WIENER`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){const m=String(e.message||'Task verification failed');say(/^wait_\d+_seconds$/.test(m)?`Please wait ${m.match(/\d+/)?.[0]||'a few'} more seconds.`:m)}finally{setBusy('')}};
   const botAction=async(t:any)=>{if(busy)return;const state=botStates[t.id]||'not_started';try{setBusy(t.id);if(state==='not_started'){const x=await botTask('begin',t.id);setBotStates(v=>({...v,[t.id]:'pending'}));say(`Forward one message from @${x.bot_username} to WIENER bot, then tap CHECK`);const url=String(x.url||t.url||'');if(url)window.Telegram?.WebApp?.openTelegramLink?.(url);return}if(state==='pending'){const x=await botTask('status',t.id);if(x.verified){setBotStates(v=>({...v,[t.id]:'verified'}));say('✅ Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward one message from the required bot to WIENER, then check again.');return}await taskApi(t.id,'claim');say(`+${t.reward} WIENER`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
-
-  return <><section className="card progress-card"><div className="section-head"><div className="square check"><AnimatedIcon name="tasks" active/></div><div><h3>Your Progress</h3><p>{count} current tasks completed</p></div></div><div className="progress"><span style={{width:`${visibleTasks.length?Math.min(100,count/visibleTasks.length*100):0}%`}}/></div></section><div className="tabs">{['official','partner'].map(x=><button className={cat===x?'active':''} onClick={()=>setCat(x)} key={x}>{x[0].toUpperCase()+x.slice(1)}</button>)}</div><section className="card task-list">{cat==='official'&&<AdsGramTaskBlock say={say}/>} {items.length?items.map(t=>{const isBot=t.verification==='bot_forward',isExternal=t.verification==='external_visit',state=botStates[t.id]||'not_started',normalOpened=normalStates[t.id]==='opened',label=done.has(t.id)?'DONE':busy===t.id?'WAIT':isBot?(state==='verified'?'CLAIM':state==='pending'?'CHECK':'START BOT'):(normalOpened?'CHECK':isExternal?'OPEN':'JOIN'),progress=t.max_completions?`${Number(t.completed_count||0)}/${Number(t.max_completions)} completed · `:'';return <div className={`task ${targetId===t.id?'target-task':''}`} id={`task-${t.id}`} key={t.id}><div className="square check"><AnimatedIcon name={isBot?'ads':'check'} active={done.has(t.id)||state==='verified'}/></div><div className="grow"><h3>{t.title}{t.is_daily&&<span className="tag">DAILY</span>}{isBot&&<span className="tag">BOT</span>}{isExternal&&<span className="tag">LINK</span>}{t.user_created&&<span className="tag">SPONSORED</span>}</h3><p>+{t.reward} WIENER · {progress}{isBot?`Start @${String(t.telegram_chat_id||'bot').replace('@','')} and forward one bot message`:t.description||t.category}{t.expires_at?` · Ends ${date(t.expires_at)}`:''}</p>{isExternal&&normalOpened&&<small className="bot-verify-status">Return after 15 seconds and tap CHECK.</small>}{isBot&&state==='pending'&&<small className="bot-verify-status">Forward sent? Tap CHECK anytime.</small>}{isBot&&state==='verified'&&<small className="bot-verify-status verified">✓ Forward verified — reward ready</small>}</div><button className="primary small" disabled={done.has(t.id)||busy===t.id} onClick={()=>isBot?botAction(t):normalTask(t)}>{label}</button></div>}):cat==='official'?null:<div className="empty">No {cat} tasks right now.</div>}</section></>;
+  return <><style>{`.task-tabs{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;padding:6px;margin:14px 0 16px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(0,24,14,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}.task-tabs button{min-width:0!important;width:100%!important;height:50px!important;margin:0!important;border:1px solid transparent!important;border-radius:15px!important;background:transparent!important;color:rgba(255,255,255,.58)!important;font-size:14px!important;font-weight:850!important;letter-spacing:.1px!important;box-shadow:none!important;transition:.18s ease}.task-tabs button.active{background:linear-gradient(180deg,#fff16a,#ffd21a)!important;color:#251f00!important;border-color:rgba(255,255,255,.38)!important;box-shadow:0 8px 20px rgba(255,210,26,.16),inset 0 1px 0 rgba(255,255,255,.65)!important}.task-tabs button:not(.active):active{background:rgba(255,255,255,.06)!important}.task-list{overflow:hidden}`}</style><section className="card progress-card"><div className="section-head"><div className="square check"><AnimatedIcon name="tasks" active/></div><div><h3>Your Progress</h3><p>{count} current tasks completed</p></div></div><div className="progress"><span style={{width:`${visibleTasks.length?Math.min(100,count/visibleTasks.length*100):0}%`}}/></div></section><div className="tabs task-tabs"><button className={cat==='official'?'active':''} onClick={()=>setCat('official')}>Official</button><button className={cat==='partner'?'active':''} onClick={()=>setCat('partner')}>Partner</button></div><section className="card task-list">{cat==='official'&&<AdsGramTaskBlock say={say}/>} {items.length?items.map(t=>{const isBot=t.verification==='bot_forward',isExternal=t.verification==='external_visit',state=botStates[t.id]||'not_started',normalOpened=normalStates[t.id]==='opened',label=done.has(t.id)?'DONE':busy===t.id?'WAIT':isBot?(state==='verified'?'CLAIM':state==='pending'?'CHECK':'START BOT'):(normalOpened?'CHECK':isExternal?'OPEN':'JOIN'),progress=t.max_completions?`${Number(t.completed_count||0)}/${Number(t.max_completions)} completed · `:'';return <div className={`task ${targetId===t.id?'target-task':''}`} id={`task-${t.id}`} key={t.id}><div className="square check"><AnimatedIcon name={isBot?'ads':'check'} active={done.has(t.id)||state==='verified'}/></div><div className="grow"><h3>{t.title}{t.is_daily&&<span className="tag">DAILY</span>}{isBot&&<span className="tag">BOT</span>}{isExternal&&<span className="tag">LINK</span>}{t.user_created&&<span className="tag">SPONSORED</span>}</h3><p>+{t.reward} WIENER · {progress}{isBot?`Start @${String(t.telegram_chat_id||'bot').replace('@','')} and forward one bot message`:t.description||t.category}{t.expires_at?` · Ends ${date(t.expires_at)}`:''}</p>{isExternal&&normalOpened&&<small className="bot-verify-status">Return after 15 seconds and tap CHECK.</small>}{isBot&&state==='pending'&&<small className="bot-verify-status">Forward sent? Tap CHECK anytime.</small>}{isBot&&state==='verified'&&<small className="bot-verify-status verified">✓ Forward verified — reward ready</small>}</div><button className="primary small" disabled={done.has(t.id)||busy===t.id} onClick={()=>isBot?botAction(t):normalTask(t)}>{label}</button></div>}):cat==='official'?null:<div className="empty">No partner tasks right now.</div>}</section></>;
 }
