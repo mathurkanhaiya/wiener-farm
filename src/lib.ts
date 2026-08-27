@@ -1,10 +1,9 @@
 const viteEnv=(import.meta as any).env||{};
 export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
 export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
-// Browser traffic goes through our Vercel origin. This avoids mobile/ISP failures
-// reaching *.supabase.co directly while keeping the existing Edge Functions intact.
 const edge=(name:string)=>`/api/supabase?fn=${encodeURIComponent(name)}`;
 export const API=edge('wiener-api');
+export const ADMIN_API=edge('wiener-admin-api');
 export const AD_API=edge('wiener-ad');
 export const SECONDARY_AD_API=edge('wiener-tads');
 export const ADSGRAM_TASK_API=edge('wiener-adsgram-task');
@@ -29,7 +28,7 @@ async function getDeviceFingerprint(){const raw=[navigator.userAgent,navigator.l
 export async function deviceContext(){return {device_id:getDeviceId(),device_fingerprint:await getDeviceFingerprint()}}
 async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');return x.data??x}
 export async function registerDevice(){const ctx=await deviceContext();const r=await fetch(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData(),...ctx})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Device check failed');return x.data??x}
-export async function api(action:string,body:any={}){const result=await post(action==='task_claim'?TASK_API:API,action==='task_claim'?'claim':action,body);if(action==='admin_promo_save'){const code=String(body?.promo?.code||result?.code||'').trim().toUpperCase();if(code)await post(PROMO_CHANNEL_API,'publish',{code})}return result}
+export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const result=await post(url,mapped,body);if(action==='admin_promo_save'){const code=String(body?.promo?.code||result?.code||'').trim().toUpperCase();if(code)await post(PROMO_CHANNEL_API,'publish',{code})}return result}
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
 export async function secondaryAdApi(action:'stats'|'start'|'reward',body:any={}){return post(SECONDARY_AD_API,action,body)}
