@@ -1,17 +1,20 @@
 const viteEnv=(import.meta as any).env||{};
 export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
 export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
-export const API=`${SUPABASE_URL}/functions/v1/wiener-api`;
-export const AD_API=`${SUPABASE_URL}/functions/v1/wiener-ad`;
-export const SECONDARY_AD_API=`${SUPABASE_URL}/functions/v1/wiener-tads`;
-export const ADSGRAM_TASK_API=`${SUPABASE_URL}/functions/v1/wiener-adsgram-task`;
-export const TASK_API=`${SUPABASE_URL}/functions/v1/wiener-task-api`;
-export const MANDATORY_API=`${SUPABASE_URL}/functions/v1/wiener-mandatory`;
-export const WITHDRAW_API=`${SUPABASE_URL}/functions/v1/wiener-withdraw`;
-export const DEVICE_API=`${SUPABASE_URL}/functions/v1/wiener-device`;
-export const PROMO_CHANNEL_API=`${SUPABASE_URL}/functions/v1/wiener-promo-channel`;
-export const SHARE_API=`${SUPABASE_URL}/functions/v1/wiener-share`;
-export const MISSION_API=`${SUPABASE_URL}/functions/v1/wiener-missions`;
+// Browser traffic goes through our Vercel origin. This avoids mobile/ISP failures
+// reaching *.supabase.co directly while keeping the existing Edge Functions intact.
+const edge=(name:string)=>`/api/supabase?fn=${encodeURIComponent(name)}`;
+export const API=edge('wiener-api');
+export const AD_API=edge('wiener-ad');
+export const SECONDARY_AD_API=edge('wiener-tads');
+export const ADSGRAM_TASK_API=edge('wiener-adsgram-task');
+export const TASK_API=edge('wiener-task-api');
+export const MANDATORY_API=edge('wiener-mandatory');
+export const WITHDRAW_API=edge('wiener-withdraw');
+export const DEVICE_API=edge('wiener-device');
+export const PROMO_CHANNEL_API=edge('wiener-promo-channel');
+export const SHARE_API=edge('wiener-share');
+export const MISSION_API=edge('wiener-missions');
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
 export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];referrals:any[];leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string};
