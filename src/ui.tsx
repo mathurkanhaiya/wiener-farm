@@ -3,7 +3,7 @@ import {money} from './lib';
 import {AnimatedIcon,type IconName} from './icons';
 
 const WIENER_LOGO='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';
-function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
+function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" loading="eager" decoding="sync" fetchPriority="high" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
 
 export function Splash({text}:{text:string}){return <div className="center-screen liquid-splash"><div style={{position:'relative',width:126,height:126,display:'grid',placeItems:'center'}}><WienerLogo size={108}/><span className="splash-ring ring-one"/><span className="splash-ring ring-two"/></div><div className="splash-copy"><span>WIENER</span><h1>Loading your rewards</h1><p>{text}</p></div><div className="liquid-loader"><i/><i/><i/></div><small className="splash-secure">Secure Telegram session</small></div>}
 export function OpenTelegram(){return <div className="center-screen"><WienerLogo size={108}/><h1>WIENER</h1><p>This Mini App uses signed Telegram authentication. Open it from <b>@WienerDogeFarmBot</b>.</p><a className="primary linkbtn" href="https://t.me/WienerDogeFarmBot">OPEN WIENER</a></div>}
