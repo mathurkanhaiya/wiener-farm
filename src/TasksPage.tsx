@@ -17,58 +17,47 @@ async function ensureAdsGramTaskSdk(){
 }
 
 function AdsGramTaskBlock({say}:{say:(s:string)=>void}){
-  const mount=useRef<HTMLDivElement|null>(null),sessionRef=useRef<Promise<any>|null>(null),completedRef=useRef(false),[cycle,setCycle]=useState(0),[state,setState]=useState<AdsTaskState>('loading');
+  const mount=useRef<HTMLDivElement|null>(null),sessionRef=useRef<Promise<any>|null>(null),[cycle,setCycle]=useState(0),[state,setState]=useState<AdsTaskState>('loading');
   useEffect(()=>{
     let active=true,rewarded=false,retry:any=null,nextTaskTimer:any=null,completedPoll:any=null;
     const root=mount.current;if(!root)return;root.innerHTML='';setState('loading');
-    const retryFresh=(ms=12000)=>{if(retry)clearTimeout(retry);retry=window.setTimeout(()=>{if(active&&!completedRef.current)setCycle(v=>v+1)},ms)};
+    const retryFresh=(ms=12000)=>{if(retry)clearTimeout(retry);retry=window.setTimeout(()=>{if(active)setCycle(v=>v+1)},ms)};
     (async()=>{try{
-      // Check permanent backend completion before creating/replacing any session.
-      // This prevents completed users from generating repeated task_already_completed 400s.
-      if(!completedRef.current){
-        const status=await adsgramTaskApi('status');
-        if(!active)return;
-        if(status?.completed){completedRef.current=true;sessionRef.current=null;setState('completed');return}
-      }else{setState('completed');return}
-
       await ensureAdsGramTaskSdk();if(!active)return;
-      // Keep one backend session across AdsGram SDK retries instead of expiring/creating a new one each cycle.
+      // Keep one backend session across provider retries. The backend itself reuses any open session.
       if(!sessionRef.current)sessionRef.current=adsgramTaskApi('start');
       const el=document.createElement('adsgram-task') as HTMLElement;el.className='adsgram-native-task';el.setAttribute('data-block-id','task-44148');el.setAttribute('data-debug','false');el.setAttribute('data-debug-console','false');
-      const reward=document.createElement('span');reward.slot='reward';reward.className='adsgram-task-reward';reward.textContent='+2 WIENER';
+      const reward=document.createElement('span');reward.slot='reward';reward.className='adsgram-task-reward';reward.textContent='+5 WIENER';
       const button=document.createElement('span');button.slot='button';button.className='adsgram-task-button';button.textContent='START';
       const claim=document.createElement('span');claim.slot='claim';claim.className='adsgram-task-button';claim.textContent='CLAIM';
       const done=document.createElement('span');done.slot='done';done.className='adsgram-task-button done';done.textContent='DONE';el.append(reward,button,claim,done);
-      const onReward=async()=>{if(rewarded||!active)return;rewarded=true;setState('crediting');try{let session:any;try{session=await sessionRef.current}catch{sessionRef.current=adsgramTaskApi('start');session=await sessionRef.current}if(!active)return;const x=await adsgramTaskApi('reward',{session_id:session.session_id});if(!active)return;completedRef.current=true;sessionRef.current=null;say(`+${Number(x?.reward||2)} WIENER`);setState('waiting');nextTaskTimer=window.setTimeout(()=>{if(active)window.location.reload()},900)}catch(e:any){const m=String(e?.message||'Task reward failed');if(/task_session_(expired|not_found)|task_already_completed/i.test(m))sessionRef.current=null;if(/task_already_completed/i.test(m)){completedRef.current=true;setState('completed');return}rewarded=false;setState('error');say(m)}};
-      const scheduleRetry=(next:AdsTaskState,ms=7000)=>{if(!active||rewarded||completedRef.current)return;setState(next);retryFresh(ms)};
+      const onReward=async()=>{if(rewarded||!active)return;rewarded=true;setState('crediting');try{let session:any;try{session=await sessionRef.current}catch{sessionRef.current=adsgramTaskApi('start');session=await sessionRef.current}if(!active)return;const x=await adsgramTaskApi('reward',{session_id:session.session_id});if(!active)return;sessionRef.current=null;say(`+${Number(x?.reward||5)} WIENER`);setState('waiting');nextTaskTimer=window.setTimeout(()=>{if(active)setCycle(v=>v+1)},700)}catch(e:any){const m=String(e?.message||'Task reward failed');if(/task_session_(expired|not_found|closed)|task_already_completed/i.test(m))sessionRef.current=null;rewarded=false;setState('error');say(m);retryFresh(1200)}};
+      const scheduleRetry=(next:AdsTaskState,ms=7000)=>{if(!active||rewarded)return;setState(next);retryFresh(ms)};
       el.addEventListener('reward',onReward as EventListener);
       el.addEventListener('onBannerNotFound',(()=>scheduleRetry('unavailable',12000)) as EventListener);
       el.addEventListener('onError',(()=>scheduleRetry('error',8000)) as EventListener);
       el.addEventListener('onTooLongSession',(()=>scheduleRetry('restart',900)) as EventListener);
       root.appendChild(el);setState('ready');
 
-      // Provider may expose a stale completed task. Hide it without creating another backend session.
+      // AdsGram may leave the just-finished provider task visible briefly.
+      // Hide only that stale task and refresh this block for the next feed item.
       completedPoll=window.setInterval(()=>{
-        if(!active||rewarded||completedRef.current)return;
+        if(!active||rewarded)return;
         const shadow=(el as any).shadowRoot as ShadowRoot|null;
         const text=`${shadow?.textContent||''} ${el.textContent||''}`.toLowerCase();
         if(text.includes('task already completed')||text.includes('already completed')||text.includes('task completed')){
           setState('completed');
           el.style.visibility='hidden';
-          // Recheck provider UI later, but reuse the same backend session.
           retryFresh(15000);
         }
       },700);
-    }catch(e:any){
-      if(!active)return;
-      const m=String(e?.message||'');
-      if(/task_already_completed/i.test(m)){completedRef.current=true;sessionRef.current=null;setState('completed');return}
-      setState('error');retryFresh(8000)
+    }catch{
+      if(active){setState('error');retryFresh(8000)}
     }})();
     return()=>{active=false;if(retry)clearTimeout(retry);if(nextTaskTimer)clearTimeout(nextTaskTimer);if(completedPoll)clearInterval(completedPoll);if(root)root.innerHTML=''};
   },[cycle]);
   const covered=state!=='ready';
-  return <div className={`adsgram-task-shell ${state}`}><style>{`.adsgram-task-shell{position:relative;border-bottom:1px solid rgba(255,255,255,.08);min-height:82px}.adsgram-task-shell:last-child{border-bottom:0}.adsgram-task-mount{min-height:82px}.adsgram-native-task{--adsgram-task-font-size:14px;--adsgram-task-icon-size:46px;--adsgram-task-icon-title-gap:14px;--adsgram-task-button-width:76px;--adsgram-task-icon-border-radius:15px;display:block;width:100%;padding:18px 0;background:transparent;color:#fff;font-family:inherit}.adsgram-task-reward{display:block;margin-top:4px;color:#a3b5a6;font-size:13px;font-weight:800}.adsgram-task-button{display:inline-flex;align-items:center;justify-content:center;min-width:76px;min-height:40px;padding:0 14px;border-radius:14px;background:linear-gradient(180deg,#fff05f,#ffd20b 63%,#edb900);color:#272000;font-size:12px;font-weight:950;letter-spacing:.5px}.adsgram-task-button.done{filter:saturate(.45);opacity:.7}.adsgram-task-status{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:18px 0;background:linear-gradient(155deg,rgba(25,92,55,.98),rgba(15,73,43,.98));z-index:2}.adsgram-task-status .square{width:50px;height:50px;border-radius:16px}.adsgram-task-status b{display:block;font-size:15px}.adsgram-task-status small{display:block;margin-top:3px;color:#a3b5a6;font-size:12px;font-weight:700}.adsgram-task-dot{width:8px;height:8px;border-radius:50%;background:#ffe025;box-shadow:0 0 0 5px rgba(255,224,37,.12)}`}</style><div className="adsgram-task-mount" ref={mount}/>{covered&&<div className="adsgram-task-status"><div className="square check"><AnimatedIcon name="ads" active={state==='crediting'||state==='waiting'}/></div><div className="grow"><b>{state==='crediting'?'Claiming sponsored reward':state==='waiting'?'Loading next task':state==='completed'?'AdsGram task completed':state==='unavailable'?'No sponsored task right now':state==='restart'?'Refreshing sponsored task':state==='error'?'Refreshing sponsored task':'Loading sponsored task'}</b><small>{state==='waiting'?'Reward received · refreshing…':state==='completed'?'Your AdsGram task reward has already been claimed.':state==='unavailable'||state==='error'||state==='restart'?'Checking again automatically…':'Please wait…'}</small></div><span className="adsgram-task-dot"/></div>}</div>
+  return <div className={`adsgram-task-shell ${state}`}><style>{`.adsgram-task-shell{position:relative;border-bottom:1px solid rgba(255,255,255,.08);min-height:82px}.adsgram-task-shell:last-child{border-bottom:0}.adsgram-task-mount{min-height:82px}.adsgram-native-task{--adsgram-task-font-size:14px;--adsgram-task-icon-size:46px;--adsgram-task-icon-title-gap:14px;--adsgram-task-button-width:76px;--adsgram-task-icon-border-radius:15px;display:block;width:100%;padding:18px 0;background:transparent;color:#fff;font-family:inherit}.adsgram-task-reward{display:block;margin-top:4px;color:#a3b5a6;font-size:13px;font-weight:800}.adsgram-task-button{display:inline-flex;align-items:center;justify-content:center;min-width:76px;min-height:40px;padding:0 14px;border-radius:14px;background:linear-gradient(180deg,#fff05f,#ffd20b 63%,#edb900);color:#272000;font-size:12px;font-weight:950;letter-spacing:.5px}.adsgram-task-button.done{filter:saturate(.45);opacity:.7}.adsgram-task-status{position:absolute;inset:0;display:flex;align-items:center;gap:14px;padding:18px 0;background:linear-gradient(155deg,rgba(25,92,55,.98),rgba(15,73,43,.98));z-index:2}.adsgram-task-status .square{width:50px;height:50px;border-radius:16px}.adsgram-task-status b{display:block;font-size:15px}.adsgram-task-status small{display:block;margin-top:3px;color:#a3b5a6;font-size:12px;font-weight:700}.adsgram-task-dot{width:8px;height:8px;border-radius:50%;background:#ffe025;box-shadow:0 0 0 5px rgba(255,224,37,.12)}`}</style><div className="adsgram-task-mount" ref={mount}/>{covered&&<div className="adsgram-task-status"><div className="square check"><AnimatedIcon name="ads" active={state==='crediting'||state==='waiting'}/></div><div className="grow"><b>{state==='crediting'?'Claiming sponsored reward':state==='waiting'?'Loading next task':state==='completed'?'Loading next AdsGram task':state==='unavailable'?'No sponsored task right now':state==='restart'?'Refreshing sponsored task':state==='error'?'Refreshing sponsored task':'Loading sponsored task'}</b><small>{state==='waiting'?'Reward received · fetching next task…':state==='completed'?'Previous task finished. Checking for a new one…':state==='unavailable'||state==='error'||state==='restart'?'Checking again automatically…':'Please wait…'}</small></div><span className="adsgram-task-dot"/></div>}</div>
 }
 
 export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void;refresh?:()=>Promise<any>}){
