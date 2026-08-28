@@ -26,8 +26,10 @@ const exact:Record<string,string>={
  'No rankings yet.':'leaderboard.none','Your Rank':'leaderboard.yourRank','Total earned':'common.totalEarned','Daily':'tasks.daily','Loading secure payout controls…':'wallet.loadingControls'
 };
 
-const originals=new WeakMap<Text,string>();
-const attrOriginals=new WeakMap<Element,Record<string,string>>();
+type TextState={source:string;output:string};
+type AttrState={source:string;output:string};
+const textStates=new WeakMap<Text,TextState>();
+const attrStates=new WeakMap<Element,Record<string,AttrState>>();
 const skip=(el:Element|null)=>!el||!!el.closest('script,style,code,pre,[data-no-i18n],.withdraw-wallet-code,.withdraw-tx,[class*="admin-"]');
 const technicalOnly=(s:string)=>/^(?:[\s+≈·,:./#()\-–—✓×]*|\d[\d\s.,:%/+\-]*|(?:WIENER|USDT|TON|Polygon|BEP20|AdsGram|Binance UID)(?:\s|$)|0x[a-fA-F0-9]{8,}|[EUUk0][Qq][A-Za-z0-9_-]{20,}|@[A-Za-z0-9_]{3,}|https?:\/\/\S+)$/i.test(s.trim());
 const fill=(template:string,value:string)=>template.replaceAll('{value}',value);
@@ -52,14 +54,37 @@ export function LocalizedSurface(){
  useEffect(()=>{
   let stopped=false;
   const tr=(key:string,fallback?:string)=>EXTRA_PACKS[lang]?.[key]||t(key,fallback);
-  const translate=(original:string)=>{if(lang==='en'||technicalOnly(original))return original;const key=exact[original];if(key)return tr(key,original);return dynamicTranslate(original,tr)||original};
-  const applyAttrs=(el:Element)=>{if(skip(el))return;const attrs=['placeholder','title','aria-label'] as const;let saved=attrOriginals.get(el);if(!saved){saved={};attrOriginals.set(el,saved)}for(const attr of attrs){const cur=el.getAttribute(attr);if(!cur)continue;if(!saved[attr])saved[attr]=cur;const original=saved[attr];const translated=translate(original);if(cur!==translated)el.setAttribute(attr,translated)}};
+  const translate=(source:string)=>{if(lang==='en'||technicalOnly(source))return source;const key=exact[source];if(key)return tr(key,source);return dynamicTranslate(source,tr)||source};
+  const applyAttrs=(el:Element)=>{
+   if(skip(el))return;
+   const attrs=['placeholder','title','aria-label'] as const;
+   let saved=attrStates.get(el);if(!saved){saved={};attrStates.set(el,saved)}
+   for(const attr of attrs){
+    const cur=el.getAttribute(attr);if(!cur)continue;
+    let st=saved[attr];
+    if(!st||cur!==st.output){st={source:cur,output:cur};saved[attr]=st}
+    const output=translate(st.source);
+    st.output=output;
+    if(cur!==output)el.setAttribute(attr,output);
+   }
+  };
   const apply=(root:Node=document.body)=>{
    if(stopped)return;
    if(root.nodeType===Node.ELEMENT_NODE)applyAttrs(root as Element);
    if(root.nodeType!==Node.TEXT_NODE){const ew=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT);let e;while((e=ew.nextNode()))applyAttrs(e as Element)}
-   const nodes:Text[]=[];if(root.nodeType===Node.TEXT_NODE)nodes.push(root as Text);else{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))nodes.push(n as Text)}
-   for(const node of nodes){const parent=node.parentElement;if(skip(parent))continue;const current=node.nodeValue||'',trim=current.trim();if(!trim)continue;let original=originals.get(node);if(!original){original=trim;originals.set(node,original)}const translated=translate(original);const lead=current.match(/^\s*/)?.[0]||'',tail=current.match(/\s*$/)?.[0]||'';const next=lead+translated+tail;if(node.nodeValue!==next)node.nodeValue=next}
+   const nodes:Text[]=[];
+   if(root.nodeType===Node.TEXT_NODE)nodes.push(root as Text);else{const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=w.nextNode()))nodes.push(n as Text)}
+   for(const node of nodes){
+    const parent=node.parentElement;if(skip(parent))continue;
+    const current=node.nodeValue||'',trim=current.trim();if(!trim)continue;
+    let st=textStates.get(node);
+    if(!st||trim!==st.output){st={source:trim,output:trim};textStates.set(node,st)}
+    const translated=translate(st.source);
+    st.output=translated;
+    const lead=current.match(/^\s*/)?.[0]||'',tail=current.match(/\s*$/)?.[0]||'';
+    const next=lead+translated+tail;
+    if(node.nodeValue!==next)node.nodeValue=next;
+   }
   };
   apply();
   const observer=new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')apply(m.target);else if(m.type==='attributes')apply(m.target);else for(const n of Array.from(m.addedNodes))apply(n)}});
