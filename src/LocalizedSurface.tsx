@@ -1,6 +1,7 @@
 import {useEffect} from 'react';
 import {useI18n} from './i18n';
 import {EXTRA_PACKS} from './i18n-extra';
+import {POPUP_PACKS} from './i18n-popups';
 
 const exact:Record<string,string>={
  'TOTAL BALANCE':'home.totalBalance','Sessions':'home.sessions','Ads':'nav.ads','Referrals':'common.referrals',
@@ -23,7 +24,12 @@ const exact:Record<string,string>={
  'One Last Step':'mandatory.lastStep','Join the required communities to unlock WIENER.':'mandatory.copy','CHECKING…':'mandatory.checking','CHECK & CONTINUE':'mandatory.continue','JOINED':'mandatory.joined','Join the missing community, then return and continue.':'mandatory.hint','Community group':'mandatory.group','Official channel':'mandatory.channel','Required':'mandatory.required','Bot cannot verify this chat yet':'mandatory.verifyError',
  'OPENING CLAIM AD':'farm.openingAd','LOADING REWARD…':'farm.loadingReward','Please wait. Don’t tap claim again.':'farm.pleaseWait','PARTIAL FARM REWARD':'farm.partial','FARM REWARD UNLOCKED':'farm.unlocked','CLAIM AD':'farm.claimAd','INTERACTION':'farm.interaction','CLAIMED ✓':'farm.claimed','CLAIM NOT COMPLETED':'farm.notCompleted','TRY AGAIN':'farm.tryAgain','Cancel':'farm.cancel',
  'Temporarily unavailable':'common.unavailable','Available':'wallet.available','Minimum withdrawal':'wallet.minimum','Withdrawal fee':'common.fee','Selected network:':'wallet.selectedNetwork','Requested Amount':'wallet.requestedAmount','Amount Received':'wallet.amountReceived','Requested':'wallet.requested','Processed':'wallet.processed','TX Hash':'wallet.txHash',
- 'No rankings yet.':'leaderboard.none','Your Rank':'leaderboard.yourRank','Total earned':'common.totalEarned','Daily':'tasks.daily','Loading secure payout controls…':'wallet.loadingControls'
+ 'No rankings yet.':'leaderboard.none','Your Rank':'leaderboard.yourRank','Total earned':'common.totalEarned','Daily':'tasks.daily','Loading secure payout controls…':'wallet.loadingControls',
+ 'FULL REWARD UNLOCKED':'ad.full','PARTIAL REWARD':'ad.partial','Nice! You visited the advertiser and earned the full reward.':'ad.fullText','Keep doing this to earn more every ad.':'ad.tipFull','Visit the advertiser during the ad to unlock the full reward next time.':'ad.tipPartial','AD SHOWN':'ad.shown',
+ '💡 TIP':'promo.tip','more WIENER from ads':'promo.moreAds','Visit / Play / Open':'promo.tapVisit',
+ 'Unable to load ad progress':'error.loadAds','Daily ad limit reached':'error.dailyAdLimit','Ad was not completed':'error.adNotCompleted','Reward could not be credited':'error.rewardFailed',
+ 'Promo already claimed':'promo.already','Invalid promo code':'promo.invalid','Complete the rewarded ad to claim this promo.':'promo.completeToClaim','Promo reward confirmation failed':'promo.rewardFailed',
+ 'Nice! You unlocked the full farm reward. Start the next farm manually whenever you’re ready.':'farm.fullText','Tip: Visit the advertiser during the claim ad to unlock the full reward next time.':'farm.tipPartial','Complete the ad and try again.':'farm.tryComplete'
 };
 
 type TextState={source:string;output:string};
@@ -46,6 +52,8 @@ function dynamicTranslate(original:string,tr:(key:string,fallback?:string)=>stri
  if((m=original.match(/^(.+)\s+today$/i))&&!/withdraw|farm|claimed/i.test(original))return fill(tr('dynamic.adsToday',original),m[1]);
  if((m=original.match(/^(.+)\s+each(?:\s*·.*)?$/i)))return fill(tr('dynamic.each',original),m[1]);
  if((m=original.match(/^Ends\s+(.+)$/i)))return fill(tr('dynamic.ends',original),m[1]);
+ if((m=original.match(/^Next ad in\s+(.+)$/i)))return fill(tr('dynamic.nextAd','Next ad in {value}'),m[1]);
+ if((m=original.match(/^You could[’']ve earned\s+(.+?)\s+more WIENER\s+by visiting the advertiser\.?$/i)))return fill(tr('dynamic.couldEarn','You could have earned {value} more WIENER by visiting the advertiser.'),m[1]);
  return null;
 }
 
@@ -53,7 +61,7 @@ export function LocalizedSurface(){
  const {lang,t}=useI18n();
  useEffect(()=>{
   let stopped=false;
-  const tr=(key:string,fallback?:string)=>EXTRA_PACKS[lang]?.[key]||t(key,fallback);
+  const tr=(key:string,fallback?:string)=>POPUP_PACKS[lang]?.[key]||EXTRA_PACKS[lang]?.[key]||t(key,fallback);
   const translate=(source:string)=>{if(lang==='en'||technicalOnly(source))return source;const key=exact[source];if(key)return tr(key,source);return dynamicTranslate(source,tr)||source};
   const applyAttrs=(el:Element)=>{
    if(skip(el))return;
