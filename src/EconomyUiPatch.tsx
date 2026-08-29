@@ -1,0 +1,1 @@
+export function EconomyUiPatch(){return <style>{`.treasury-home-badge{font-size:0!important}.treasury-home-badge::after{content:'UP TO 375';font-size:9px!important}.treasury-tap span{font-size:0!important}.treasury-tap span::after{content:'Rewards up to 375 WIENER';font-size:11px!important}`}</style>}
