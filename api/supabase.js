@@ -10,12 +10,19 @@ export default async function handler(req,res){
   const fn=String(req.query?.fn||'');
   if(!ALLOWED.has(fn)) return res.status(400).json({ok:false,error:'invalid_function'});
   try{
+    const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
+    const clientIp=forwarded||String(req.socket?.remoteAddress||'').trim();
     const upstream=await fetch(`${SUPABASE_URL}/functions/v1/${fn}`,{
       method:'POST',
       headers:{
         'content-type':'application/json',
         'apikey':String(req.headers.apikey||''),
-        ...(req.headers.authorization?{'authorization':String(req.headers.authorization)}:{})
+        ...(req.headers.authorization?{'authorization':String(req.headers.authorization)}:{}),
+        ...(clientIp?{'x-wiener-client-ip':clientIp}:{}),
+        ...(req.headers['x-vercel-ip-country']?{'x-wiener-country':String(req.headers['x-vercel-ip-country'])}:{}),
+        ...(req.headers['x-vercel-ip-country-region']?{'x-wiener-region':String(req.headers['x-vercel-ip-country-region'])}:{}),
+        ...(req.headers['x-vercel-ip-city']?{'x-wiener-city':String(req.headers['x-vercel-ip-city'])}:{}),
+        ...(req.headers['user-agent']?{'x-wiener-user-agent':String(req.headers['user-agent']).slice(0,512)}:{})
       },
       body:JSON.stringify(req.body||{})
     });
