@@ -15,14 +15,14 @@ export const PROMO_CHANNEL_API=edge('wiener-promo-channel');
 export const SHARE_API=edge('wiener-share');
 export const MISSION_API=edge('wiener-missions');
 
-export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'admin';
+export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'treasury'|'admin';
 export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];withdrawal_methods?:any[];referrals:any[];leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string};
 export const money=(n:any,d=0)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
-export function pageFromUrl():Tab{const p=new URLSearchParams(window.location.search).get('page')||'';const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads'};return map[p]||'home'}
+export function pageFromUrl():Tab{const p=new URLSearchParams(window.location.search).get('page')||'';const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',treasury:'treasury'};return map[p]||'home'}
 function getDeviceId(){const key='wiener_device_id_v1';try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;localStorage.setItem(key,id)}return id}catch{return `volatile-${navigator.userAgent.length}-${screen.width}x${screen.height}`}}
 export async function deviceContext(){return {device_id:getDeviceId(),device_fingerprint:await getDeviceFingerprint()}}
 async function getDeviceFingerprint(){const raw=[navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`].join('|');try{const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch{return raw.slice(0,128)}}
