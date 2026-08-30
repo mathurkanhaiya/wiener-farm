@@ -7,7 +7,7 @@ type Sticker=
   | {kind:'video';url:string}
   | {kind:'fallback'};
 
-const STICKER_URL='https://duck-earn-bot.vercel.app/icons/game_tictactoe';
+const STICKER_URL='https://wiener-farm.vercel.app/api/host/restricted-cross';
 
 async function ungzip(bytes:Uint8Array){
   if(typeof DecompressionStream==='undefined')throw new Error('gzip_unsupported');
