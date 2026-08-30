@@ -24,7 +24,38 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
 
   const fallback=()=>window.Telegram?.WebApp?.openTelegramLink?.(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
   const share=async()=>{if(busy)return;try{setBusy(true);const wa:any=window.Telegram?.WebApp;if(typeof wa?.shareMessage!=='function'){fallback();return}const prepared=await shareApi();if(!prepared?.id)throw new Error('Share message unavailable');wa.shareMessage(prepared.id)}catch(e:any){say(String(e?.message||'Unable to prepare share message'));fallback()}finally{setBusy(false)}};
-  const copy=async()=>{try{await navigator.clipboard.writeText(link);say('Invite link copied')}catch{say('Could not copy invite link')}};
+  const copy=async()=>{
+    let copied=false;
+    try{
+      if(window.isSecureContext&&navigator.clipboard?.writeText){
+        await navigator.clipboard.writeText(link);
+        copied=true;
+      }
+    }catch{}
+    if(!copied){
+      const input=document.createElement('textarea');
+      input.value=link;
+      input.setAttribute('readonly','');
+      input.setAttribute('aria-hidden','true');
+      input.style.position='fixed';
+      input.style.left='-9999px';
+      input.style.top='0';
+      input.style.opacity='0';
+      input.style.pointerEvents='none';
+      document.body.appendChild(input);
+      try{
+        input.focus();
+        input.select();
+        input.setSelectionRange(0,input.value.length);
+        copied=document.execCommand('copy');
+      }catch{}
+      finally{input.remove()}
+    }
+    if(copied){
+      try{window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success')}catch{}
+      say('Invite link copied');
+    }else say('Copy failed — use Invite Friends to share');
+  };
   const status=(r:any)=>{if(r.referral_reward_eligible===false)return {label:r.referral_ineligible_reason==='same_device'?'NOT ELIGIBLE · SAME DEVICE':'NOT ELIGIBLE',bad:true};if(r.referral_active)return {label:'QUALIFIED · 20/20 ADS',good:true};const ads=Number(r.total_ads||0);const next=ads<5?{ads:5,reward:40}:ads<10?{ads:10,reward:40}:{ads:20,reward:70};return {label:`${Math.min(ads,20)}/20 ADS · NEXT +${next.reward}`}};
   const qualifiedText=refsReady?String(qualified??0):'—';
   const ranking=(leaderboard?.[rankMode]||[]).slice(0,10),podium=ranking.slice(0,3),rest=ranking.slice(3,10),myRank=leaderboard?.me?.[rankMode];
