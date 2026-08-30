@@ -3,9 +3,10 @@ import {ambassadorApi,type Snapshot,type Tab} from './lib';
 
 const usd=(v:any,d=4)=>Number(v||0).toFixed(d);
 const cleanErr=(v:any)=>String(v?.message||v||'Request failed').replace(/^telegram:/,'').replace(/_/g,' ');
+const WIENER_LOGO='https://wiener-farm.vercel.app/api/host/wiener-logo';
 
 export function AmbassadorIcon({size=44,active=true}:{size?:number;active?:boolean}){
-  return <span className={`amb-icon ${active?'active':''}`} style={{width:size,height:size}} aria-hidden="true"><span className="amb-medal"><b>W</b></span><i/><em/></span>
+  return <span className={`amb-icon ${active?'active':''}`} style={{width:size,height:size}} aria-hidden="true"><span className="amb-medal"><img src={WIENER_LOGO} alt="" style={{zIndex:1,width:'52%',height:'52%',objectFit:'cover',borderRadius:'50%',display:'block',boxShadow:'0 2px 6px rgba(0,0,0,.28)'}}/></span><i/><em/></span>
 }
 
 export function AmbassadorHomeCard({setTab}:{setTab:(t:Tab)=>void}){
