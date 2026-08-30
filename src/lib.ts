@@ -22,7 +22,7 @@ export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
-export function pageFromUrl():Tab{const p=new URLSearchParams(window.location.search).get('page')||'';const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',treasury:'treasury'};return map[p]||'home'}
+export function pageFromUrl():Tab{const qs=new URLSearchParams(window.location.search),tg=window.Telegram?.WebApp as any,p=qs.get('page')||qs.get('tgWebAppStartParam')||String(tg?.initDataUnsafe?.start_param||'');const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',treasury:'treasury'};return map[p]||'home'}
 function persistentId(key:string){try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;localStorage.setItem(key,id)}return id}catch{return `volatile-${navigator.userAgent.length}-${screen.width}x${screen.height}`}}
 function getDeviceId(){return persistentId('wiener_device_id_v1')}
 function getInstallationId(){return persistentId('wiener_installation_id_v2')}
