@@ -14,15 +14,16 @@ export const DEVICE_API=edge('wiener-device');
 export const PROMO_CHANNEL_API=edge('wiener-promo-channel');
 export const SHARE_API=edge('wiener-share');
 export const MISSION_API=edge('wiener-missions');
+export const AMBASSADOR_API=edge('wiener-ambassador');
 
-export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'treasury'|'admin';
+export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'treasury'|'ambassador'|'admin';
 export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];withdrawal_methods?:any[];referrals:any[];leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string};
 export const money=(n:any,d=0)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
-export function pageFromUrl():Tab{const qs=new URLSearchParams(window.location.search),tg=window.Telegram?.WebApp as any,p=qs.get('page')||qs.get('tgWebAppStartParam')||String(tg?.initDataUnsafe?.start_param||'');const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',treasury:'treasury'};return map[p]||'home'}
+export function pageFromUrl():Tab{const qs=new URLSearchParams(window.location.search),tg=window.Telegram?.WebApp as any,p=qs.get('page')||qs.get('tgWebAppStartParam')||String(tg?.initDataUnsafe?.start_param||'');const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',earn:'ads',treasury:'treasury',ambassador:'ambassador'};return map[p]||'home'}
 function persistentId(key:string){try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;localStorage.setItem(key,id)}return id}catch{return `volatile-${navigator.userAgent.length}-${screen.width}x${screen.height}`}}
 function getDeviceId(){return persistentId('wiener_device_id_v1')}
 function getInstallationId(){return persistentId('wiener_installation_id_v2')}
@@ -42,3 +43,4 @@ export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admi
 export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){return post(WITHDRAW_API,action,body)}
 export async function shareApi(){return post(SHARE_API,'prepare')}
 export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
+export async function ambassadorApi(action:string,body:any={}){return post(AMBASSADOR_API,action,body)}
