@@ -13,7 +13,7 @@ import {LeaderboardPageV2,ProfilePageV2} from './ProfileLeaderboardV2';
 import {HomeWithPromo} from './PromoClaim';
 import {Tasks} from './TasksPage';
 import {SpecialTasks} from './SpecialTasks';
-import {WalletV2} from './WithdrawV2';
+import {WalletV2} from './WithdrawV3';
 import {Brand,Nav,OpenTelegram,Splash,StateScreen} from './ui';
 import {FarmClaimModal} from './FarmClaimModal';
 import {AmbassadorPage} from './Ambassador';
