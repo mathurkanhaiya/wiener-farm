@@ -1,4 +1,8 @@
 const SUPABASE_URL='https://hvyrairuogiljplmsuat.supabase.co';
+const configured=String(process.env.WIENER_BACKEND_URL||'').trim().replace(/\/+$/,'');
+const BACKEND_URL=configured||SUPABASE_URL;
+const BACKEND_NAME=configured?'vps':'supabase';
+
 const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-mandatory','wiener-withdraw','wiener-device','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
 
 export default async function handler(req,res){
@@ -12,7 +16,7 @@ export default async function handler(req,res){
   try{
     const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
     const clientIp=forwarded||String(req.socket?.remoteAddress||'').trim();
-    const upstream=await fetch(`${SUPABASE_URL}/functions/v1/${fn}`,{
+    const upstream=await fetch(`${BACKEND_URL}/functions/v1/${fn}`,{
       method:'POST',
       headers:{
         'content-type':'application/json',
@@ -30,9 +34,10 @@ export default async function handler(req,res){
     res.status(upstream.status);
     res.setHeader('content-type',upstream.headers.get('content-type')||'application/json; charset=utf-8');
     res.setHeader('cache-control','no-store');
+    res.setHeader('x-wiener-upstream',BACKEND_NAME);
     return res.send(text);
   }catch(error){
-    console.error('Supabase proxy failed',error);
+    console.error(`${BACKEND_NAME} proxy failed`,error);
     return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
   }
 }
