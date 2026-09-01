@@ -7,6 +7,10 @@ export function EconomyUiPatch(){
     const sync=()=>{
       scheduled=false;
       observer?.disconnect();
+      document.querySelectorAll('.ad-card').forEach((card)=>{
+        const title=card.querySelector('h3')?.textContent?.trim()||'';
+        if(title.startsWith('Bonus Ads'))card.remove();
+      });
       document.querySelectorAll('.amb-info-grid').forEach((grid)=>{
         const cards=grid.querySelectorAll(':scope > div');
         if(cards[1]&&cards[1].textContent?.trim()!=='1code/drop')cards[1].innerHTML='<b>1</b><span>code/drop</span>';
