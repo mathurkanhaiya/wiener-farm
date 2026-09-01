@@ -43,7 +43,7 @@ export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={
 export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}
 export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){return post(WITHDRAW_API,action,body)}
 export async function shareApi(){return post(SHARE_API,'prepare')}
-export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,'status',body)}
+export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
 export async function ambassadorApi(action:string,body:any={}){
   if(action==='admin_publish_drop'){
     const url=`${AMBASSADOR_PUBLISH_API}&v=one-code-20260901`;
