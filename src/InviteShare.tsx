@@ -11,13 +11,13 @@ function initials(x:RankUser){const n=rankName(x).trim();return (n[0]||'?').toUp
 function RankAvatar({user,size='small'}:{user:RankUser;size?:'small'|'large'}){const[bad,setBad]=useState(false);return <div className={`rank-avatar ${size}`}>{user.photo_url&&!bad?<img src={user.photo_url} alt="" onError={()=>setBad(true)}/>:<span>{initials(user)}</span>}</div>}
 
 const TOTAL_REWARD=150;
-const MILESTONES=[{ads:5,reward:40},{ads:10,reward:40},{ads:20,reward:70}];
+const REFERRAL_RULE_CUTOFF=new Date('2026-09-01T13:34:45.479Z').getTime();
 
 export function Invite({data,say}:{data:Snapshot;say:any}){
   const s=data.settings,u=data.user,[busy,setBusy]=useState(false),[refs,setRefs]=useState<any[]>([]),[qualified,setQualified]=useState<number|null>(null),[refsReady,setRefsReady]=useState(false),[leaderboard,setLeaderboard]=useState<Leaderboard|null>(null),[rankMode,setRankMode]=useState<RankMode>('inviters');
   const link=`https://t.me/${String(s.bot_username||'@WienerDogeFarmBot').replace('@','')}?startapp=ref_${u.telegram_id}`;
   const referralReward=Number(s.referral_active_reward||TOTAL_REWARD);
-  const referralUsdText=`$${(referralReward/10000).toFixed(3)}`;
+  const referralUsdText='$0.01';
   const shareText=`🌭 Join WIENER Farm\n\nEarn WIENER by watching ads, completing tasks & inviting friends.\n💰 I can earn up to ${referralReward} WIENER when you become a valid referral.\n\n👇 Open WIENER Farm`;
 
   useEffect(()=>{let active=true;setRefsReady(false);fetch(`${SUPABASE_URL}/functions/v1/wiener-referral-status`,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData()})}).then(r=>r.json()).then(x=>{if(!active)return;if(x?.ok){setRefs(x.data?.referrals||[]);setQualified(Number(x.data?.qualified||0));setLeaderboard(x.data?.leaderboard||null)}else{setRefs([]);setQualified(0);setLeaderboard(null)}}).catch(()=>{if(active){setRefs([]);setQualified(0);setLeaderboard(null)}}).finally(()=>{if(active)setRefsReady(true)});return()=>{active=false}},[]);
@@ -56,7 +56,7 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
       say('Invite link copied');
     }else say('Copy failed — use Invite Friends to share');
   };
-  const status=(r:any)=>{if(r.referral_reward_eligible===false)return {label:r.referral_ineligible_reason==='same_device'?'NOT ELIGIBLE · SAME DEVICE':'NOT ELIGIBLE',bad:true};if(r.referral_active)return {label:'QUALIFIED · 20/20 ADS',good:true};const ads=Number(r.total_ads||0);const next=ads<5?{ads:5,reward:40}:ads<10?{ads:10,reward:40}:{ads:20,reward:70};return {label:`${Math.min(ads,20)}/20 ADS · NEXT +${next.reward}`}};
+  const status=(r:any)=>{if(r.referral_reward_eligible===false)return {label:r.referral_ineligible_reason==='same_device'?'NOT ELIGIBLE · SAME DEVICE':'NOT ELIGIBLE',bad:true};const oldRule=new Date(r.created_at||0).getTime()<REFERRAL_RULE_CUTOFF,required=oldRule?20:5,ads=Number(r.total_ads||0);if(r.referral_active)return {label:`QUALIFIED · ${required}/${required} ADS`,good:true};return {label:`${Math.min(ads,required)}/${required} ADS · NEXT +${referralReward}`}};
   const qualifiedText=refsReady?String(qualified??0):'—';
   const ranking=(leaderboard?.[rankMode]||[]).slice(0,10),podium=ranking.slice(0,3),rest=ranking.slice(3,10),myRank=leaderboard?.me?.[rankMode];
   const valueText=(x:any)=>rankMode==='inviters'?`${Number(x||0).toLocaleString()} referrals`:`${money(Number(x||0))} WIENER`;
@@ -66,7 +66,7 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
   .invite-hero-v2:after{content:'';position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;bottom:-95px;background:rgba(255,214,35,.08);filter:blur(12px);pointer-events:none}
   .invite-kicker{font-size:10px;font-weight:950;letter-spacing:1.5px;color:#ffe33b;text-transform:uppercase}.invite-title-row{display:flex;align-items:center;gap:12px;margin-top:8px}.invite-title-row .invite-icon{margin:0;width:48px;height:48px;flex:0 0 48px}.invite-title-row h2{margin:0;font-size:24px;letter-spacing:-.45px}.invite-sub{margin:10px 0 0;font-size:13px;line-height:1.55;color:rgba(255,255,255,.62)}.invite-sub b{color:#fff}
   .invite-total{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:18px;padding:14px 15px;border-radius:18px;border:1px solid rgba(255,226,61,.2);background:linear-gradient(180deg,rgba(255,224,62,.105),rgba(255,224,62,.045));box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}.invite-total span{display:block;font-size:10px;font-weight:850;letter-spacing:.65px;color:rgba(255,255,255,.52)}.invite-total strong{display:block;margin-top:2px;font-size:23px;color:#ffe33b;letter-spacing:-.4px}.invite-total em{font-style:normal;font-size:11px;font-weight:850;color:rgba(255,255,255,.55);white-space:nowrap}
-  .milestone-card{padding:16px}.milestone-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.milestone-head b{font-size:14px}.milestone-head span{font-size:10px;color:rgba(255,255,255,.45)}.milestone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.milestone{padding:12px 8px;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.035)}.milestone strong{display:block;font-size:15px;color:#ffe33b}.milestone b{display:block;margin-top:5px;font-size:11px}.milestone span{display:block;margin-top:2px;font-size:9px;color:rgba(255,255,255,.43)}
+  .milestone-card{padding:16px}.milestone-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.milestone-head b{font-size:14px}.milestone-head span{font-size:10px;color:rgba(255,255,255,.45)}.milestone-grid{display:grid;grid-template-columns:1fr;gap:8px}.milestone{padding:12px 8px;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.075);background:rgba(255,255,255,.035)}.milestone strong{display:block;font-size:15px;color:#ffe33b}.milestone b{display:block;margin-top:5px;font-size:11px}.milestone span{display:block;margin-top:2px;font-size:9px;color:rgba(255,255,255,.43)}
   .invite-actions{display:grid;gap:9px}.invite-actions .primary{min-height:55px}.invite-copy{width:100%;min-height:48px;border:1px solid rgba(255,224,62,.25);border-radius:15px;background:rgba(255,224,62,.06);color:#ffe53d;font-size:12px;font-weight:900;letter-spacing:.4px}.invite-copy:active{transform:translateY(1px);background:rgba(255,224,62,.12)}
   .invite-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.invite-stat{padding:12px 7px;text-align:center;border-radius:16px;border:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.03)}.invite-stat b{display:block;font-size:17px}.invite-stat span{display:block;margin-top:3px;font-size:9px;font-weight:850;letter-spacing:.55px;color:rgba(255,255,255,.45)}
   .refrow b.bad{color:#ff8585}.refrow b.good{color:#69e69a}.ref-loading{display:grid;gap:10px;padding-top:8px}.ref-loading-line{height:42px;border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(255,255,255,.08),rgba(255,255,255,.035));background-size:220% 100%;animation:refShimmer 1.15s linear infinite}@keyframes refShimmer{to{background-position:-220% 0}}
@@ -75,11 +75,11 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
 
   <section className="card invite-hero-v2">
     <div className="invite-kicker">Invite • Earn • Grow</div>
-    <div className="invite-title-row"><div className="invite-icon"><AnimatedIcon name="invite" active/></div><div><h2>Invite Friends</h2><p className="invite-sub">Earn as your friend becomes active. Rewards unlock automatically from <b>verified ad activity.</b></p></div></div>
+    <div className="invite-title-row"><div className="invite-icon"><AnimatedIcon name="invite" active/></div><div><h2>Invite Friends</h2><p className="invite-sub">Earn <b>+{referralReward} WIENER</b> when a new referral completes 5 verified ads.</p></div></div>
     <div className="invite-total"><div><span>TOTAL PER VALID REFERRAL</span><strong>+{referralReward} WIENER</strong></div><em>≈ {referralUsdText}</em></div>
   </section>
 
-  <section className="card milestone-card"><div className="milestone-head"><b>Referral milestones</b><span>20 ads = qualified</span></div><div className="milestone-grid">{MILESTONES.map(m=><div className="milestone" key={m.ads}><strong>+{m.reward}</strong><b>{m.ads} ADS</b><span>{m.ads===20?'QUALIFIED':'MILESTONE'}</span></div>)}</div></section>
+  <section className="card milestone-card"><div className="milestone-head"><b>Referral qualification</b><span>5 ads = qualified</span></div><div className="milestone-grid"><div className="milestone"><strong>+{referralReward}</strong><b>5 ADS</b><span>QUALIFIED</span></div></div></section>
 
   <section className="card invite-actions"><button className="primary button-with-icon" disabled={busy} onClick={share}><AnimatedIcon name="share" active={!busy}/>{busy?'PREPARING…':'INVITE FRIENDS'}</button><button className="invite-copy" onClick={copy}>⧉ COPY INVITE LINK</button></section>
 
