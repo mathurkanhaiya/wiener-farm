@@ -6,6 +6,7 @@ export type AdInteractionTracker={
 
 type AdInteractionOptions={
   allowBlur?:boolean;
+  minBlurMs?:number;
 };
 
 // AdsGram does not expose advertiser CTA-click events to publishers.
@@ -23,6 +24,7 @@ export function trackAdInteraction(options:AdInteractionOptions={}):AdInteractio
   let hiddenAt=0;
   let blurAt=0;
   let confirmed=false;
+  const minBlurMs=Math.max(0,Number(options.minBlurMs??MIN_BLUR_MS));
 
   const eligible=()=>startedAt>0&&Date.now()-startedAt>=START_GRACE_MS;
   const blurEligible=()=>startedAt>0&&Date.now()-startedAt>=BLUR_GRACE_MS;
@@ -39,7 +41,7 @@ export function trackAdInteraction(options:AdInteractionOptions={}):AdInteractio
     if(!blurAt)blurAt=Date.now();
   };
   const finishBlur=()=>{
-    if(blurAt&&Date.now()-blurAt>=MIN_BLUR_MS)confirmed=true;
+    if(blurAt&&Date.now()-blurAt>=minBlurMs)confirmed=true;
     blurAt=0;
   };
   const onVisibility=()=>{
@@ -64,7 +66,7 @@ export function trackAdInteraction(options:AdInteractionOptions={}):AdInteractio
     interacted:()=>{
       if(confirmed)return true;
       if(hiddenAt&&Date.now()-hiddenAt>=MIN_HIDDEN_MS)return true;
-      return Boolean(options.allowBlur&&blurAt&&Date.now()-blurAt>=MIN_BLUR_MS);
+      return Boolean(options.allowBlur&&blurAt&&Date.now()-blurAt>=minBlurMs);
     },
     stop:()=>{
       document.removeEventListener('visibilitychange',onVisibility,true);
