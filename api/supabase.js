@@ -3,7 +3,7 @@ const WIENER_VPS_URL='https://drill-angeles-shades-wit.trycloudflare.com';
 const ALLOWED=new Set([
   'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
   'wiener-task-api','wiener-bot-task','wiener-exclusive','wiener-mandatory','wiener-withdraw','wiener-withdraw-internal',
-  'wiener-ton-wallet','wiener-ton-payout','wiener-payout','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions',
+  'wiener-ton-wallet','wiener-ton-payout','wiener-payout','wiener-ton-deposit-backfill','wiener-sponsored-task','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions',
   'wiener-referral-status','wiener-notify','wiener-broadcast-run','wiener-notification-worker',
   'wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all','wiener-ambassador-retry','wiener-ambassador-retry-trigger','wiener-ambassador-weekly-notify',
   'wiener-auto-giveaway-worker','wiener-giveaway-reminder','wiener-giveaway-reminder-preview',
