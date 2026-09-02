@@ -24,6 +24,7 @@ const VPS_FUNCTIONS=new Set([
   'wiener-tads',
   'wiener-adsgram-task',
   'wiener-task-api',
+  'wiener-bot-task',
   'wiener-mandatory',
   'wiener-withdraw',
   'wiener-ton-wallet',
