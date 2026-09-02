@@ -39,8 +39,13 @@ export default async function handler(req,res){
   const fn=String(req.query?.fn||'');
   if(!ALLOWED.has(fn)) return res.status(400).json({ok:false,error:'invalid_function'});
 
+  const body=req.body||{};
+  let upstreamFn=fn;
+  if(fn==='wiener-ad'&&String(body.action||'')==='status'&&!body.session_id) upstreamFn='wiener-ad-usage';
+  if(fn==='wiener-admin-api'&&String(body.action||'')==='admin_settings_save') upstreamFn='wiener-admin-settings';
+
   try{
-    const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${fn}`,buildHeaders(req),req.body||{});
+    const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${upstreamFn}`,buildHeaders(req),body);
     res.status(result.upstream.status);
     res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
     res.setHeader('cache-control','no-store');
