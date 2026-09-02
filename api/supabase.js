@@ -21,7 +21,10 @@ const VPS_WIENER_API_ACTIONS=new Set([
 const VPS_FUNCTIONS=new Set([
   'wiener-ad',
   'wiener-tads',
-  'wiener-adsgram-task'
+  'wiener-adsgram-task',
+  'wiener-task-api',
+  'wiener-mandatory',
+  'wiener-withdraw'
 ]);
 
 function buildHeaders(req){
