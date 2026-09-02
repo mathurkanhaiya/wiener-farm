@@ -1,42 +1,6 @@
-const SUPABASE_URL='https://hvyrairuogiljplmsuat.supabase.co';
 const WIENER_VPS_URL='http://15.235.145.222';
 
 const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
-
-const VPS_WIENER_API_ACTIONS=new Set([
-  'admin_adjust_balance',
-  'admin_ban',
-  'admin_bootstrap',
-  'admin_unban',
-  'app_opened',
-  'bootstrap',
-  'daily_claim',
-  'farm_claim',
-  'farm_start',
-  'promo_claim',
-  'promo_redeem',
-  'referral_refresh'
-]);
-
-const VPS_FUNCTIONS=new Set([
-  'wiener-admin-api',
-  'wiener-ad',
-  'wiener-tads',
-  'wiener-adsgram-task',
-  'wiener-task-api',
-  'wiener-bot-task',
-  'wiener-mandatory',
-  'wiener-withdraw',
-  'wiener-ton-wallet',
-  'wiener-device',
-  'wiener-missions',
-  'wiener-share',
-  'wiener-promo-channel',
-  'wiener-ambassador',
-  'wiener-ambassador-publish',
-  'wiener-ambassador-board',
-  'wiener-ambassador-check-all'
-]);
 
 function buildHeaders(req){
   const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
@@ -55,7 +19,7 @@ function buildHeaders(req){
 
 async function callUpstream(url,headers,body){
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),5000);
+  const timer=setTimeout(()=>controller.abort(),7000);
   try{
     const upstream=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal:controller.signal,redirect:'manual'});
     const text=await upstream.text();
@@ -75,41 +39,15 @@ export default async function handler(req,res){
   const fn=String(req.query?.fn||'');
   if(!ALLOWED.has(fn)) return res.status(400).json({ok:false,error:'invalid_function'});
 
-  const body=req.body||{};
-  const action=String(body?.action||'');
-  const useVps=VPS_FUNCTIONS.has(fn)||(fn==='wiener-api'&&VPS_WIENER_API_ACTIONS.has(action));
-  const headers=buildHeaders(req);
-
-  let result=null;
-  let backend='supabase';
-
-  if(useVps){
-    try{
-      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${fn}`,headers,body);
-      if(vps.upstream.status<500 && !(vps.upstream.status>=300 && vps.upstream.status<400)){
-        result=vps;
-        backend='vps';
-      } else {
-        console.error('VPS unavailable for request',vps.upstream.status);
-      }
-    }catch(error){
-      console.error('VPS request failed; falling back to Supabase',error);
-    }
+  try{
+    const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${fn}`,buildHeaders(req),req.body||{});
+    res.status(result.upstream.status);
+    res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
+    res.setHeader('cache-control','no-store');
+    res.setHeader('x-wiener-backend','vps');
+    return res.send(result.text);
+  }catch(error){
+    console.error('Wiener VPS request failed',error);
+    return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
   }
-
-  if(!result){
-    try{
-      result=await callUpstream(`${SUPABASE_URL}/functions/v1/${fn}`,headers,body);
-      backend=useVps?'supabase-fallback':'supabase';
-    }catch(error){
-      console.error('Supabase request failed',error);
-      return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
-    }
-  }
-
-  res.status(result.upstream.status);
-  res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
-  res.setHeader('cache-control','no-store');
-  res.setHeader('x-wiener-backend',backend);
-  return res.send(result.text);
 }
