@@ -1,6 +1,15 @@
 const WIENER_VPS_URL='https://drill-angeles-shades-wit.trycloudflare.com';
 
-const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
+const ALLOWED=new Set([
+  'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
+  'wiener-task-api','wiener-bot-task','wiener-exclusive','wiener-mandatory','wiener-withdraw','wiener-withdraw-internal',
+  'wiener-ton-wallet','wiener-ton-payout','wiener-payout','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions',
+  'wiener-referral-status','wiener-notify','wiener-broadcast-run','wiener-notification-worker',
+  'wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all','wiener-ambassador-retry','wiener-ambassador-retry-trigger','wiener-ambassador-weekly-notify',
+  'wiener-auto-giveaway-worker','wiener-giveaway-reminder','wiener-giveaway-reminder-preview',
+  'wiener-bot-sync','wiener-bot-router','wiener-bot-start','wiener-user-menu','wiener-bot-leaderboard','wiener-bot-admin','wiener-bot-user-inspector','wiener-bot-broadcast','wiener-bot-pay','wiener-bot-pay-ton','wiener-bot-treasury','wiener-special-task-admin','wiener-bot-addtask','wiener-bot-addtask-target','wiener-admin-action',
+  'wiener-migration-audit'
+]);
 
 function buildHeaders(req){
   const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
@@ -9,6 +18,8 @@ function buildHeaders(req){
     'content-type':'application/json',
     'apikey':String(req.headers.apikey||''),
     ...(req.headers.authorization?{'authorization':String(req.headers.authorization)}:{}),
+    ...(req.headers['x-wiener-internal-secret']?{'x-wiener-internal-secret':String(req.headers['x-wiener-internal-secret'])}:{}),
+    ...(req.headers['x-wiener-cron-secret']?{'x-wiener-cron-secret':String(req.headers['x-wiener-cron-secret'])}:{}),
     ...(clientIp?{'x-wiener-client-ip':clientIp}:{}),
     ...(req.headers['x-vercel-ip-country']?{'x-wiener-country':String(req.headers['x-vercel-ip-country'])}:{}),
     ...(req.headers['x-vercel-ip-country-region']?{'x-wiener-region':String(req.headers['x-vercel-ip-country-region'])}:{}),
