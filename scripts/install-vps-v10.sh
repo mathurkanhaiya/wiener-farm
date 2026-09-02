@@ -8,6 +8,7 @@ git pull --ff-only
 echo '=== APPLY COMPATIBILITY PATCHES ==='
 python3 scripts/patch-vps-v9.py
 python3 scripts/patch-vps-v10-all.py
+python3 scripts/patch-vps-v10b-bot-ops.py
 
 echo '=== INSTALL PAYOUT RUNTIME DEPENDENCIES ==='
 cd /opt/wiener-backend
@@ -26,8 +27,8 @@ curl -fsS http://127.0.0.1:3000/health
 echo
 
 echo '=== ROUTE SMOKE TESTS ==='
-# Empty unauthenticated calls must be rejected by auth, not 404.
-for fn in wiener-referral-status wiener-withdraw-internal wiener-payout wiener-ton-payout wiener-notify wiener-broadcast-run wiener-notification-worker; do
+# Empty unauthenticated/internal calls must be rejected by auth/secret, not return 404.
+for fn in wiener-referral-status wiener-withdraw-internal wiener-payout wiener-ton-payout wiener-notify wiener-broadcast-run wiener-notification-worker wiener-sponsored-task wiener-ton-deposit-backfill; do
   code=$(curl -s -o /tmp/wiener-v10-test.out -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "http://127.0.0.1:3000/functions/v1/$fn" || true)
   body=$(head -c 180 /tmp/wiener-v10-test.out 2>/dev/null || true)
   echo "$fn -> HTTP $code $body"
@@ -39,4 +40,4 @@ cat /var/log/wiener-cron.log 2>/dev/null || true
 echo
 
 echo '=== DONE ==='
-echo 'V10 installed. Keep payout settings disabled until status/preflight checks are verified.'
+echo 'V10 + V10B installed. Keep payout settings disabled until status/preflight checks are verified.'
