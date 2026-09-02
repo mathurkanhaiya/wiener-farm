@@ -1,4 +1,4 @@
-const VPS='http://15.235.145.222';
+const VPS='http://15.235.145.222:8080';
 export default async function handler(req,res){
   if(req.method!=='GET') return res.status(405).json({ok:false,error:'method_not_allowed'});
   const qs=new URLSearchParams();
