@@ -66,42 +66,34 @@ export default async function handler(req,res){
   const useVps=VPS_FUNCTIONS.has(fn)||(fn==='wiener-api'&&VPS_WIENER_API_ACTIONS.has(action));
   const headers=buildHeaders(req);
 
-  let result=null;
-  let backend='supabase';
-
   if(useVps){
     try{
       const vpsPath=fn==='wiener-api'?'wiener-api':fn;
-      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${vpsPath}`,headers,body);
-      if(vps.upstream.status<500 && vps.upstream.status<300){
-        result=vps;
-        backend='vps';
-      } else if(vps.upstream.status>=300 && vps.upstream.status<400){
-        console.error('VPS redirect blocked',vps.upstream.status,vps.upstream.headers.get('location')||'');
-      } else if(vps.upstream.status<500){
-        result=vps;
-        backend='vps';
-      } else {
-        console.error('VPS returned server error',vps.upstream.status);
+      const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${vpsPath}`,headers,body);
+      if(result.upstream.status>=300 && result.upstream.status<400){
+        console.error('VPS redirect blocked',result.upstream.status,result.upstream.headers.get('location')||'');
+        return res.status(502).json({ok:false,error:'vps_redirect',message:'VPS backend redirect blocked.'});
       }
+      res.status(result.upstream.status);
+      res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
+      res.setHeader('cache-control','no-store');
+      res.setHeader('x-wiener-backend','vps');
+      return res.send(result.text);
     }catch(error){
-      console.error('VPS request failed; falling back to Supabase',error);
+      console.error('VPS request failed',error);
+      return res.status(502).json({ok:false,error:'vps_unreachable',message:'VPS backend connection failed. Please try again.'});
     }
   }
 
-  if(!result){
-    try{
-      result=await callUpstream(`${SUPABASE_URL}/functions/v1/${fn}`,headers,body);
-      backend=useVps?'supabase-fallback':'supabase';
-    }catch(error){
-      console.error('Supabase request failed',error);
-      return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
-    }
+  try{
+    const result=await callUpstream(`${SUPABASE_URL}/functions/v1/${fn}`,headers,body);
+    res.status(result.upstream.status);
+    res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
+    res.setHeader('cache-control','no-store');
+    res.setHeader('x-wiener-backend','supabase');
+    return res.send(result.text);
+  }catch(error){
+    console.error('Supabase request failed',error);
+    return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
   }
-
-  res.status(result.upstream.status);
-  res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
-  res.setHeader('cache-control','no-store');
-  res.setHeader('x-wiener-backend',backend);
-  return res.send(result.text);
 }
