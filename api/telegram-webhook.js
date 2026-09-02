@@ -1,4 +1,4 @@
-const VPS='http://15.235.145.222:8080';
+const VPS='https://drill-angeles-shades-wit.trycloudflare.com';
 export default async function handler(req,res){
   if(req.method!=='POST') return res.status(200).send('ok');
   try{
