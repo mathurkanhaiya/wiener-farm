@@ -1,7 +1,7 @@
 const SUPABASE_URL='https://hvyrairuogiljplmsuat.supabase.co';
 const WIENER_VPS_URL='http://15.235.145.222';
 
-const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
+const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
 
 const VPS_WIENER_API_ACTIONS=new Set([
   'admin_adjust_balance',
@@ -85,8 +85,7 @@ export default async function handler(req,res){
 
   if(useVps){
     try{
-      const vpsPath=fn==='wiener-api'?'wiener-api':fn;
-      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${vpsPath}`,headers,body);
+      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${fn}`,headers,body);
       if(vps.upstream.status<500 && !(vps.upstream.status>=300 && vps.upstream.status<400)){
         result=vps;
         backend='vps';
