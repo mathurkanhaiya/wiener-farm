@@ -3,8 +3,6 @@ const WIENER_VPS_URL='http://15.235.145.222';
 
 const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-mandatory','wiener-withdraw','wiener-device','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
 
-// Actions already implemented by the VPS compatibility API.
-// All other traffic remains on Supabase until those routes are migrated.
 const VPS_WIENER_API_ACTIONS=new Set([
   'admin_adjust_balance',
   'admin_ban',
@@ -18,6 +16,12 @@ const VPS_WIENER_API_ACTIONS=new Set([
   'promo_claim',
   'promo_redeem',
   'referral_refresh'
+]);
+
+const VPS_FUNCTIONS=new Set([
+  'wiener-ad',
+  'wiener-tads',
+  'wiener-adsgram-task'
 ]);
 
 function buildHeaders(req){
@@ -39,7 +43,7 @@ async function callUpstream(url,headers,body){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),5000);
   try{
-    const upstream=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal:controller.signal});
+    const upstream=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal:controller.signal,redirect:'manual'});
     const text=await upstream.text();
     return {upstream,text};
   } finally {
@@ -59,7 +63,7 @@ export default async function handler(req,res){
 
   const body=req.body||{};
   const action=String(body?.action||'');
-  const useVps=fn==='wiener-api'&&VPS_WIENER_API_ACTIONS.has(action);
+  const useVps=VPS_FUNCTIONS.has(fn)||(fn==='wiener-api'&&VPS_WIENER_API_ACTIONS.has(action));
   const headers=buildHeaders(req);
 
   let result=null;
@@ -67,8 +71,14 @@ export default async function handler(req,res){
 
   if(useVps){
     try{
-      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/wiener-api`,headers,body);
-      if(vps.upstream.status<500){
+      const vpsPath=fn==='wiener-api'?'wiener-api':fn;
+      const vps=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${vpsPath}`,headers,body);
+      if(vps.upstream.status<500 && vps.upstream.status<300){
+        result=vps;
+        backend='vps';
+      } else if(vps.upstream.status>=300 && vps.upstream.status<400){
+        console.error('VPS redirect blocked',vps.upstream.status,vps.upstream.headers.get('location')||'');
+      } else if(vps.upstream.status<500){
         result=vps;
         backend='vps';
       } else {
