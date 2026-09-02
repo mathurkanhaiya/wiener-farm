@@ -1,7 +1,7 @@
 const SUPABASE_URL='https://hvyrairuogiljplmsuat.supabase.co';
 const WIENER_VPS_URL='http://15.235.145.222';
 
-const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-mandatory','wiener-withdraw','wiener-device','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
+const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
 
 const VPS_WIENER_API_ACTIONS=new Set([
   'admin_adjust_balance',
@@ -19,16 +19,23 @@ const VPS_WIENER_API_ACTIONS=new Set([
 ]);
 
 const VPS_FUNCTIONS=new Set([
+  'wiener-admin-api',
   'wiener-ad',
   'wiener-tads',
   'wiener-adsgram-task',
   'wiener-task-api',
+  'wiener-bot-task',
   'wiener-mandatory',
   'wiener-withdraw',
+  'wiener-ton-wallet',
   'wiener-device',
   'wiener-missions',
   'wiener-share',
-  'wiener-promo-channel'
+  'wiener-promo-channel',
+  'wiener-ambassador',
+  'wiener-ambassador-publish',
+  'wiener-ambassador-board',
+  'wiener-ambassador-check-all'
 ]);
 
 function buildHeaders(req){
