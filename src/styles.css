@@ -17,3 +17,37 @@
 
 /* Tasks tab: hide the top overall task progress card only. */
 body:has(.task-tabs) .progress-card{display:none!important;}
+
+/* Keep the admin shortcut as a small floating circle. Later theme layers must not
+   stretch it into an extra navigation row or consume a sixth nav column. */
+.bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+.bottom-nav>.admin-fab{
+  position:absolute!important;
+  left:auto!important;
+  right:8px!important;
+  top:-48px!important;
+  bottom:auto!important;
+  width:42px!important;
+  min-width:42px!important;
+  max-width:42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:0!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:none!important;
+  border-radius:50%!important;
+  z-index:3!important;
+}
+@media(max-width:760px){
+  .bottom-nav>.admin-fab{
+    right:6px!important;
+    top:-45px!important;
+    width:38px!important;
+    min-width:38px!important;
+    max-width:38px!important;
+    height:38px!important;
+    min-height:38px!important;
+  }
+}
