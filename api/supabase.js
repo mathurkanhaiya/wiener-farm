@@ -1,4 +1,4 @@
-const WIENER_VPS_URL='http://15.235.145.222';
+const WIENER_VPS_URL='http://15.235.145.222:8080';
 
 const ALLOWED=new Set(['wiener-api','wiener-admin-api','wiener-ad','wiener-tads','wiener-adsgram-task','wiener-task-api','wiener-bot-task','wiener-mandatory','wiener-withdraw','wiener-ton-wallet','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions','wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all']);
 
