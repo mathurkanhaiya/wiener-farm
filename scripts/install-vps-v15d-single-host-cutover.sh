@@ -22,6 +22,13 @@ say(){ printf '%s\n' "$*"; }
 fail(){ say "ERROR: $*" >&2; exit 1; }
 
 pg_scalar(){ runuser -u postgres -- psql -d "$DB" -Atqc "$1"; }
+sql_escape(){ printf '%s' "$1" | sed "s/'/''/g"; }
+set_app_url(){
+  local value escaped
+  value="$1"
+  escaped=$(sql_escape "$value")
+  runuser -u postgres -- psql -d "$DB" -qc "update public.app_settings set app_url='${escaped}' where id=true"
+}
 read_env(){
   local key="$1" file="$2"
   node - "$key" "$file" <<'NODE'
@@ -39,7 +46,7 @@ rollback(){
   if [ "$CUTOVER_LIVE" = 1 ]; then
     say '=== ROLLBACK TELEGRAM/APP URL ==='
     if [ -n "$OLD_APP_URL" ]; then
-      runuser -u postgres -- psql -d "$DB" -v old="$OLD_APP_URL" -qc "update public.app_settings set app_url=:'old' where id=true" || true
+      set_app_url "$OLD_APP_URL" || true
       curl -fsS -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton" \
         --data-urlencode "menu_button={\"type\":\"web_app\",\"text\":\"🌭 OPEN WIENER FARM\",\"web_app\":{\"url\":\"${OLD_APP_URL}\"}}" >/dev/null || true
     fi
@@ -170,7 +177,7 @@ fi
 
 say '=== SWITCH TELEGRAM + APP URL TO VPS ==='
 CUTOVER_LIVE=1
-runuser -u postgres -- psql -d "$DB" -v new="$APP_URL" -qc "update public.app_settings set app_url=:'new' where id=true"
+set_app_url "$APP_URL"
 curl -fsS -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
   --data-urlencode "url=${WEBHOOK_URL}" --data-urlencode "secret_token=${WEBHOOK_SECRET}" \
   --data-urlencode 'drop_pending_updates=false' | telegram_ok
