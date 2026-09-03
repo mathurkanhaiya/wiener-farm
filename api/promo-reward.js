@@ -1,4 +1,4 @@
-const VPS='https://noon-parent-cakes-colon.trycloudflare.com';
+const VPS='https://api.viralaitools.xyz';
 export default async function handler(req,res){
   if(req.method!=='GET') return res.status(405).json({ok:false,error:'method_not_allowed'});
   const qs=new URLSearchParams();
