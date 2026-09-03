@@ -104,12 +104,10 @@ server {
         proxy_send_timeout 60s;
     }
 
-    location /api/host/ {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-Proto https;
+    location ~ ^/api/host/([^/]+)$ {
+        alias /opt/wiener-host-assets/$1;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Wiener-Storage "vps" always;
     }
 
     location = /api/adsgram/reward {
@@ -140,9 +138,7 @@ python3 - "$CF_CFG" <<'PY'
 from pathlib import Path
 import sys,re
 p=Path(sys.argv[1]); s=p.read_text()
-# Remove the unused attempted second-host ingress block if present.
 s=re.sub(r'\n\s*- hostname: wiener\.viralaitools\.xyz\n\s*service: http://127\.0\.0\.1:18081\n?', '\n', s)
-# Change the proven existing API hostname to the Nginx frontend/API gateway.
 pat=r'(\s*- hostname: api\.viralaitools\.xyz\s*\n\s*service:)\s*\S+'
 if re.search(pat,s):
     s=re.sub(pat, r'\1 http://127.0.0.1:18081', s, count=1)
