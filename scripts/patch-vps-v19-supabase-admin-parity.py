@@ -14,14 +14,11 @@ if 'WIENER VPS FULL BOT PARITY V18B' not in s:
 if marker not in s:
     raise SystemExit('ERROR: final fallback marker not found')
 
-# Run V19 before V18 so exact legacy admin commands/callbacks win, while all
-# unchanged user/admin handlers continue through the reviewed V18 implementation.
 hook = "    try{if(await handleBotFullV18(up,uid,text,m,q)) return done();}catch(e){console.error('v18_bot_ops',String(e?.message||e));}\n"
 if hook not in s:
     raise SystemExit('ERROR: full V18 webhook hook not found')
 s = s.replace(hook, "    try{if(await handleAdminParityV19(up,uid,text,m,q)) return done();}catch(e){console.error('v19_admin_parity',String(e?.message||e));}\n" + hook, 1)
 
-# Restore the exact public command list previously registered by wiener-bot-sync.
 old_commands = "[{command:'start',description:'Open WIENER dashboard'},{command:'menu',description:'Main menu'},{command:'balance',description:'Check WIENER balance'},{command:'farm',description:'Farm status'},{command:'ads',description:'Ads status'},{command:'tasks',description:'Available tasks'},{command:'referral',description:'Referral stats'},{command:'withdraw',description:'Open wallet'},{command:'profile',description:'Account profile'},{command:'leaderboard',description:'WIENER rankings'},{command:'promo',description:'Active promos'},{command:'giveaway',description:'Active giveaway'},{command:'addtask',description:'Create sponsored task'},{command:'support',description:'Support'},{command:'help',description:'Help and commands'}]"
 legacy_commands = "[{command:'start',description:'Open WIENER dashboard'},{command:'menu',description:'Main menu'},{command:'balance',description:'Check WIENER balance'},{command:'farm',description:'Farm status'},{command:'tasks',description:'Available tasks'},{command:'referral',description:'Referral stats'},{command:'withdraw',description:'Open wallet'},{command:'profile',description:'Account profile'},{command:'leaderboard',description:'WIENER rankings'},{command:'support',description:'Support'},{command:'help',description:'Help and commands'}]"
 if old_commands in s:
@@ -29,15 +26,12 @@ if old_commands in s:
 else:
     print('WARNING: V18 sync command array not found; V19 /syncbot still restores it')
 
-# Add the old secret-presence inspector button to Polygon payout settings.
 needle = "[cb18('⏳ TX / RETRY','wpay:attempts')],[cb18('Max $0.10','wpay:max:010')"
 if needle in s:
     s = s.replace(needle, "[cb18('⏳ TX / RETRY','wpay:attempts')],[cb18('🔐 SECRET STATUS','wpay:secrets')],[cb18('Max $0.10','wpay:max:010')", 1)
 else:
     print('WARNING: payout settings button insertion point not found')
 
-# Extend the restored V18 treasury endpoint so the old recover action and the
-# combined Polygon+TON scanner are reachable with the same contract.
 s = s.replace("if(act==='scan_deposits')return res.json({ok:true,data:await treasuryScan18()});", "if(act==='scan_deposits')return res.json({ok:true,data:await treasuryScan19()});if(act==='recover_latest_deposit')return res.json({ok:true,data:await treasuryRecover19()});", 1)
 s = s.replace("return res.json({ok:true,data:await treasuryScan18()})", "return res.json({ok:true,data:await treasuryScan19()})", 1)
 s = s.replace("scan=await treasuryScan18()", "scan=await treasuryScan19()", 1)
@@ -85,8 +79,8 @@ async function polygonStats19(){
   let attempts={failed:0,submitted:0,gas:'0'};try{attempts=(await pool.query(`select count(*) filter(where state='failed')::int failed,count(*) filter(where state in ('submitted','broadcasting'))::int submitted,coalesce(sum(gas_used::numeric) filter(where created_at>=current_date),0)::text gas from public.wiener_payout_attempts`)).rows[0]||attempts}catch{}
   const st=await st18();return{text:`📊 PAYOUT STATS — TODAY\n\n📥 Pending: ${q.pending||0} · ${n18(q.pending_v).toFixed(4)} USDT\n✅ Paid: ${q.paid||0} · ${n18(q.paid_v).toFixed(4)} USDT\n❌ Rejected: ${q.rejected||0}\n⏳ Submitted/broadcasting: ${attempts.submitted||0}\n⚠️ Failed attempts: ${attempts.failed||0}\n⛽ Recorded gas units: ${attempts.gas||'0'}\n\nDaily cap: ${n18(st.payout_daily_cap_usdt).toFixed(2)} USDT`,markup:kb18([[cb18('◀️ SETTINGS','wpay:settings')]])};
 }
-async function polygonSecrets19(){
-  const st=await payoutStatus18(0,false).catch(()=>null);return{text:`🔐 PAYOUT SECRET STATUS\n\n${st?.rpc_present?'✅':'❌'} Polygon RPC configured\n${st?.token_present?'✅':'❌'} USDT contract configured\n${st?.private_key_present?'✅':'❌'} Payout private key configured\n\nSecret values are never displayed in Telegram.`,markup:kb18([[cb18('◀️ SETTINGS','wpay:settings')]])};
+async function polygonSecrets19(id){
+  const st=await payoutStatus18(id,false).catch(()=>null);return{text:`🔐 PAYOUT SECRET STATUS\n\n${st?.rpc_present?'✅':'❌'} Polygon RPC configured\n${st?.token_present?'✅':'❌'} USDT contract configured\n${st?.private_key_present?'✅':'❌'} Payout private key configured\n\nSecret values are never displayed in Telegram.`,markup:kb18([[cb18('◀️ SETTINGS','wpay:settings')]])};
 }
 
 async function syncOldBotCommands19(){
@@ -142,13 +136,11 @@ async function handleAdminParityV19(up,uid,text,m,q){
     try{await adm18(uid);await edit18(q,await adminHome19());await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Updated'})}catch{await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin permission required',show_alert:true})}return true;
   }
   if(q&&String(q.data||'').startsWith('wpay:')){
-    try{await adm18(uid,'withdrawals')}catch{await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin required',show_alert:true});return true}const p=String(q.data).split(':'),act=p[1];if(act==='home'||act==='status'){await edit18(q,await polygonPayCard19(uid));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Updated'});return true}if(act==='next'){await edit18(q,await polygonPayCard19(uid,p.slice(2).join(':')));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Next'});return true}if(act==='stats'){await edit18(q,await polygonStats19());await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Stats'});return true}if(act==='secrets'){await edit18(q,await polygonSecrets19());await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Secret status'});return true}
+    try{await adm18(uid,'withdrawals')}catch{await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin required',show_alert:true});return true}const p=String(q.data).split(':'),act=p[1];if(act==='home'||act==='status'){await edit18(q,await polygonPayCard19(uid));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Updated'});return true}if(act==='next'){await edit18(q,await polygonPayCard19(uid,p.slice(2).join(':')));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Next'});return true}if(act==='stats'){await edit18(q,await polygonStats19());await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Stats'});return true}if(act==='secrets'){await edit18(q,await polygonSecrets19(uid));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Secret status'});return true}
   }
   return false;
 }
 
-// Old one-click UNBAN links used a GET action token.  Restore that separately
-// from the JSON POST admin API; token values are one-time and are never logged.
 app.get('/functions/v1/wiener-admin-action',async(req,res)=>{
   const page=(title,text,ok=true)=>res.status(ok?200:400).type('html').set('cache-control','no-store').send(`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="margin:0;background:#002b18;color:white;font-family:system-ui;min-height:100vh;display:grid;place-items:center"><main style="width:min(86vw,380px);padding:34px 24px;text-align:center;border:1px solid #ffffff22;border-radius:28px;background:#ffffff10"><div style="font-size:54px">${ok?'✅':'⚠️'}</div><h2>${title}</h2><p style="opacity:.7;line-height:1.5">${text}</p><button onclick="window.close()" style="width:100%;height:52px;border:0;border-radius:16px;background:#ffe025;font-weight:900">CLOSE</button></main></body>`);
   try{const token=String(req.query?.token||'');if(!token)return page('Invalid action','This admin action link is invalid.',false);const data=await rpc('consume_admin_unban_token',[token]),x=Array.isArray(data)?data[0]:data,tid=Number(x?.telegram_id||x?.p_telegram_id||0);if(!tid)throw new Error('invalid_or_expired_token');return page('User Unbanned',`UID ${tid} can access WIENER Farm again. This device is now admin-approved.`)}catch(e){const m=String(e?.message||e);return page('Unable to unban',m.includes('expired')?'This UNBAN button has expired.':m.includes('used')?'This UNBAN action was already used.':'The action could not be completed.',false)}
