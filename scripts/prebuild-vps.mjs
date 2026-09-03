@@ -29,10 +29,11 @@ function walk(dir){
     else if(exts.has(path.extname(ent.name))){
       let s=fs.readFileSync(p,'utf8');
       const before=s;
-      s=s.replace(/\$\{SUPABASE_URL\}\/functions\/v1\/([A-Za-z0-9_-]+)/g,'/api/supabase?fn=$1');
-      s=s.replace(/https:\/\/[A-Za-z0-9.-]*supabase\.co\/functions\/v1\/([A-Za-z0-9_-]+)/g,'/api/supabase?fn=$1');
+      s=s.replace(/\$\{SUPABASE_URL\}\/functions\/v1\/([A-Za-z0-9_-]+)/g,'/functions/v1/$1');
+      s=s.replace(/https:\/\/[A-Za-z0-9.-]*supabase\.co\/functions\/v1\/([A-Za-z0-9_-]+)/g,'/functions/v1/$1');
+      s=s.replace(/\/api\/supabase\?fn=([A-Za-z0-9_-]+)/g,'/functions/v1/$1');
       s=patchAdminHub(s,p);
-      if(s!==before){fs.writeFileSync(p,s);changed++;console.log('VPS proxy rewrite:',p)}
+      if(s!==before){fs.writeFileSync(p,s);changed++;console.log('VPS direct rewrite:',p)}
     }
   }
 }
