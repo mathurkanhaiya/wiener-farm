@@ -74,7 +74,9 @@ pat=r"async function treasuryTonScan19\(\)\{.*?\n\}\nasync function treasuryScan
 m=re.search(pat,s,re.S)
 if not m:
     raise SystemExit('ERROR: V19 TON scanner body not found')
-s=re.sub(pat,scanner+"\nasync function treasuryScan19(){",s,count=1,flags=re.S)
+# Use a callable replacement so Python does not interpret JavaScript regex escapes
+# (for example /\s+/) as replacement-template escapes.
+s=re.sub(pat,lambda _m: scanner+"\nasync function treasuryScan19(){",s,count=1,flags=re.S)
 
 code=r'''
 
