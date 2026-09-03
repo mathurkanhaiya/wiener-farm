@@ -69,7 +69,7 @@ cd "$CODE"
 git pull --ff-only
 
 say '=== PRE-CUTOVER CHECKS ==='
-curl -fsS "${API_URL}/healthz" >/tmp/wiener-v15-api-health.json
+curl -fsS "${API_URL}/" >/tmp/wiener-v15-api-health.json
 cat /tmp/wiener-v15-api-health.json
 node --check "$BACKEND/server.mjs"
 
@@ -107,7 +107,7 @@ server {
     index index.html;
 
     location = /healthz {
-        proxy_pass http://127.0.0.1:3000/healthz;
+        proxy_pass http://127.0.0.1:3000/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
@@ -226,7 +226,7 @@ PY
 pm2 restart wiener-api --update-env
 pm2 save
 sleep 2
-curl -fsS "${API_URL}/healthz" >/tmp/wiener-v15-post-health.json
+curl -fsS "${API_URL}/" >/tmp/wiener-v15-post-health.json
 cat /tmp/wiener-v15-post-health.json
 
 say '=== NO-SUPABASE RUNTIME AUDIT ==='
