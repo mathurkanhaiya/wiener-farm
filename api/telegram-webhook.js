@@ -1,4 +1,4 @@
-const VPS='https://drill-angeles-shades-wit.trycloudflare.com';
+const VPS='https://confidentiality-robin-nashville-commissions.trycloudflare.com';
 export default async function handler(req,res){
   if(req.method!=='POST') return res.status(200).send('ok');
   try{
