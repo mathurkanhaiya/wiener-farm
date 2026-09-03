@@ -1,4 +1,4 @@
-const VPS='https://drill-angeles-shades-wit.trycloudflare.com';
+const VPS='https://confidentiality-robin-nashville-commissions.trycloudflare.com';
 export default async function handler(req,res){
   if(req.method!=='GET') return res.status(405).json({ok:false,error:'method_not_allowed'});
   const qs=new URLSearchParams();
