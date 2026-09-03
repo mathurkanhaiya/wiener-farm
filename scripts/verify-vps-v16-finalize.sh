@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-APP_URL='https://wiener.viralaitools.xyz'
+APP_URL='https://api.viralaitools.xyz'
 API_URL='https://api.viralaitools.xyz'
 WEBHOOK_URL="${API_URL}/functions/v1/wiener-bot-webhook"
 BACKEND=/opt/wiener-backend
@@ -70,8 +70,8 @@ asset_count=$(find /opt/wiener-host-assets -maxdepth 1 -type f | wc -l)
 echo "hosted_assets=$asset_count"
 if [ "$asset_count" -gt 0 ]; then
   asset=$(find /opt/wiener-host-assets -maxdepth 1 -type f -printf '%f\n' | head -n1)
-  c=$(curl -sS -I -o /dev/null -w '%{http_code}' "$APP_URL/api/host/$asset" || true)
-  [ "$c" = 200 ] || fail "Hosted asset public test failed: HTTP $c"
+  c=$(curl -sS -o /dev/null -w '%{http_code}' "$APP_URL/api/host/$asset" || true)
+  [ "$c" = 200 ] || fail "Hosted asset public GET failed: HTTP $c"
 fi
 ok 'Hosted files are served from VPS'
 
@@ -81,7 +81,6 @@ for fn in wiener-payout wiener-ton-payout; do
   case "$c" in 000|404|502) fail "$fn route unavailable: HTTP $c";; esac
   echo "$fn protected smoke -> HTTP $c"
 done
-# Never send a payment here. Check duplicate-protection implementation exists in live backend source.
 grep -Eqi 'idempot|already.*paid|status.*paid|double.*pay|payment.*processed' "$BACKEND/server.mjs" || echo 'WARNING: duplicate-protection pattern not recognized automatically; manual code review required.'
 ok 'Payout routes reachable; no transfer executed'
 
