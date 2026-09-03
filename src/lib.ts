@@ -5,6 +5,7 @@ const edge=(name:string)=>`/api/supabase?fn=${encodeURIComponent(name)}`;
 export const API=edge('wiener-api');
 export const ADMIN_API=edge('wiener-admin-api');
 export const AD_API=edge('wiener-ad');
+export const AD_USAGE_API=edge('wiener-ad-usage');
 export const SECONDARY_AD_API=edge('wiener-tads');
 export const ADSGRAM_TASK_API=edge('wiener-adsgram-task');
 export const TASK_API=edge('wiener-task-api');
@@ -34,10 +35,11 @@ async function getDeviceFingerprintV2(){const tg=window.Telegram?.WebApp as any;
 export async function deviceContext(){const tg=window.Telegram?.WebApp as any;return {device_id:getDeviceId(),installation_id:getInstallationId(),device_fingerprint:await getDeviceFingerprint(),fingerprint_v2:await getDeviceFingerprintV2(),telegram_platform:String(tg?.platform||'').slice(0,32),language:String(navigator.language||'').slice(0,32),timezone:String(Intl.DateTimeFormat().resolvedOptions().timeZone||'').slice(0,64)}}
 async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');return x.data??x}
 export async function registerDevice(){const ctx=await deviceContext();const r=await fetch(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData(),...ctx})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Device check failed');return x.data??x}
-export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const data=await post(url,mapped,body);if(action==='bootstrap'){try{const st=await post(AD_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
+export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const data=await post(url,mapped,body);if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
 export async function promoChannelApi(body:{code:string;channels?:string[]}){return post(PROMO_CHANNEL_API,'publish',body)}
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
+export async function adUsageApi(){return post(AD_USAGE_API,'status')}
 export async function secondaryAdApi(action:'stats'|'start'|'reward',body:any={}){return post(SECONDARY_AD_API,action,body)}
 export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={}){return post(ADSGRAM_TASK_API,action,body)}
 export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}
