@@ -41,7 +41,8 @@ for x in \
   "cmd==='deposit'" "wtre:" "wpay:" "wgpay:" "usr:" "adm:prep:" "adm:ov:" "bc:" "at:" \
   'alertDeviceAdmin19' 'treasuryTonScan19' 'recover_latest_deposit' 'wpay:secrets' \
   'wiener-bot-sync' 'wiener-bot-admin' 'wiener-bot-user-inspector' 'wiener-bot-broadcast' \
-  'wiener-bot-pay' 'wiener-bot-pay-ton' 'wiener-bot-treasury' 'wiener-treasury-wallet'; do
+  'wiener-bot-pay' 'wiener-bot-pay-ton' 'wiener-bot-treasury' 'wiener-treasury-wallet' \
+  'wiener-admin-api' 'wiener-special-task-admin' 'wiener-withdraw-internal'; do
   grep -Fq "$x" "$BACKEND" || { echo "ERROR: missing parity marker/handler: $x" >&2; exit 1; }
 done
 
@@ -94,6 +95,13 @@ for fn in wiener-bot-admin wiener-bot-user-inspector wiener-bot-broadcast wiener
 done
 unset SECRET
 
+echo '=== ADMIN PANEL BACKEND PARITY ==='
+for fn in wiener-admin-api wiener-special-task-admin wiener-withdraw-internal; do
+  c=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{}' "http://127.0.0.1:3000/functions/v1/$fn" || true)
+  echo "$fn -> HTTP $c"
+  [[ "$c" != "000" && "$c" != "404" && "$c" != "502" ]] || { echo "ERROR: $fn route unavailable" >&2; exit 1; }
+done
+
 echo '=== SAFE PAYOUT/TREASURY ROUTE CHECKS ==='
 for fn in wiener-payout wiener-ton-payout wiener-treasury-wallet; do
   c=$(curl -sS -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{}' "http://127.0.0.1:3000/functions/v1/$fn" || true)
@@ -110,6 +118,7 @@ echo 'Restored from old Supabase behavior:'
 echo '/admin /user /addbalance /removebalance /notify /ban /unban /broadcast /pay /deposit /withdraw(admin treasury) /addtask /cancel'
 echo 'Restored callback families: adm:* usr:* wpay:* wgpay:* wtre:* bc:* at:*'
 echo 'Restored: Polygon + GRAM pay centers, payout settings/history/stats/secret-presence, treasury Polygon+TON deposit scan/alerts, device/new-user/multi-account admin alerts, one-click unban action, user inspector, risk controls, system toggles, broadcast sessions, sponsored-task wizard.'
+echo 'Admin panel API, special-task admin and internal-withdraw manager routes are also gated.'
 echo 'Telegram public command list reset to the old Supabase list; hidden admin commands still work.'
 echo 'No payout or treasury withdrawal was executed.'
 trap - ERR
