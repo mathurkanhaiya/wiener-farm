@@ -1,4 +1,4 @@
-const WIENER_VPS_URL='https://noon-parent-cakes-colon.trycloudflare.com';
+const WIENER_VPS_URL='https://api.viralaitools.xyz';
 
 const ALLOWED=new Set([
   'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
