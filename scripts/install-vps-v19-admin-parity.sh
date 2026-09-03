@@ -37,7 +37,7 @@ for x in \
   'WIENER VPS SUPABASE ADMIN PARITY V19' \
   'WIENER VPS SUPABASE ADMIN PARITY V19B' \
   "cmd==='admin'" "cmd==='user'" "['addbalance','removebalance'].includes(cmd)" \
-  "cmd==='ban'" "cmd==='unban'" "cmd==='broadcast'" "cmd==='addtask'" "cmd==='pay'" \
+  "['ban','unban'].includes(cmd)" "cmd==='broadcast'" "cmd==='addtask'" "cmd==='pay'" \
   "cmd==='deposit'" "wtre:" "wpay:" "wgpay:" "usr:" "adm:prep:" "adm:ov:" "bc:" "at:" \
   'alertDeviceAdmin19' 'treasuryTonScan19' 'recover_latest_deposit' 'wpay:secrets' \
   'wiener-bot-sync' 'wiener-bot-admin' 'wiener-bot-user-inspector' 'wiener-bot-broadcast' \
