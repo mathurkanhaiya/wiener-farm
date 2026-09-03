@@ -1,4 +1,5 @@
 const WIENER_VPS_URL='https://api.viralaitools.xyz';
+// clean rebuild trigger after AdsPage compile fix
 
 const ALLOWED=new Set([
   'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
@@ -57,9 +58,7 @@ export default async function handler(req,res){
 
   try{
     const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${upstreamFn}`,buildHeaders(req),body);
-    if(!result.upstream.ok){
-      console.warn('Wiener VPS non-2xx',{fn,upstreamFn,action:String(body.action||''),status:result.upstream.status,response:String(result.text||'').slice(0,700)});
-    }
+    if(!result.upstream.ok) console.error('WIENER upstream non-2xx',{fn,upstreamFn,action:String(body.action||''),status:result.upstream.status,text:result.text.slice(0,500)});
     res.status(result.upstream.status);
     res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
     res.setHeader('cache-control','no-store');
