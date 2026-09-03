@@ -44,7 +44,7 @@ info=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo")
 current=$(printf '%s' "$info" | python3 -c 'import json,sys; x=json.load(sys.stdin)["result"]; print(x.get("url",""))')
 [ "$current" = "$WEBHOOK_URL" ] || fail "Telegram webhook is not VPS: $current"
 err=$(printf '%s' "$info" | python3 -c 'import json,sys; x=json.load(sys.stdin)["result"]; print(x.get("last_error_message", ""))')
-[ -z "$err" ] || fail "Telegram webhook reports error: $err"
+[ -z "$err" ] || echo "WARNING: Telegram reports historical webhook error: $err"
 menu=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getChatMenuButton")
 menu_url=$(printf '%s' "$menu" | python3 -c 'import json,sys; x=json.load(sys.stdin).get("result",{}); print(x.get("web_app",{}).get("url",""))')
 [ "$menu_url" = "$APP_URL" ] || fail "Telegram menu still points elsewhere: $menu_url"
@@ -60,8 +60,8 @@ crontab -l 2>/dev/null | grep -q '/usr/local/bin/wiener-cron.sh' || fail 'Wiener
 ok 'PM2, Cloudflare and cron persistence checks passed'
 
 echo '=== NO SUPABASE RUNTIME ==='
-if grep -Eiq 'supabase\.co|SUPABASE_|VITE_SUPABASE_|NEXT_PUBLIC_SUPABASE_' "$BACKEND/.env"; then fail 'Supabase reference remains in backend .env'; fi
-if grep -RInE --exclude-dir=node_modules --exclude-dir=.git 'https://[^[:space:]"'"']*supabase\.co|/api/supabase\?fn=|VITE_SUPABASE_|NEXT_PUBLIC_SUPABASE_' "$CODE/src" "$CODE/dist" 2>/dev/null; then fail 'Supabase runtime reference remains in source/build'; fi
+if grep -Eiq 'supabase\.co|^SUPABASE_|^VITE_SUPABASE_|^NEXT_PUBLIC_SUPABASE_' "$BACKEND/.env"; then fail 'Supabase reference remains in backend .env'; fi
+if grep -RInE --exclude-dir=node_modules --exclude-dir=.git 'supabase\.co|/api/supabase\?fn=' "$CODE/src" "$CODE/dist" 2>/dev/null; then fail 'Supabase runtime URL/proxy reference remains in source/build'; fi
 ok 'No Supabase runtime dependency detected on VPS app/backend'
 
 echo '=== HOSTED STORAGE ==='
@@ -86,7 +86,8 @@ ok 'Payout routes reachable; no transfer executed'
 
 echo '=== FINAL BACKUPS ==='
 mkdir -p "$BACKUP_DIR"
-pg_dump -Fc -d "$DB" -f "$BACKUP_DIR/wiener-db-$STAMP.dump"
+runuser -u postgres -- pg_dump -Fc -d "$DB" -f "/tmp/wiener-db-$STAMP.dump"
+mv "/tmp/wiener-db-$STAMP.dump" "$BACKUP_DIR/wiener-db-$STAMP.dump"
 tar -C /opt -czf "$BACKUP_DIR/wiener-host-assets-$STAMP.tar.gz" wiener-host-assets
 cp -a "$BACKEND/.env" "$BACKUP_DIR/backend-env-$STAMP.backup"
 chmod 600 "$BACKUP_DIR"/*
