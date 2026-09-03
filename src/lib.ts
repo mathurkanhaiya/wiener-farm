@@ -1,8 +1,8 @@
 const viteEnv=(import.meta as any).env||{};
-// Legacy names are kept only so older components compile. Runtime API traffic is Vercel -> VPS.
+// Legacy names are kept only so older components compile. Runtime traffic is same-origin VPS only.
 export const SUPABASE_URL='';
 export const PUBLISHABLE_KEY='vps';
-const edge=(name:string)=>`/api/supabase?fn=${encodeURIComponent(name)}`;
+const edge=(name:string)=>`/functions/v1/${encodeURIComponent(name)}`;
 export const API=edge('wiener-api');
 export const ADMIN_API=edge('wiener-admin-api');
 export const AD_API=edge('wiener-ad');
@@ -49,7 +49,7 @@ export async function shareApi(){return post(SHARE_API,'prepare')}
 export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
 export async function ambassadorApi(action:string,body:any={}){
   if(action==='admin_publish_drop'){
-    const url=`${AMBASSADOR_PUBLISH_API}&v=one-code-20260901`;
+    const url=`${AMBASSADOR_PUBLISH_API}?v=one-code-20260901`;
     return post(url,'publish',body);
   }
   return post(AMBASSADOR_API,action,body)
