@@ -29,23 +29,31 @@ class AppCrashBoundary extends Component<{children:ReactNode},BoundaryState>{
 
 function GlobalAppEffects(){
   useEffect(()=>{
-    let last=0;
+    let lastTap=0,lastToast='';
     const onTap=(event:PointerEvent)=>{
       const node=event.target as Element|null;
       const el=node?.closest?.('button,a,[role="button"]') as HTMLElement|null;
       if(!el||el.getAttribute('aria-disabled')==='true'||(el as HTMLButtonElement).disabled)return;
-      const now=performance.now();if(now-last<55)return;last=now;
+      const now=performance.now();if(now-lastTap<55)return;lastTap=now;
       hapticImpact(el.classList.contains('primary')?'medium':'light');
     };
-    const onError=()=>hapticNotify('error');
     const onRejection=()=>hapticNotify('error');
+    const observeToast=()=>{
+      const text=String(document.querySelector('.toast')?.textContent||'').trim();
+      if(!text||text===lastToast)return;
+      lastToast=text;
+      if(/error|failed|invalid|unable|unavailable|timed out|try again|rejected|blocked|denied/i.test(text))hapticNotify('error');
+      else if(/wait|checking|verifying|processing|pending/i.test(text))hapticNotify('warning');
+      else hapticNotify('success');
+    };
+    const observer=new MutationObserver(observeToast);
     document.addEventListener('pointerup',onTap,true);
-    window.addEventListener('error',onError);
     window.addEventListener('unhandledrejection',onRejection);
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
     return()=>{
       document.removeEventListener('pointerup',onTap,true);
-      window.removeEventListener('error',onError);
       window.removeEventListener('unhandledrejection',onRejection);
+      observer.disconnect();
     };
   },[]);
   return null;
