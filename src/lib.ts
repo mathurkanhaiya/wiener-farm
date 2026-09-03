@@ -1,6 +1,7 @@
 const viteEnv=(import.meta as any).env||{};
-export const SUPABASE_URL=viteEnv.VITE_SUPABASE_URL||'https://hvyrairuogiljplmsuat.supabase.co';
-export const PUBLISHABLE_KEY=viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_y-GU9ztfz4rcVSQMce9eBA_OUO832is';
+// Legacy names are kept only so older components compile. Runtime API traffic is Vercel -> VPS.
+export const SUPABASE_URL='';
+export const PUBLISHABLE_KEY='vps';
 const edge=(name:string)=>`/api/supabase?fn=${encodeURIComponent(name)}`;
 export const API=edge('wiener-api');
 export const ADMIN_API=edge('wiener-admin-api');
