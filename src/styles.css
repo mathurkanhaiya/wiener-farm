@@ -51,3 +51,41 @@ body:has(.task-tabs) .progress-card{display:none!important;}
     min-height:38px!important;
   }
 }
+
+/* V21 UI stability/polish: keep the balance visual quiet and perfectly centered. */
+.hero.card>.hero-balance{
+  width:100%;
+  display:grid!important;
+  place-items:center!important;
+  margin:18px 0 6px!important;
+  gap:0!important;
+}
+.hero.card>.hero-balance>.coin,
+.hero.card>.hero-balance>b{display:none!important;}
+.hero.card>.hero-balance>strong{
+  display:block;
+  width:100%;
+  text-align:center;
+  font-size:clamp(44px,12vw,64px)!important;
+  line-height:1.04!important;
+  letter-spacing:-.045em;
+  font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere;
+}
+
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+body{-webkit-tap-highlight-color:transparent;}
+.content,.home-stack,.card,.grow{min-width:0;}
+button,a,[role="button"],.quick{touch-action:manipulation;}
+button,.bottom-nav>button,.quick,.language-trigger{-webkit-user-select:none;user-select:none;}
+button:not(:disabled):active,.bottom-nav>button:active,.quick:active,.language-trigger:active{transform:scale(.985);}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid rgba(255,225,55,.75);outline-offset:2px;}
+img{max-width:100%;}
+.recovery-actions{width:min(100%,360px);display:grid;gap:10px;margin-top:18px;}
+.recovery-secondary{width:100%;min-height:52px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-weight:900;}
+.recovery-code{display:block;max-width:360px;margin-top:16px;opacity:.35;overflow-wrap:anywhere;}
+
+@media(max-width:520px){
+  .hero.card>.hero-balance>strong{font-size:clamp(40px,13vw,56px)!important;}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
