@@ -1,4 +1,4 @@
-const VPS='https://noon-parent-cakes-colon.trycloudflare.com';
+const VPS='https://api.viralaitools.xyz';
 export default async function handler(req,res){
   if(req.method!=='POST') return res.status(200).send('ok');
   try{
