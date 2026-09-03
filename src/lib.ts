@@ -40,6 +40,43 @@ function normalizeUiNumbers(v:any):any{
   }
   return v;
 }
+
+const REQUEST_TIMEOUT_MS=15000;
+const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+function requestError(status:number,x:any){
+  const raw=String(x?.message||x?.error||'').trim();
+  if([502,503,504].includes(status))return new Error('Server is reconnecting. Try again in a moment.');
+  if(status===429)return new Error(raw||'Too many requests. Please wait a moment.');
+  if(status>=500)return new Error(raw||'Temporary server error. Please try again.');
+  return new Error(raw||'Request failed');
+}
+async function fetchJson(url:string,init:RequestInit,timeoutMs=REQUEST_TIMEOUT_MS){
+  const controller=new AbortController(),timer=window.setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const r=await fetch(url,{...init,signal:controller.signal});
+    const raw=await r.text();
+    let x:any={ok:false,error:'invalid_response'};
+    if(raw){try{x=JSON.parse(raw)}catch{x={ok:false,error:r.ok?'invalid_response':raw.slice(0,180)}}}
+    if(!r.ok||x?.ok===false)throw requestError(r.status,x);
+    return x;
+  }catch(e:any){
+    if(e?.name==='AbortError')throw new Error('Connection timed out. Please try again.');
+    if(e instanceof TypeError)throw new Error('Network connection failed. Please try again.');
+    throw e;
+  }finally{window.clearTimeout(timer)}
+}
+function isTransientBootstrapError(e:any){return /reconnecting|temporary server|network connection|timed out/i.test(String(e?.message||e||''))}
+
+export function hapticImpact(style:'light'|'medium'|'heavy'|'rigid'|'soft'='light'){
+  try{(window.Telegram?.WebApp as any)?.HapticFeedback?.impactOccurred?.(style)}catch{}
+}
+export function hapticSelection(){
+  try{(window.Telegram?.WebApp as any)?.HapticFeedback?.selectionChanged?.()}catch{}
+}
+export function hapticNotify(type:'success'|'warning'|'error'){
+  try{(window.Telegram?.WebApp as any)?.HapticFeedback?.notificationOccurred?.(type)}catch{}
+}
+
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
@@ -52,9 +89,9 @@ async function sha256(raw:string){try{const buf=await crypto.subtle.digest('SHA-
 async function getDeviceFingerprint(){const raw=[navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`].join('|');return sha256(raw)}
 async function getDeviceFingerprintV2(){const tg=window.Telegram?.WebApp as any;const raw=['v2',navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`,String(window.devicePixelRatio||1),tg?.platform||''].join('|');return sha256(raw)}
 export async function deviceContext(){const tg=window.Telegram?.WebApp as any;return {device_id:getDeviceId(),installation_id:getInstallationId(),device_fingerprint:await getDeviceFingerprint(),fingerprint_v2:await getDeviceFingerprintV2(),telegram_platform:String(tg?.platform||'').slice(0,32),language:String(navigator.language||'').slice(0,32),timezone:String(Intl.DateTimeFormat().resolvedOptions().timeZone||'').slice(0,64)}}
-async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');return normalizeUiNumbers(x.data??x)}
-export async function registerDevice(){const ctx=await deviceContext();const r=await fetch(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData(),...ctx})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Device check failed');return normalizeUiNumbers(x.data??x)}
-export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const data=await post(url,mapped,body);if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
+async function post(url:string,action:string,body:any={}){const x=await fetchJson(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});return normalizeUiNumbers(x.data??x)}
+export async function registerDevice(){const ctx=await deviceContext();const x=await fetchJson(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},cache:'no-store',body:JSON.stringify({initData:getInitData(),...ctx})});return normalizeUiNumbers(x.data??x)}
+export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;let data:any;try{data=await post(url,mapped,body)}catch(e){if(action!=='bootstrap'||!isTransientBootstrapError(e))throw e;await sleep(550);data=await post(url,mapped,body)}if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
 export async function promoChannelApi(body:{code:string;channels?:string[]}){return post(PROMO_CHANNEL_API,'publish',body)}
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
 export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}
