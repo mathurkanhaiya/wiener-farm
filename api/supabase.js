@@ -31,7 +31,7 @@ function buildHeaders(req){
 
 async function callUpstream(url,headers,body){
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),7000);
+  const timer=setTimeout(()=>controller.abort(),15000);
   try{
     const upstream=await fetch(url,{method:'POST',headers,body:JSON.stringify(body),signal:controller.signal,redirect:'manual'});
     const text=await upstream.text();
@@ -65,7 +65,7 @@ export default async function handler(req,res){
     res.setHeader('x-wiener-backend','vps');
     return res.send(result.text);
   }catch(error){
-    console.error('Wiener VPS request failed',error);
+    console.error('Wiener VPS request failed',{fn,upstreamFn,action:String(body.action||''),name:String(error?.name||''),message:String(error?.message||error)});
     return res.status(502).json({ok:false,error:'backend_unreachable',message:'Backend connection failed. Please try again.'});
   }
 }
