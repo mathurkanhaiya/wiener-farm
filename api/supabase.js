@@ -57,6 +57,9 @@ export default async function handler(req,res){
 
   try{
     const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${upstreamFn}`,buildHeaders(req),body);
+    if(!result.upstream.ok){
+      console.warn('Wiener VPS non-2xx',{fn,upstreamFn,action:String(body.action||''),status:result.upstream.status,response:String(result.text||'').slice(0,700)});
+    }
     res.status(result.upstream.status);
     res.setHeader('content-type',result.upstream.headers.get('content-type')||'application/json; charset=utf-8');
     res.setHeader('cache-control','no-store');
