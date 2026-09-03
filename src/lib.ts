@@ -21,7 +21,25 @@ export const AMBASSADOR_PUBLISH_API=edge('wiener-ambassador-publish');
 
 export type Tab='home'|'ads'|'tasks'|'invite'|'wallet'|'daily'|'claim'|'profile'|'leaderboard'|'ambassador'|'admin';
 export type Snapshot={user:any;settings:any;tasks:any[];completed:any[];transactions:any[];withdrawals:any[];withdrawal_methods?:any[];referrals:any[];leaderboard?:any[];rank?:number;tasks_completed_total?:number;is_admin:boolean;admin_role?:string};
-export const money=(n:any,d=0)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+
+// UI amounts should preserve meaningful precision but never pad zeroes.
+// Examples: 20.000000 -> 20, 20.500000 -> 20.5, 0.050000 -> 0.05.
+export const money=(n:any,d=6)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:Math.max(0,d),minimumFractionDigits:0});
+function trimDecimalString(v:string){
+  if(!/^-?\d+\.\d+$/.test(v))return v;
+  const x=v.replace(/(\.\d*?[1-9])0+$/,'$1').replace(/\.0+$/,'');
+  return x==='-0'?'0':x;
+}
+function normalizeUiNumbers(v:any):any{
+  if(typeof v==='string')return trimDecimalString(v);
+  if(Array.isArray(v))return v.map(normalizeUiNumbers);
+  if(v&&typeof v==='object'){
+    const out:any={};
+    for(const [k,val] of Object.entries(v))out[k]=normalizeUiNumbers(val);
+    return out;
+  }
+  return v;
+}
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
@@ -34,8 +52,8 @@ async function sha256(raw:string){try{const buf=await crypto.subtle.digest('SHA-
 async function getDeviceFingerprint(){const raw=[navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`].join('|');return sha256(raw)}
 async function getDeviceFingerprintV2(){const tg=window.Telegram?.WebApp as any;const raw=['v2',navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`,String(window.devicePixelRatio||1),tg?.platform||''].join('|');return sha256(raw)}
 export async function deviceContext(){const tg=window.Telegram?.WebApp as any;return {device_id:getDeviceId(),installation_id:getInstallationId(),device_fingerprint:await getDeviceFingerprint(),fingerprint_v2:await getDeviceFingerprintV2(),telegram_platform:String(tg?.platform||'').slice(0,32),language:String(navigator.language||'').slice(0,32),timezone:String(Intl.DateTimeFormat().resolvedOptions().timeZone||'').slice(0,64)}}
-async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');return x.data??x}
-export async function registerDevice(){const ctx=await deviceContext();const r=await fetch(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData(),...ctx})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Device check failed');return x.data??x}
+async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Request failed');return normalizeUiNumbers(x.data??x)}
+export async function registerDevice(){const ctx=await deviceContext();const r=await fetch(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({initData:getInitData(),...ctx})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Device check failed');return normalizeUiNumbers(x.data??x)}
 export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const data=await post(url,mapped,body);if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
 export async function promoChannelApi(body:{code:string;channels?:string[]}){return post(PROMO_CHANNEL_API,'publish',body)}
 export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}
