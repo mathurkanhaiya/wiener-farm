@@ -1,4 +1,4 @@
-const WIENER_VPS_URL='https://drill-angeles-shades-wit.trycloudflare.com';
+const WIENER_VPS_URL='https://confidentiality-robin-nashville-commissions.trycloudflare.com';
 
 const ALLOWED=new Set([
   'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
