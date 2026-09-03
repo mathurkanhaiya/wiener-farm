@@ -17,19 +17,38 @@ set_app_url(){
   local escaped=${value//\'/\'\'}
   runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 -qc "update public.app_settings set app_url='${escaped}' where id=true"
 }
+set_menu_json(){
+  BOT_TOKEN="$BOT_TOKEN" APP_URL="$APP_URL" python3 <<'PY'
+import json, os, urllib.request
+url=f"https://api.telegram.org/bot{os.environ['BOT_TOKEN']}/setChatMenuButton"
+payload={"menu_button":{"type":"web_app","text":"🌭 OPEN WIENER FARM","web_app":{"url":os.environ['APP_URL']}}}
+req=urllib.request.Request(url,data=json.dumps(payload).encode(),headers={"Content-Type":"application/json"},method="POST")
+with urllib.request.urlopen(req,timeout=15) as r:
+    x=json.load(r)
+if not x.get("ok"):
+    raise SystemExit(x.get("description","Telegram menu update failed"))
+PY
+}
+get_menu_url(){
+  curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getChatMenuButton" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("result",{}).get("web_app",{}).get("url",""))'
+}
 
 BOT_TOKEN=$(read_env TELEGRAM_BOT_TOKEN) || fail 'TELEGRAM_BOT_TOKEN missing'
 
-# Verify both public endpoints before changing Telegram menu.
 [ "$(curl -sS -o /dev/null -w '%{http_code}' "$APP_URL/")" = 200 ] || fail 'Vercel frontend is not HTTP 200'
 api_code=$(curl -sS -o /tmp/wiener-switch-api.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{}' "$API_URL/functions/v1/wiener-api" || true)
 case "$api_code" in 000|404|502) fail "VPS API unavailable: HTTP $api_code";; esac
 
 set_app_url "$APP_URL"
 
-curl -fsS -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setChatMenuButton" \
-  --data-urlencode "menu_button={\"type\":\"web_app\",\"text\":\"🌭 OPEN WIENER FARM\",\"web_app\":{\"url\":\"${APP_URL}\"}}" \
-  | python3 -c 'import json,sys; x=json.load(sys.stdin); sys.exit(0 if x.get("ok") else 1)'
+# Update the bot's default menu button using strict JSON, then verify with retries.
+for _ in 1 2 3; do
+  set_menu_json
+  sleep 1
+  menu_url=$(get_menu_url)
+  [ "${menu_url%/}" = "${APP_URL%/}" ] && break
+done
+[ "${menu_url%/}" = "${APP_URL%/}" ] || fail "Telegram default menu verification failed: $menu_url"
 
 # Keep webhook on VPS; repair it only if it drifted.
 current_webhook=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("result",{}).get("url",""))')
@@ -43,9 +62,6 @@ if [ "$current_webhook" != "$WEBHOOK_URL" ]; then
     | python3 -c 'import json,sys; x=json.load(sys.stdin); sys.exit(0 if x.get("ok") else 1)'
 fi
 
-menu=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getChatMenuButton")
-menu_url=$(printf '%s' "$menu" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("result",{}).get("web_app",{}).get("url",""))')
-[ "${menu_url%/}" = "${APP_URL%/}" ] || fail "Telegram menu verification failed: $menu_url"
 app_db=$(runuser -u postgres -- psql -d "$DB" -Atqc "select coalesce(app_url,'') from public.app_settings where id=true limit 1")
 [ "${app_db%/}" = "${APP_URL%/}" ] || fail "DB app_url verification failed: $app_db"
 current_webhook=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getWebhookInfo" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("result",{}).get("url",""))')
