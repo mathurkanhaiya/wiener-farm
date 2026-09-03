@@ -35,7 +35,7 @@ users=$(runuser -u postgres -- psql -d "$DB" -Atqc 'select count(*) from public.
 withdrawals=$(runuser -u postgres -- psql -d "$DB" -Atqc 'select count(*) from public.withdrawals')
 echo "users=$users withdrawals=$withdrawals"
 app_db=$(runuser -u postgres -- psql -d "$DB" -Atqc "select coalesce(app_url,'') from public.app_settings where id=true limit 1")
-[ "$app_db" = "$APP_URL" ] || fail "DB app_url is not VPS app: $app_db"
+[ "${app_db%/}" = "${APP_URL%/}" ] || fail "DB app_url is not VPS app: $app_db"
 ok 'Local PostgreSQL is authoritative'
 
 echo '=== TELEGRAM CUTOVER ==='
@@ -47,7 +47,7 @@ err=$(printf '%s' "$info" | python3 -c 'import json,sys; x=json.load(sys.stdin)[
 [ -z "$err" ] || echo "WARNING: Telegram reports historical webhook error: $err"
 menu=$(curl -fsS "https://api.telegram.org/bot${BOT_TOKEN}/getChatMenuButton")
 menu_url=$(printf '%s' "$menu" | python3 -c 'import json,sys; x=json.load(sys.stdin).get("result",{}); print(x.get("web_app",{}).get("url",""))')
-[ "$menu_url" = "$APP_URL" ] || fail "Telegram menu still points elsewhere: $menu_url"
+[ "${menu_url%/}" = "${APP_URL%/}" ] || fail "Telegram menu still points elsewhere: $menu_url"
 ok 'Telegram webhook and Mini App menu are VPS-only'
 
 echo '=== PROCESS PERSISTENCE ==='
