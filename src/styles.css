@@ -14,6 +14,7 @@
 @import './styles-wallet-polish.css';
 @import './styles-performance.css';
 @import './styles-language.css';
+@import './styles-wiener-signature.css';
 
 /* Tasks tab: hide the top overall task progress card only. */
 body:has(.task-tabs) .progress-card{display:none!important;}
