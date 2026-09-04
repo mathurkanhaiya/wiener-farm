@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState} from 'react';
 import lottie from 'lottie-web';
 import {ambassadorApi,PUBLISHABLE_KEY,getInitData,type Snapshot,type Tab} from './lib';
 
-const usd=(v:any,d=4)=>Number(v||0).toFixed(d);
+const usd=(v:any,d=4)=>Number(v||0).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:0});
 const cleanErr=(v:any)=>String(v?.message||v||'Request failed').replace(/^telegram:/,'').replace(/_/g,' ');
 const WIENER_LOGO='https://wiener-farm.vercel.app/api/host/wiener-logo';
 const USDT_ICON='https://wiener-farm.vercel.app/api/host/usdt-icon';
