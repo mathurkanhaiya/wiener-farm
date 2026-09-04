@@ -320,3 +320,125 @@ input::placeholder{color:#6f625a!important}
 @media(prefers-reduced-motion:reduce){
   .bottom-nav>button,.bottom-nav>button:after{transition:none!important}
 }
+
+
+/* V23 header cleanup + button-only corner glow.
+   Keep decorative motion off headers/cards; animated light belongs to controls only. */
+.brand.wf-header{
+  min-height:64px!important;
+  height:64px!important;
+  margin:0 0 10px!important;
+  padding:7px 2px 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+}
+.brand.wf-header:after{
+  left:8px!important;
+  right:8px!important;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent)!important;
+}
+.brand.wf-header>.wf-brand-lockup{
+  width:auto!important;height:auto!important;min-width:0!important;flex:1 1 auto!important;
+  display:flex!important;align-items:center!important;gap:10px!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+.wf-brand-logo{
+  width:42px;height:42px;flex:0 0 42px;border-radius:14px;overflow:hidden;
+  border:1px solid rgba(255,173,61,.17);
+  background:#17100d;
+  box-shadow:0 7px 18px rgba(0,0,0,.22)!important;
+}
+.wf-brand-logo img{width:100%!important;height:100%!important;border-radius:13px!important}
+.brand.wf-header .brand-copy{min-width:0;line-height:1.05}
+.brand.wf-header .brand-copy b{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:17px!important;letter-spacing:.15px!important;text-shadow:none!important;
+}
+.brand.wf-header .brand-copy span{
+  margin-top:4px!important;font-size:8px!important;letter-spacing:1.15px!important;
+  color:#887c74!important;
+}
+.wf-header-actions{
+  flex:0 0 auto;display:flex;align-items:center;gap:7px;
+}
+.brand.wf-header .balance-pill{
+  height:36px;box-sizing:border-box;display:flex;align-items:center;gap:6px;
+  padding:0 9px!important;border-radius:12px!important;
+  background:rgba(24,16,12,.82)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.035)!important;
+  font-size:11px!important;font-weight:950!important;
+}
+.brand.wf-header .mini-coin{width:20px!important;height:20px!important;font-size:8px!important}
+.brand.wf-header .language-trigger{
+  width:36px!important;height:36px!important;min-width:36px!important;padding:0!important;
+  border-radius:12px!important;
+}
+.brand.wf-header .language-trigger span{font-size:14px!important}
+.brand.wf-header .language-trigger small{display:none!important}
+
+/* No animated/highlight glow on structural surfaces. */
+.card,.glass-panel,.brand,.balance-pill,.wf-brand-logo{
+  animation:none!important;
+}
+.card:before,.glass-panel:before{filter:none!important}
+
+/* Corner-to-corner light motion — buttons only. */
+.primary,.secondary,.quick,.ad-card button,.task button,.tabs button,.task-tabs button,
+.bottom-nav>button,.language-trigger,.link-row button,.quick-withdraw button,.withdraw-back,
+.amb-open,.amb-admin-actions button,.amb-amount button,.amb-link{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate;
+}
+.primary:before,.secondary:before,.quick:before,.ad-card button:before,.task button:before,
+.tabs button:before,.task-tabs button:before,.bottom-nav>button:before,.language-trigger:before,
+.link-row button:before,.quick-withdraw button:before,.withdraw-back:before,.amb-open:before,
+.amb-admin-actions button:before,.amb-amount button:before,.amb-link:before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:58px;height:58px;
+  left:-30px;top:-30px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.58;
+  background:radial-gradient(circle,rgba(255,220,126,.38) 0%,rgba(255,157,31,.17) 34%,transparent 70%);
+  filter:blur(7px);
+  animation:wfButtonCornerGlow 4.2s cubic-bezier(.45,0,.55,1) infinite;
+}
+.secondary:before,.quick:before,.bottom-nav>button:before,.language-trigger:before,
+.tabs button:before,.task-tabs button:before,.withdraw-back:before{
+  opacity:.34;
+}
+.primary:disabled:before,.secondary:disabled:before,.ad-card button:disabled:before,
+.task button:disabled:before,.tabs button:disabled:before,.task-tabs button:disabled:before{
+  display:none;
+}
+@keyframes wfButtonCornerGlow{
+  0%,100%{left:-30px;top:-30px;opacity:.26}
+  22%{left:calc(100% - 28px);top:-30px;opacity:.64}
+  48%{left:calc(100% - 28px);top:calc(100% - 28px);opacity:.46}
+  74%{left:-30px;top:calc(100% - 28px);opacity:.58}
+}
+@media(max-width:430px){
+  .brand.wf-header{height:58px!important;min-height:58px!important;gap:8px!important}
+  .wf-brand-logo{width:38px;height:38px;flex-basis:38px;border-radius:12px}
+  .wf-brand-logo img{border-radius:11px!important}
+  .brand.wf-header .brand-copy b{font-size:15px!important}
+  .brand.wf-header .brand-copy span{display:none!important}
+  .brand.wf-header .balance-pill{height:34px;padding:0 8px!important}
+  .brand.wf-header .language-trigger{width:34px!important;height:34px!important;min-width:34px!important}
+}
+@media(max-width:350px){
+  .brand.wf-header .brand-copy b{max-width:92px}
+  .brand.wf-header .balance-pill{padding:0 7px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .primary:before,.secondary:before,.quick:before,.ad-card button:before,.task button:before,
+  .tabs button:before,.task-tabs button:before,.bottom-nav>button:before,.language-trigger:before,
+  .link-row button:before,.quick-withdraw button:before,.withdraw-back:before,.amb-open:before,
+  .amb-admin-actions button:before,.amb-amount button:before,.amb-link:before{animation:none!important;opacity:.18}
+}
