@@ -1,4 +1,4 @@
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import type {Snapshot,Tab} from './lib';
 import {money} from './lib';
 import {AnimatedIcon,type IconName} from './icons';
@@ -7,7 +7,7 @@ import {LANGUAGES,useI18n,type LangCode} from './i18n';
 const WIENER_LOGO='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';
 function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" loading="eager" decoding="sync" fetchPriority="high" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
 
-export function Splash({text}:{text:string}){const {t}=useI18n();return <div className="center-screen liquid-splash"><div style={{position:'relative',width:126,height:126,display:'grid',placeItems:'center'}}><WienerLogo size={108}/><span className="splash-ring ring-one"/><span className="splash-ring ring-two"/></div><div className="splash-copy"><span>WIENER</span><h1>{t('system.loadingRewards')}</h1><p>{text}</p></div><div className="liquid-loader"><i/><i/><i/></div><small className="splash-secure">{t('system.secure')}</small></div>}
+export function Splash({text}:{text:string}){const {t}=useI18n();const[phase,setPhase]=useState(0);useEffect(()=>{const timers=[window.setTimeout(()=>setPhase(1),520),window.setTimeout(()=>setPhase(2),1350),window.setTimeout(()=>setPhase(3),2600)];return()=>timers.forEach(window.clearTimeout)},[]);const phases=[text||'Opening your farm…','Syncing your rewards…','Growing your dashboard…','Almost ready…'];return <div className="center-screen wf-boot" role="status" aria-live="polite"><div className="wf-boot-ambient" aria-hidden="true"><i/><i/><i/></div><div className="wf-boot-core"><div className="wf-boot-emblem" aria-hidden="true"><div className="wf-boot-orbit"><i/><i/><i/></div><div className="wf-boot-mark"><b>W</b><span>FARM</span></div></div><div className="wf-boot-wordmark"><strong>WIENER</strong><b>FARM</b></div><div className="wf-boot-tagline">EARN · GROW · WITHDRAW</div><p key={phase} className="wf-boot-status">{phases[phase]}</p><div className="wf-boot-track" aria-hidden="true"><i/></div><small className="wf-boot-secure">{t('system.secure')}</small></div></div>}
 export function OpenTelegram(){const {t}=useI18n();return <div className="center-screen"><WienerLogo size={108}/><h1>WIENER</h1><p>This Mini App uses signed Telegram authentication. Open it from <b>@WienerDogeFarmBot</b>.</p><a className="primary linkbtn" href="https://t.me/WienerDogeFarmBot">{t('system.openTelegram')}</a></div>}
 export function StateScreen({icon,title,text}:{icon:string;title:string;text:string}){return <div className="center-screen"><div className="state-icon">{icon}</div><h2>{title}</h2><p>{text}</p></div>}
 
