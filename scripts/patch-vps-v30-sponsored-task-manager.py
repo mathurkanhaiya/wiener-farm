@@ -225,6 +225,7 @@ async function handleSponsoredTaskManagerV30(up,uid,text,m,q){
 '''
 
 s=s.replace(marker,"\n"+code+marker,1)
+s=s.replace("{command:'addtask',description:'Create sponsored task'}","{command:'addtask',description:'Create & manage sponsored tasks'}")
 
 needle="try{if(await handleBotFullV18(up,uid,text,m,q)) return done();}"
 pos=s.find(needle)
