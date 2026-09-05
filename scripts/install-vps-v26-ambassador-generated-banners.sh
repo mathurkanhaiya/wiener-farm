@@ -49,6 +49,12 @@ if [[ ! -s "$TEMPLATE" ]]; then
 fi
 
 echo '=== SHARP RENDERER ==='
+if ! command -v fc-match >/dev/null 2>&1 || ! fc-match 'DejaVu Sans' 2>/dev/null | grep -qi 'DejaVu'; then
+  echo 'Installing fontconfig + DejaVu font required for promo-code text rendering...'
+  apt-get update -y
+  DEBIAN_FRONTEND=noninteractive apt-get install -y fontconfig fonts-dejavu-core
+fi
+fc-cache -f >/dev/null 2>&1 || true
 cd "$BACKEND"
 if ! node -e "import('sharp').then(()=>process.exit(0)).catch(()=>process.exit(1))"; then
   npm install --no-save --no-audit --no-fund sharp@0.33.5
