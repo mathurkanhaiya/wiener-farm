@@ -3,14 +3,33 @@ set -Eeuo pipefail
 
 ROOT=/opt/wiener-code
 BACKEND=/opt/wiener-backend/server.js
+if [[ ! -f "$BACKEND" ]]; then
+  PM2_BACKEND="$(pm2 jlist 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{try{const a=JSON.parse(s);const p=a.find(x=>x.name==='wiener-api');process.stdout.write(p?.pm2_env?.pm_exec_path||'')}catch{}})" || true)"
+  if [[ -n "$PM2_BACKEND" && -f "$PM2_BACKEND" ]]; then
+    BACKEND="$PM2_BACKEND"
+  fi
+fi
+export WIENER_BACKEND_FILE="$BACKEND"
 DB=wiener_farm_final
 STAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP="/opt/wiener-backend/server.js.v24-backup-$STAMP"
 
 echo '=== V24 WITHDRAW AD UNLOCK PRECHECK ==='
-test -f "$BACKEND"
-test -f "$ROOT/scripts/patch-vps-v24-withdraw-ad-unlock.py"
-node --check "$BACKEND"
+echo "backend_file=$BACKEND"
+if [[ ! -f "$BACKEND" ]]; then
+  echo "ERROR: live wiener-api backend file not found."
+  pm2 describe wiener-api 2>/dev/null | grep -E 'script path|status|exec cwd' || true
+  exit 1
+fi
+if [[ ! -f "$ROOT/scripts/patch-vps-v24-withdraw-ad-unlock.py" ]]; then
+  echo "ERROR: V24 patcher not found: $ROOT/scripts/patch-vps-v24-withdraw-ad-unlock.py"
+  exit 1
+fi
+if ! node --check "$BACKEND"; then
+  echo "ERROR: current backend has a JavaScript syntax error. V24 was not applied."
+  exit 1
+fi
+echo 'precheck=PASS'
 
 echo '=== INSTALL DATABASE SESSION LEDGER ==='
 runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 <<'SQL'
