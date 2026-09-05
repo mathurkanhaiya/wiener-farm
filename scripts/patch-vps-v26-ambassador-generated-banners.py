@@ -81,10 +81,10 @@ function cleanAmbCodeV26(code){
 }
 function bannerSvgAmbV26(code,width,height){
   const clean=cleanAmbCodeV26(code);
-  // Center the code in the large right-hand ticket panel and make it prominent.
-  const cx=Math.round(width*0.585),cy=Math.round(height*0.752);
-  const size=Math.max(82,Math.min(110,Math.round(width*0.078*(10/Math.max(10,clean.length)))));
-  const stroke=Math.max(2,Math.round(size*0.028));
+  // Large, visually centered code inside the right-hand golden ticket panel.
+  const cx=Math.round(width*0.590),cy=Math.round(height*0.755);
+  const size=Math.max(90,Math.min(118,Math.round(width*0.084*(10/Math.max(10,clean.length)))));
+  const stroke=Math.max(2,Math.round(size*0.025));
   return Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
     <text x="${cx+4}" y="${cy+5}" text-anchor="middle" dominant-baseline="middle"
       font-family="DejaVu Sans,Arial,sans-serif" font-size="${size}" font-weight="900"
