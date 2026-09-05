@@ -25,11 +25,11 @@ for need in [
         raise SystemExit("ERROR: required payment feature missing: "+need)
 
 # Fast background scan + deeper paginated scan for explicit CHECK PAYMENT.
-pat=r"async function sponsorScanV30\\(\\)\\{.*?\\n\\}\\n\\nasync function sponsorOrderV30"
-m=re.search(pat,s,re.S)
-if not m:
-    raise SystemExit("ERROR: sponsorScanV30 block not found")
-scanner=r"""async function sponsorScanV30(deep=false){
+scan_start=s.find("async function sponsorScanV30")
+scan_end=s.find("async function sponsorOrderV30",scan_start)
+if scan_start<0 or scan_end<0:
+    raise SystemExit("ERROR: sponsor payment scanner anchors not found")
+scanner=r'''async function sponsorScanV30(deep=false){
   const now=Date.now();
   if(sponsorScanPromiseV30)return sponsorScanPromiseV30;
   if(now-sponsorScanAtV30<4500)return{scanned:0,inserted:0,throttled:true};
@@ -56,8 +56,8 @@ scanner=r"""async function sponsorScanV30(deep=false){
   try{return await sponsorScanPromiseV30}finally{sponsorScanPromiseV30=null}
 }
 
-async function sponsorOrderV30"""
-s=s[:m.start()]+scanner+s[m.end():]
+'''
+s=s[:scan_start]+scanner+s[scan_end:]
 
 # Explicit app/manager checks must surface TON RPC errors instead of pretending payment was not sent.
 for old,new in [
