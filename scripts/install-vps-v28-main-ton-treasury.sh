@@ -33,7 +33,7 @@ grep -q "wiener-main-treasury" "$SERVER"
 
 echo '=== RETIRE ACTIVE POLYGON TREASURY ==='
 runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
-DO $$
+DO $do$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='payout_polygon_enabled') THEN
     EXECUTE 'update public.app_settings set payout_polygon_enabled=false where id=true';
@@ -54,7 +54,7 @@ BEGIN
       EXECUTE $$update public.withdrawal_methods set enabled=false where lower(method_key) like '%polygon%'$$;
     END IF;
   END IF;
-END $$;
+END $do$;
 SQL
 
 echo '=== BUILD ADVANCED TREASURY UI ==='
