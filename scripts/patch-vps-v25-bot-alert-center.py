@@ -217,6 +217,12 @@ if dev_admin_old in s:
 else:
     print('WARNING: V19B device admin routing anchor not found')
 
+# If V24 withdrawal-ad enforcement is already live, add a deduplicated bypass warning.
+v24_guard_old=r"""if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<5)throw new Error(`withdraw_ads_required_${withdrawAdCount}_of_5`);const amount=num(b.amount_wiener);"""
+v24_guard_new=r"""if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<5){void sendAdminsV25('withdrawals',{type:'admin_fraud',key:`withdraw_gate_bypass:${id}:${Math.floor(Date.now()/21600000)}`,severity:'warning',text:`🟠 WITHDRAWAL GATE BYPASS ATTEMPT\n\nUID: ${id}\nWithdrawal ads: ${withdrawAdCount}/5\n\nDirect withdrawal request was blocked server-side.`,meta:{target_uid:id,count:withdrawAdCount}}).catch(()=>null);throw new Error(`withdraw_ads_required_${withdrawAdCount}_of_5`)}const amount=num(b.amount_wiener);"""
+if v24_guard_old in s:s=s.replace(v24_guard_old,v24_guard_new,1)
+elif 'withdraw_gate_bypass:' not in s:print('WARNING: V24 bypass alert anchor not found; V24 may not be installed yet')
+
 # Add clear mandatory account-status messages to the existing manual ban/unban flow.
 ban_anchor=r"""await tgV10('sendMessage',{chat_id:uid,text:cmd==='ban'?`🚫 User Banned\nUID: ${target}`:`✅ User Fully Unbanned\nUID: ${target}`});return true}"""
 if ban_anchor in s:
