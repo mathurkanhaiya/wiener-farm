@@ -37,7 +37,8 @@ async function sponsorScanV30(){
 
 async function sponsorOrderV30(uid,id){
   return (await pool.query(`
-    select o.*,t.id live_task_id,t.completed_count,t.max_completions,t.enabled task_enabled,t.created_at task_created_at
+    select o.*,t.id live_task_id,t.completed_count,t.max_completions,t.enabled task_enabled,t.created_at task_created_at,
+      greatest(coalesce(t.max_completions,o.target_completions,0)-coalesce(t.completed_count,0),0)::int remaining_completions
     from public.exclusive_task_orders o
     left join public.tasks t on t.id=o.task_id
     where o.telegram_id=$1 and o.id::text=$2 limit 1
