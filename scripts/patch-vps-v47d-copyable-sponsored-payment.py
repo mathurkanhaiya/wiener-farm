@@ -40,12 +40,21 @@ if pay_start<0 or pay_end<0:
     raise SystemExit('ERROR: /addtask payment boundaries not found')
 pay=r'''if(s.step==='payment'){
     const o=(await pool.query(`select * from public.exclusive_task_orders where id=$1`,[s.order_id])).rows[0];
-    return edit(`💎 <b>TON Payment</b>
+    return edit(`🟡 <b>PAYMENT REQUIRED</b>
+
+${o?.title||s.title||'Sponsored Task'}
+
+👥 ${o?.target_completions||s.target_completions} completions
+🎁 ${o?.reward_per_completion||10} WIENER each
+💵 Total: ${(n18(o?.target_completions||s.target_completions)/100*.30).toFixed(2)}
+
+💎 <b>TON Payment</b>
 
 Send: <code>${n18(o?.package_ton).toFixed(6)}</code> TON
 To: <code>${o?.payment_address||'—'}</code>
 Memo: <code>${o?.payment_memo||'—'}</code>
 
+⚠️ Send the exact TON amount.
 ⚠️ Include the memo exactly.
 After sending, tap <b>CHECK PAYMENT</b>.`,kb18([
       [cb18('✅ CHECK PAYMENT','at:checkpay')],
@@ -69,12 +78,21 @@ if branch<0 or markup<0 or branch_end<0:
     raise SystemExit('ERROR: sponsor manager payment boundaries not found')
 branch_end+=4
 buttons=s[markup:branch_end]
-manager=r'''if(o.status==='awaiting_payment')return{text:`💎 <b>TON Payment</b>
+manager=r'''if(o.status==='awaiting_payment')return{text:`🟡 <b>PAYMENT REQUIRED</b>
+
+${String(o.title||'Sponsored Task').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+👥 ${o.target_completions} completions
+🎁 ${o.reward_per_completion} WIENER each
+💵 Total: ${(sponsorNumV30(o.target_completions)/100*.30).toFixed(2)}
+
+💎 <b>TON Payment</b>
 
 Send: <code>${sponsorNumV30(o.package_ton).toFixed(6)}</code> TON
 To: <code>${o.payment_address}</code>
 Memo: <code>${o.payment_memo}</code>
 
+⚠️ Send the exact TON amount.
 ⚠️ Include the memo exactly.
 After sending, tap <b>CHECK PAYMENT</b>.`,parse_mode:'HTML','''+buttons
 s=s[:branch]+manager+s[branch_end:]
@@ -86,14 +104,18 @@ if top>=0:
     if top_end<0:
         raise SystemExit('ERROR: top-up payment boundaries not found')
     top_end+=5
-    top_new=r'''await edit18(q,{text:`💎 <b>TON Top-up Payment</b>
+    top_new=r'''await edit18(q,{text:`🟡 <b>TOP-UP PAYMENT REQUIRED</b>
 
 ➕ ${x.added_completions} completions
+💵 Total: ${sponsorNumV30(x.price_usd).toFixed(2)}
+
+💎 <b>TON Payment</b>
 
 Send: <code>${sponsorNumV30(x.package_ton).toFixed(6)}</code> TON
 To: <code>${x.payment_address}</code>
 Memo: <code>${x.payment_memo}</code>
 
+⚠️ Send the exact TON amount.
 ⚠️ Include the memo exactly.
 After sending, tap <b>CHECK PAYMENT</b>.`,parse_mode:'HTML',markup:kb18([
         [cb18('✅ CHECK PAYMENT',`stm30:topcheck:${x.id}`)],
