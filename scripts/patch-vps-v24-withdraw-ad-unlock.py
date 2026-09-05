@@ -2,7 +2,8 @@
 from pathlib import Path
 import sys
 
-p=Path('/opt/wiener-backend/server.js')
+import os
+p=Path(os.environ.get('WIENER_BACKEND_FILE','/opt/wiener-backend/server.js'))
 s=p.read_text()
 tag='// === WIENER WITHDRAW AD UNLOCK V24 ==='
 if tag in s:
