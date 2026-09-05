@@ -117,6 +117,7 @@ python3 -m py_compile scripts/patch-vps-v26-ambassador-generated-banners.py
 python3 scripts/patch-vps-v26-ambassador-generated-banners.py
 python3 scripts/patch-vps-v26b-ambassador-banner-public-url.py
 python3 scripts/patch-vps-v26c-ambassador-banner-text.py
+python3 scripts/patch-vps-v26d-ambassador-banner-center.py
 node --check "$SERVER"
 grep -q "const c='AMBA'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();" "$SERVER"
 grep -q "WIENER AMBASSADOR GENERATED BANNERS V26" "$SERVER"
