@@ -16,23 +16,19 @@ if "'treasury'" not in re.search(r"type MoneyTab=.*?;",s).group(0):
     s=re.sub(r"type MoneyTab=", "type MoneyTab='treasury'|", s, count=1)
 
 # Keep local AdminHub customizations: patch only the MoneyCenter fragments.
-m=re.search(r"function MoneyCenter\(\{d,setD,say,reload\}.*?\nfunction WithdrawalOverview",s,re.S)
+m=re.search(r"function MoneyCenter\(\{d,setD,say,reload\}.*?(?=\nfunction WithdrawalOverview)",s,re.S)
 if not m: raise SystemExit('ERROR: MoneyCenter block missing')
 block=m.group(0)
 block=block.replace("useState<MoneyTab>('withdrawals')","useState<MoneyTab>('treasury')")
 if '["treasury","Main Treasury"]' not in block:
     block=block.replace('items={[[', 'items={[["treasury","Main Treasury"],',1)
 if "tab==='treasury'" not in block:
-    needle="/>}{tab==='withdrawals'"
+    needle="/>{tab==='withdrawals'"
     if needle in block:
-        block=block.replace(needle,"/>}{tab==='treasury'&&<section className=\"adminx-embed\"><MainTreasuryAdmin say={say}/></section>} {tab==='withdrawals'",1)
+        block=block.replace(needle,"/>{tab==='treasury'&&<section className=\"adminx-embed\"><MainTreasuryAdmin say={say}/></section>} {tab==='withdrawals'",1)
     else:
-        needle="/>} {tab==='withdrawals'"
-        if needle in block:
-            block=block.replace(needle,"/>} {tab==='treasury'&&<section className=\"adminx-embed\"><MainTreasuryAdmin say={say}/></section>} {tab==='withdrawals'",1)
-        else:
-            raise SystemExit('ERROR: MoneyCenter render anchor missing')
-s=s[:m.start()]+block+s[m.end()-len('function WithdrawalOverview'):]
+        raise SystemExit('ERROR: MoneyCenter render anchor missing')
+s=s[:m.start()]+block+s[m.end():]
 admin.write_text(s)
 
 if withdraw.exists():
