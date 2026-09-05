@@ -101,7 +101,7 @@ async function gvCard32(id){
     if(!g.target_confirmed_at&&Number(g.reaction_count||0)<50)b.push([cb18("✅ CONFIRM 50 REACTIONS","gv32:target:"+g.id)]);
     b.push([cb18("🎲 DRAW 3 UNIQUE WINNERS","gv32:draw:"+g.id)]);
     b.push([cb18("🔄 REFRESH","gv32:show:"+g.id)])
-  }else if(g.status==="drawn"&&g.payout_state!=="paid"){
+  }else if(g.status==="drawn"&&!["paid","broadcasting","submitted","reconcile_required"].includes(String(g.payout_state))){
     b.push([cb18("💎 REVIEW PAY 0.15 GRAM","gv32:prepay:"+g.id)]);
     b.push([cb18("🔐 DRAW AUDIT","gv32:audit:"+g.id)])
   }
