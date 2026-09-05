@@ -1,13 +1,58 @@
 from pathlib import Path
-import re
+import os, re
 
-p=Path('/opt/wiener-backend/server.mjs')
+p=Path(os.environ.get('WIENER_BACKEND_FILE','/opt/wiener-backend/server.mjs'))
+if not p.exists():
+    alt=Path('/opt/wiener-backend/server.js')
+    if alt.exists(): p=alt
 s=p.read_text()
 
 MARK='WIENER AMBASSADOR GENERATED BANNERS V26'
 if MARK in s:
-    print('V26 Ambassador generated banners already installed')
+    changed=0
+    old_gen="const c='AMB'+crypto.randomUUID().replace(/-/g,'').slice(0,7).toUpperCase();"
+    new_gen="const c='AMBA'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();"
+    if old_gen in s:
+        s=s.replace(old_gen,new_gen,1); changed+=1
+    if "/^AMB[A-Z0-9]{7}$/" in s:
+        s=s.replace("/^AMB[A-Z0-9]{7}$/","/^AMBA[A-F0-9]{6}$/"); changed+=1
+    if "/^ambpromo-[a-z0-9_-]+$/" in s:
+        pass
+    if "trackAmbassadorClaimV26" not in s:
+        anchor="// === END WIENER AMBASSADOR GENERATED BANNERS V26 ==="
+        helper=r"""
+async function trackAmbassadorClaimV26(uid,code){
+  try{
+    const clean=cleanAmbCodeV26(code);
+    const ap=(await pool.query(`select id,ambassador_id from public.ambassador_promos where code=$1 limit 1`,[clean])).rows[0];
+    if(!ap)return;
+    const bi=(await pool.query(`select broadcast_id from public.ambassador_broadcast_items where ambassador_id=$1 and code_1=$2 order by posted_at desc nulls last limit 1`,[ap.ambassador_id,clean])).rows[0]||{};
+    await pool.query(`insert into public.ambassador_claim_attributions(ambassador_id,promo_id,broadcast_id,code,telegram_id,claimed_at)
+      values($1,$2,$3,$4,$5,now()) on conflict(code,telegram_id) do nothing`,
+      [String(ap.ambassador_id),String(ap.id),bi.broadcast_id?String(bi.broadcast_id):null,clean,Number(uid)]);
+  }catch(e){console.error('amb_claim_attribution_v26',String(e?.message||e))}
+}
+"""
+        if anchor in s:
+            s=s.replace(anchor,helper+"\n"+anchor,1); changed+=1
+        old_finalize="async function promoFinalizeV6(id,sid){const data=await rpc('finalize_promo_reward_if_ready',[id,sid]);if(data?.status==='credited'&&data?.code)await promoSyncV6(String(data.code));return data}"
+        new_finalize="async function promoFinalizeV6(id,sid){const data=await rpc('finalize_promo_reward_if_ready',[id,sid]);if(data?.status==='credited'&&data?.code){await promoSyncV6(String(data.code));await trackAmbassadorClaimV26(id,String(data.code))}return data}"
+        if old_finalize in s:
+            s=s.replace(old_finalize,new_finalize,1); changed+=1
+    if changed:
+        p.write_text(s)
+        print(f'V26 Ambassador banner repair applied; changes={changed}')
+    else:
+        print('V26 Ambassador generated banners already installed and current')
     raise SystemExit(0)
+
+# Force the canonical code format: AMBA + 6 uppercase hex chars, e.g. AMBA6A6B14.
+old_gen="const c='AMB'+crypto.randomUUID().replace(/-/g,'').slice(0,7).toUpperCase();"
+new_gen="const c='AMBA'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();"
+if old_gen in s:
+    s=s.replace(old_gen,new_gen,1)
+elif new_gen not in s:
+    raise SystemExit('ERROR: Ambassador unique-code generator anchor not found')
 
 route="app.post('/functions/v1/wiener-ambassador-publish',async(req,res)=>{"
 if route not in s:
@@ -31,7 +76,7 @@ async function fileExistsAmbV26(file){
 }
 function cleanAmbCodeV26(code){
   const x=String(code||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(!/^AMB[A-Z0-9]{7}$/.test(x)) throw new Error('invalid_ambassador_code');
+  if(!/^AMBA[A-F0-9]{6}$/.test(x)) throw new Error('invalid_ambassador_code');
   return x;
 }
 function bannerSvgAmbV26(code,width,height){
@@ -104,6 +149,13 @@ if insert_old in s:
 admin_anchor="    if(!await ambassadorAdminV4(id)) throw new Error('admin_forbidden');"
 if admin_anchor in s:
     s=s.replace(admin_anchor,admin_anchor+"\n    await cleanupAmbBannersV26();",1)
+
+finalize_old="async function promoFinalizeV6(id,sid){const data=await rpc('finalize_promo_reward_if_ready',[id,sid]);if(data?.status==='credited'&&data?.code)await promoSyncV6(String(data.code));return data}"
+finalize_new="async function promoFinalizeV6(id,sid){const data=await rpc('finalize_promo_reward_if_ready',[id,sid]);if(data?.status==='credited'&&data?.code){await promoSyncV6(String(data.code));await trackAmbassadorClaimV26(id,String(data.code))}return data}"
+if finalize_old in s:
+    s=s.replace(finalize_old,finalize_new,1)
+elif "trackAmbassadorClaimV26(id,String(data.code))" not in s:
+    print('WARNING: promo finalization attribution hook anchor not found')
 
 p.write_text(s)
 print('Installed WIENER Ambassador generated banners V26')
