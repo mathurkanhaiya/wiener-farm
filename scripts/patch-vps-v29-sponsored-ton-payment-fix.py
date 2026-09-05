@@ -34,7 +34,7 @@ async function saveTonDepositV10B(t,tx){
 }
 // === END WIENER SPONSORED TON PAYMENT FIX V29 ==='''
 
-pat_save=r"async function saveTonDepositV10B\(t,tx\)\{.*?\n\}\n\napp\.post\('/functions/v1/wiener-ton-deposit-backfill'"
+pat_save=r"async function saveTonDepositV10B\(t,tx\)\{.*?\}\n\napp\.post\('/functions/v1/wiener-ton-deposit-backfill'"
 m=re.search(pat_save,s,re.S)
 if not m: raise SystemExit('ERROR: saveTonDepositV10B live anchor not found')
 s=s[:m.start()]+save_fn+"\n\napp.post('/functions/v1/wiener-ton-deposit-backfill'"+s[m.end():]
@@ -73,7 +73,7 @@ reconcile_fn=r'''async function reconcileSponsoredV10B(o){
   }catch(e){await db.query('rollback').catch(()=>null);throw e}finally{db.release()}
 }'''
 
-pat_rec=r"async function reconcileSponsoredV10B\(o\)\{.*?\n\}\n\napp\.post\('/functions/v1/wiener-sponsored-task'"
+pat_rec=r"async function reconcileSponsoredV10B\(o\)\{.*?\}\n\napp\.post\('/functions/v1/wiener-sponsored-task'"
 m=re.search(pat_rec,s,re.S)
 if not m: raise SystemExit('ERROR: reconcileSponsoredV10B live anchor not found')
 s=s[:m.start()]+reconcile_fn+"\n\napp.post('/functions/v1/wiener-sponsored-task'"+s[m.end():]
