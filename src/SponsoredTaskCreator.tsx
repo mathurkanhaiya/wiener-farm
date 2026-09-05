@@ -8,7 +8,7 @@ const MANIFEST='https://wiener-farm.vercel.app/tonconnect-manifest.json';
 let creatorTon:any=null;
 async function getTon(){if(creatorTon)return creatorTon;const {TonConnectUI}=await import('@tonconnect/ui');creatorTon=new TonConnectUI({manifestUrl:MANIFEST});return creatorTon}
 async function api(action:string,body:any={}){const r=await fetch(`${SUPABASE_URL}/functions/v1/wiener-sponsored-task`,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||!x.ok)throw new Error(x.message||x.error||'Sponsored task request failed');return x.data}
-const clean=(e:any)=>String(e?.message||e).replace(/_/g,' ');
+const clean=(e:any)=>{const m=String(e?.message||e);if(/exclusive[_ ]task[_ ]orders.*reward[_ ]per[_ ]completion.*check|reward[_ ]per[_ ]completion[_ ]check/i.test(m))return 'Sponsored task pricing is syncing. Please reopen Create Task and try again.';return m.replace(/_/g,' ')};
 
 export function SponsoredTaskCreator({onLive,onClose}:{onLive?:()=>void;onClose?:()=>void}){
  const [cfg,setCfg]=useState<Config|null>(null),[kind,setKind]=useState<Kind>('channel'),[target,setTarget]=useState(''),[count,setCount]=useState('100'),[order,setOrder]=useState<Order|null>(null),[busy,setBusy]=useState(false),[msg,setMsg]=useState('Loading…'),poll=useRef<any>(null);
