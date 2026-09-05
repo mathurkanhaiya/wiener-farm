@@ -205,6 +205,14 @@ legacy_new="async function send(uid,type,key,text,button,url,meta={},counts=true
 if legacy in s:s=s.replace(legacy,legacy_new,1)
 else:print('WARNING: legacy notification preference hook not found; existing reminders remain unchanged')
 
+# Add clear mandatory account-status messages to the existing manual ban/unban flow.
+ban_anchor="await tgV10('sendMessage',{chat_id:uid,text:cmd==='ban'?\`🚫 User Banned\\nUID: \${target}\`:\`✅ User Fully Unbanned\\nUID: \${target}\`});return true}"
+if ban_anchor in s:
+    ban_notice="if(cmd==='unban'){const a25=await appUrlV25();await sendAlertV25({uid:target,type:'account_restored',key:\`account_restored:\${target}:\${Date.now()}\`,severity:'critical',text:'✅ ACCOUNT ACCESS RESTORED\\n\\nYour WIENER Farm account has been unrestricted.\\nYou can use the Mini App normally again.',markup:{inline_keyboard:[[{text:'🌭 OPEN WIENER FARM',web_app:{url:a25}}]]}})}else{await sendAlertV25({uid:target,type:'security',key:\`account_restricted:\${target}:\${Date.now()}\`,severity:'critical',text:'🛡 ACCOUNT RESTRICTED\\n\\nYour WIENER Farm account access has been restricted.\\nIf you believe this is a mistake, contact WIENER Support.',markup:{inline_keyboard:[[{text:'💬 CONTACT SUPPORT',url:'https://t.me/WienerSupport'}]]}})}"
+    s=s.replace(ban_anchor,ban_notice+ban_anchor,1)
+else:
+    print('WARNING: manual ban/unban notification anchor not found')
+
 # Trigger V25 asynchronously from the existing authenticated internal cron.
 cron_pos=s.find("app.post('/internal/cron'")
 if cron_pos<0:raise SystemExit('ERROR: internal cron route not found')
