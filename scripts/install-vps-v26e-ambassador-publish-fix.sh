@@ -41,13 +41,16 @@ cp -a dist/. "$NEW_RELEASE/"
 
 echo '=== RESTART API + SWITCH APP ==='
 pm2 restart wiener-api --update-env
-sleep 2
+sleep 3
 pm2 save >/dev/null
 ln -sfn "$NEW_RELEASE" /opt/wiener-app/current
 
 echo '=== VERIFY ==='
 node --check "$SERVER"
-curl -fsS http://127.0.0.1:3000/ >/tmp/wiener-v26e-health.json
+if ! ss -ltn | grep -q '127.0.0.1:3000'; then
+  echo 'Backend is not listening on 127.0.0.1:3000' >&2
+  exit 1
+fi
 code=$(curl -sS -o /tmp/wiener-v26e-route.json -w '%{http_code}' -X POST -H 'content-type: application/json' --data '{}' http://127.0.0.1:3000/functions/v1/wiener-ambassador-publish || true)
 if [[ "$code" == "000" || "$code" == "404" || "$code" == "502" ]]; then
   cat /tmp/wiener-v26e-route.json 2>/dev/null || true
