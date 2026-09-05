@@ -72,4 +72,5 @@ echo
 echo "=== V42 READY ==="
 echo "Sponsored TON payment verification hardened"
 echo "Automatic settlement: every 7 seconds while pending payments exist"
+echo "CHECK PAYMENT scans up to 300 recent TON transactions"
 echo "Exact memo + treasury address + minimum amount are still required"
