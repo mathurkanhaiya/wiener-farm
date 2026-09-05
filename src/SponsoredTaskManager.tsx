@@ -14,8 +14,8 @@ const n=(v:any)=>Number(v||0);
 const short=(v:any)=>{const s=String(v||'—');return s.length<22?s:`${s.slice(0,9)}…${s.slice(-7)}`};
 const statusLabel=(o:Order)=>o.status==='awaiting_payment'?'PENDING PAYMENT':n(o.remaining_completions)<=0?'COMPLETED':o.task_enabled===false?'PAUSED':'LIVE';
 
-export function SponsoredTaskManager({onClose,onCreate}:{onClose?:()=>void;onCreate?:()=>void}){
- const [data,setData]=useState<ManagerData>({orders:[],topups:[],counts:{pending:0,live:0,completed:0,total:0}}),[tab,setTab]=useState<'all'|'pending'|'live'|'completed'>('all'),[selected,setSelected]=useState<Order|null>(null),[topup,setTopup]=useState<Topup|null>(null),[custom,setCustom]=useState('100'),[busy,setBusy]=useState(false),[msg,setMsg]=useState('Loading…'),poll=useRef<any>(null);
+export function SponsoredTaskManager({onClose,onCreate,initialTab='all'}:{onClose?:()=>void;onCreate?:()=>void;initialTab?:'all'|'pending'|'live'|'completed'}){
+ const [data,setData]=useState<ManagerData>({orders:[],topups:[],counts:{pending:0,live:0,completed:0,total:0}}),[tab,setTab]=useState<'all'|'pending'|'live'|'completed'>(initialTab),[selected,setSelected]=useState<Order|null>(null),[topup,setTopup]=useState<Topup|null>(null),[custom,setCustom]=useState('100'),[busy,setBusy]=useState(false),[msg,setMsg]=useState('Loading…'),poll=useRef<any>(null);
  const load=async(silent=false)=>{try{if(!silent)setBusy(true);const d=await api('list');setData(d);if(selected){const fresh=(d.orders||[]).find((x:Order)=>x.id===selected.id);if(fresh)setSelected(fresh)}if(!silent)setMsg('')}catch(e){if(!silent)setMsg(clean(e))}finally{if(!silent)setBusy(false)}};
  useEffect(()=>{let alive=true;load(false);const id=setInterval(()=>{if(alive)load(true)},7000);return()=>{alive=false;clearInterval(id);if(poll.current)clearInterval(poll.current)}},[]);
  const rows=useMemo(()=>data.orders.filter(o=>tab==='all'||tab==='pending'&&o.status==='awaiting_payment'||tab==='live'&&o.status==='live'&&n(o.remaining_completions)>0||tab==='completed'&&o.status==='live'&&n(o.remaining_completions)<=0),[data,tab]);
