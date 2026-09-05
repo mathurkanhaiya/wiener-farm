@@ -23,7 +23,8 @@ grep -q 'handleAdminParityV19' "$BACKEND" || { echo 'ERROR: V19 admin/bot parity
 echo 'precheck=PASS'
 
 echo '=== DRY-RUN PATCH ON TEMP COPY ==='
-DRYRUN="/tmp/wiener-v25-dryrun-$STAMP.js"
+EXT="${BACKEND##*.}"
+DRYRUN="/tmp/wiener-v25-dryrun-$STAMP.$EXT"
 cp -a "$BACKEND" "$DRYRUN"
 WIENER_BACKEND_FILE="$DRYRUN" python3 "$ROOT/scripts/patch-vps-v25-bot-alert-center.py"
 node --check "$DRYRUN"
