@@ -56,7 +56,7 @@ if old_task not in s:
 s = s.replace(old_task, new_task, 1)
 
 old_order = "[uid,`Join ${target.title}`,b.kind,target.chat,target.url,expected,count,reward,t.address,memo,gross,count*reward,worker,profit,usd,exp]"
-new_order = "[uid,String(b.kind||'')==='mini_app'?`Open ${target.title} Mini App`:`Join ${target.title}`,b.kind,target.ref||target.chat,target.url,expected,count,reward,t.address,memo,gross,count*reward,worker,profit,usd,exp]"
+new_order = "[uid,String(b.kind||'')==='mini_app'?`Open ${target.title} Mini App`:`Join ${target.title}`,b.kind,String(b.kind||'')==='mini_app'?target.ref:target.chat,target.url,expected,count,reward,t.address,memo,gross,count*reward,worker,profit,usd,exp]"
 if old_order not in s:
     raise SystemExit("ERROR: sponsored order creation values not found")
 s = s.replace(old_order, new_order, 1)
