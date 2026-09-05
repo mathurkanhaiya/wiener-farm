@@ -22,33 +22,35 @@ elif "ton_treasury_next_scan_at=now()+interval '5 seconds'" not in s:
     raise SystemExit('ERROR: V21 TON success cooldown anchor not found')
 s=s.replace("set ton_treasury_scan_failures=$1,ton_treasury_next_scan_at=now()+($2::text||' seconds')::interval", "set ton_treasury_scan_failures=$1,ton_treasury_last_scan_at=now(),ton_treasury_next_scan_at=now()+($2::text||' seconds')::interval", 1)
 
-# Legacy combined treasury scan becomes TON-only. Historical Polygon rows remain intact for audit.
-pat=r"async function treasuryScan19\(\)\{.*?\n\}\n\nasync function handleAdminParityV19"
-replacement="""async function treasuryScan19(){
-  const ton=await treasuryTonScan19('main_treasury');
-  let reconciled=false;
-  try{const r=await mainTreasuryReconcileV28();reconciled=!!r}catch(e){console.error('v28_task_reconcile',String(e?.message||e))}
-  return{found:n18(ton?.found),ton,main_treasury:'TON',polygon_disabled:true,sponsored_reconciled:reconciled};
-}
-
-async function handleAdminParityV19"""
-if not re.search(pat,s,re.S):
-    raise SystemExit('ERROR: treasuryScan19 anchor not found')
-s=re.sub(pat,replacement,s,count=1,flags=re.S)
+# Do not rewrite the existing treasuryScan19 function body: live VPS builds may contain
+# local edits around it. Redirect its call sites to the new TON-only V28 scanner instead.
+compat_replacements=0
+if "await treasuryScan19()" in s:
+    compat_replacements=s.count("await treasuryScan19()")
+    s=s.replace("await treasuryScan19()","await mainTreasuryScanV28('compat_v28')")
+print(f'V28 redirected {compat_replacements} legacy treasury scan call(s) to TON-only mode')
 
 # Make the active admin entry point Main Treasury; stale old buttons are redirected by V28 handler.
 s=s.replace("cb18('💎 TREASURY','adm:treasury')","cb18('💎 MAIN TREASURY','cfg28:home')")
 s=s.replace("cb18('🏦 TREASURY','adm:treasury')","cb18('💎 MAIN TREASURY','cfg28:home')")
 s=s.replace("cb18('💎 TON CONFIG','cfg20:home')","cb18('💎 MAIN TREASURY','cfg28:home')")
 
-hook="    try{if(await handleTonReliabilityV21(up,uid,text,m,q)) return done();}catch(e){console.error('v21_ton_reliability',String(e?.message||e));}\n"
-if hook not in s:
+needle="handleTonReliabilityV21(up,uid,text,m,q)"
+pos=s.find(needle)
+if pos<0:
     raise SystemExit('ERROR: V21 webhook hook not found')
-s=s.replace(hook,"    try{if(await handleMainTreasuryV28(up,uid,text,m,q)) return done();}catch(e){console.error('v28_main_treasury',String(e?.message||e));}\n"+hook,1)
+line_start=s.rfind("\n",0,pos)+1
+indent=re.match(r"[ \t]*",s[line_start:pos]).group(0)
+hook_line=indent+"try{if(await handleMainTreasuryV28(up,uid,text,m,q)) return done();}catch(e){console.error('v28_main_treasury',String(e?.message||e));}\n"
+s=s[:line_start]+hook_line+s[line_start:]
 
 marker="\napp.use((_req,res)=>\n  res.status(404).json({ok:false,error:'route_not_enabled_yet'})\n);\n"
 if marker not in s:
-    raise SystemExit('ERROR: final fallback marker not found')
+    fallback=s.rfind("app.use((_req,res)=>")
+    if fallback<0:
+        raise SystemExit('ERROR: final fallback marker not found')
+    line=s.rfind("\n",0,fallback)
+    marker=s[line:fallback]+s[fallback:]
 
 code=r'''
 // === WIENER MAIN TON TREASURY V28 ===
@@ -60,6 +62,13 @@ async function mainTreasuryReconcileV28(){
   let activated=0;
   for(const o of rows){try{const x=await reconcileSponsoredV10B(o);if(x?.status==='live')activated++}catch(e){console.error('v28_reconcile_order',String(o?.id||''),String(e?.message||e))}}
   return{checked:rows.length,activated};
+}
+
+async function mainTreasuryScanV28(source='main_treasury_v28'){
+  const ton=await treasuryTonScan19(source);
+  let reconcile=null;
+  if(!ton?.error)try{reconcile=await mainTreasuryReconcileV28()}catch(e){console.error('v28_reconcile_after_scan',String(e?.message||e))}
+  return{found:n18(ton?.found),ton,main_treasury:'TON',polygon_disabled:true,sponsored_reconciled:!!reconcile,reconcile};
 }
 
 async function mainTreasuryTransactionsV28(limit=180,includeLegacy=true){
@@ -169,7 +178,7 @@ async function handleMainTreasuryV28(up,uid,text,m,q){
   try{await adm18(uid,'treasury')}catch{await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin required',show_alert:true});return true}
   const act=data.split(':')[1];
   if(act==='home'||act==='health'){await edit18(q,await mainTreasuryCardV28(uid));await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:act==='health'?'Health refreshed':'Updated'});return true}
-  if(act==='scan'){await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Scanning TON…'});const scan=await treasuryTonScan19('manual_v28'),reconcile=scan?.error?null:await mainTreasuryReconcileV28();await edit18(q,await mainTreasuryCardV28(uid));if(scan?.error)await safeTg18('sendMessage',{chat_id:uid,text:`⚠️ ${String(scan.error)}`});else await safeTg18('sendMessage',{chat_id:uid,text:`✅ MAIN TREASURY SCAN\nNew payments: ${Number(scan?.found||0)}\nTask orders activated: ${Number(reconcile?.activated||0)}`});return true}
+  if(act==='scan'){await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Scanning TON…'});const out=await mainTreasuryScanV28('manual_v28'),scan=out.ton,reconcile=out.reconcile;await edit18(q,await mainTreasuryCardV28(uid));if(scan?.error)await safeTg18('sendMessage',{chat_id:uid,text:`⚠️ ${String(scan.error)}`});else await safeTg18('sendMessage',{chat_id:uid,text:`✅ MAIN TREASURY SCAN\nNew payments: ${Number(scan?.found||0)}\nTask orders activated: ${Number(reconcile?.activated||0)}`});return true}
   if(act==='tx'){const r=await mainTreasuryTransactionsV28(12,true);await edit18(q,{text:`📜 MAIN TREASURY TRANSACTIONS\n\n${r.map(x=>`${x.legacy?'◫':x.direction==='in'?'⬇️':'⬆️'} ${x.type.replace(/_/g,' ').toUpperCase()} · ${fmt20(x.amount,9)} ${x.asset}\n${String(x.state||'unknown').toUpperCase()} · ${x.telegram_id?'UID '+x.telegram_id+' · ':''}${short18(x.tx_hash||x.reference||'',22)}`).join('\n\n')||'No transactions.'}`,markup:kb18([[cb18('🔄 REFRESH','cfg28:tx')],[cb18('◀️ MAIN TREASURY','cfg28:home')]])});await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Transactions'});return true}
   return false;
 }
@@ -180,13 +189,13 @@ app.post('/functions/v1/wiener-main-treasury',async(req,res)=>{
     const action=String(b.action||'status');
     if(action==='status')return res.json({ok:true,data:await mainTreasuryStatusV28(uid)});
     if(action==='transactions')return res.json({ok:true,data:{transactions:await mainTreasuryTransactionsV28(b.limit,b.include_legacy!==false)}});
-    if(action==='scan'){const scan=await treasuryTonScan19('admin_v28'),reconcile=scan?.error?null:await mainTreasuryReconcileV28();return res.json({ok:true,data:{scan,reconcile}})}
+    if(action==='scan'){const out=await mainTreasuryScanV28('admin_v28');return res.json({ok:true,data:{scan:out.ton,reconcile:out.reconcile}})}
     throw new Error('unknown_action');
   }catch(e){return edgeFail(res,e)}
 });
 
 async function mainTreasuryWorkerTickV28(){
-  try{const st=await st18();if(!st.ton_treasury_scan_enabled)return;const scan=await treasuryTonScan19('worker_v28');if(!scan?.error&&Number(scan?.found||0)>0)await mainTreasuryReconcileV28()}catch(e){console.error('v28_main_treasury_worker',String(e?.message||e))}
+  try{const st=await st18();if(!st.ton_treasury_scan_enabled)return;await mainTreasuryScanV28('worker_v28')}catch(e){console.error('v28_main_treasury_worker',String(e?.message||e))}
 }
 if(!globalThis.__wienerMainTreasuryWorkerV28){
   globalThis.__wienerMainTreasuryWorkerV28=true;
