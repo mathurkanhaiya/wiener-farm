@@ -194,8 +194,8 @@ if home_old in s:s=s.replace(home_old,home_new,1)
 else:print('WARNING: user home Alerts button anchor not found; /alerts still works')
 
 # Add Alerts to the current V19 admin home.
-adm_old="[cb18('⚙️ SYSTEM','adm:system'),cb18('📜 AUDIT','adm:audit')],[cb18('👮 ADMINS','adm:admins')"
-adm_new="[cb18('⚙️ SYSTEM','adm:system'),cb18('🔔 ALERTS','al25:admin')],[cb18('📜 AUDIT','adm:audit'),cb18('👮 ADMINS','adm:admins')"
+adm_old=r"""[cb18('⚙️ SYSTEM','adm:system'),cb18('📜 AUDIT','adm:audit')],[cb18('👮 ADMINS','adm:admins'),web18('🖥 FULL ADMIN',`${a}?page=admin`)]]"""
+adm_new=r"""[cb18('⚙️ SYSTEM','adm:system'),cb18('🔔 ALERTS','al25:admin')],[cb18('📜 AUDIT','adm:audit'),cb18('👮 ADMINS','adm:admins')],[web18('🖥 FULL ADMIN',`${a}?page=admin`)]]"""
 if adm_old in s:s=s.replace(adm_old,adm_new,1)
 else:print('WARNING: admin Alerts button anchor not found; /alerts still exposes admin settings')
 
