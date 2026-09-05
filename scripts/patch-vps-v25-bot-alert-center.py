@@ -205,6 +205,18 @@ legacy_new="async function send(uid,type,key,text,button,url,meta={},counts=true
 if legacy in s:s=s.replace(legacy,legacy_new,1)
 else:print('WARNING: legacy notification preference hook not found; existing reminders remain unchanged')
 
+# Route the existing new-user/device alert to all owner/admin recipients through V25 preferences.
+dev_admin_old=r"""const admin=(await pool.query(`select telegram_id from public.admins where enabled=true and role in ('owner','admin') order by telegram_id limit 1`)).rows[0];if(!admin?.telegram_id)return;"""
+dev_admin_new=r"""const admins=(await pool.query(`select telegram_id from public.admins where enabled=true and role in ('owner','admin') order by telegram_id`)).rows;if(!admins.length)return;"""
+if dev_admin_old in s:
+    s=s.replace(dev_admin_old,dev_admin_new,1)
+    dev_send_old=r"""await tgV10('sendMessage',{chat_id:Number(admin.telegram_id),text,reply_markup:kb18([[web18('👤 VIEW USER',`https://wiener-farm.vercel.app/?page=admin&user=${a.telegram_id}`)]]),disable_web_page_preview:true});"""
+    dev_send_new=r"""for(const admin of admins){const severity=blocked?'critical':same?'warning':'info';await sendAlertV25({uid:Number(admin.telegram_id),type:'admin_security',key:`device_alert:${a.telegram_id}:${a.created_at||a.alert_id||'new'}`,severity,admin:true,text,markup:kb18([[web18('👤 VIEW USER',`https://wiener-farm.vercel.app/?page=admin&user=${a.telegram_id}`)]]),meta:{target_uid:a.telegram_id,blocked,same_device:same}})}"""
+    if dev_send_old in s:s=s.replace(dev_send_old,dev_send_new,1)
+    else:print('WARNING: V19B device alert send anchor not found')
+else:
+    print('WARNING: V19B device admin routing anchor not found')
+
 # Add clear mandatory account-status messages to the existing manual ban/unban flow.
 ban_anchor=r"""await tgV10('sendMessage',{chat_id:uid,text:cmd==='ban'?`🚫 User Banned\nUID: ${target}`:`✅ User Fully Unbanned\nUID: ${target}`});return true}"""
 if ban_anchor in s:
