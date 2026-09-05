@@ -22,6 +22,14 @@ node --check "$BACKEND"
 grep -q 'handleAdminParityV19' "$BACKEND" || { echo 'ERROR: V19 admin/bot parity is not installed'; exit 1; }
 echo 'precheck=PASS'
 
+echo '=== DRY-RUN PATCH ON TEMP COPY ==='
+DRYRUN="/tmp/wiener-v25-dryrun-$STAMP.js"
+cp -a "$BACKEND" "$DRYRUN"
+WIENER_BACKEND_FILE="$DRYRUN" python3 "$ROOT/scripts/patch-vps-v25-bot-alert-center.py"
+node --check "$DRYRUN"
+rm -f "$DRYRUN"
+echo 'dry_run=PASS'
+
 echo '=== INSTALL ALERT PREFERENCES + STATE ==='
 runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 <<'SQL'
 create table if not exists public.wiener_alert_preferences(
