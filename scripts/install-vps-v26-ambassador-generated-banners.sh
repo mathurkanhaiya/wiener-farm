@@ -30,14 +30,18 @@ cp "$SERVER" "$BACKUP"
 
 echo '=== AMBASSADOR PROMO TEMPLATE ==='
 if [[ ! -s "$TEMPLATE" ]]; then
-  if [[ -s "$FALLBACK" ]]; then
-    cp "$FALLBACK" "$TEMPLATE"
-    echo 'Copied existing promo-code asset as Ambassador template.'
-  else
-    tmp="$TEMPLATE.download"
-    curl -fsSL --max-time 30 "$SOURCE_URL" -o "$tmp"
+  tmp="$TEMPLATE.download"
+  if curl -fsSL --max-time 30 "$SOURCE_URL" -o "$tmp"; then
     mv "$tmp" "$TEMPLATE"
-    echo 'Downloaded Ambassador template.'
+    echo 'Downloaded requested Ambassador template.'
+  elif [[ -s "$FALLBACK" ]]; then
+    rm -f "$tmp"
+    cp "$FALLBACK" "$TEMPLATE"
+    echo 'Template URL unavailable; copied existing promo-code asset as fallback.'
+  else
+    rm -f "$tmp"
+    echo 'Ambassador template unavailable.' >&2
+    exit 1
   fi
 fi
 
@@ -46,13 +50,28 @@ cd "$BACKEND"
 if ! node -e "import('sharp').then(()=>process.exit(0)).catch(()=>process.exit(1))"; then
   npm install --no-save --no-audit --no-fund sharp@0.33.5
 fi
-node --input-type=module <<'NODE'
+if ! node --input-type=module <<'NODE'
 import sharp from 'sharp';
 const p='/opt/wiener-host-assets/ambassador-promo-template';
 const m=await sharp(p).metadata();
 if(!m.width||!m.height||m.width<900||m.height<450) throw new Error('invalid ambassador template dimensions');
 console.log(`Template: ${m.width}x${m.height} ${m.format}`);
 NODE
+then
+  if [[ -s "$FALLBACK" && "$FALLBACK" != "$TEMPLATE" ]]; then
+    echo 'Downloaded template was invalid; using existing promo-code asset fallback.'
+    cp "$FALLBACK" "$TEMPLATE"
+    node --input-type=module <<'NODE'
+import sharp from 'sharp';
+const p='/opt/wiener-host-assets/ambassador-promo-template';
+const m=await sharp(p).metadata();
+if(!m.width||!m.height||m.width<900||m.height<450) throw new Error('invalid fallback template dimensions');
+console.log(`Fallback template: ${m.width}x${m.height} ${m.format}`);
+NODE
+  else
+    exit 1
+  fi
+fi
 
 echo '=== DATABASE COMPATIBILITY ==='
 runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
