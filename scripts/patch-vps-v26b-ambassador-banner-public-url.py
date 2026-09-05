@@ -7,14 +7,26 @@ if not p.exists():
     if alt.exists(): p=alt
 
 s=p.read_text()
-old="return {asset,url:`https://api.viralaitools.xyz/host/${asset}`,size:stat.size};"
-new="const st=await settingsV14();const base=String(st.app_url||'https://wiener.viralaitools.xyz').replace(/\\\/$/,'');return {asset,url:`${base}/api/host/${asset}`,size:stat.size};"
+hardcoded="return {asset,url:`https://api.viralaitools.xyz/host/${asset}`,size:stat.size};"
+fixed="const st=await settingsV14();const rawBase=String(st.app_url||'https://wiener.viralaitools.xyz');const base=rawBase.endsWith('/')?rawBase.slice(0,-1):rawBase;return {asset,url:`${base}/api/host/${asset}`,size:stat.size};"
 
-if old in s:
-    s=s.replace(old,new,1)
+changed=False
+if hardcoded in s:
+    s=s.replace(hardcoded,fixed,1)
+    changed=True
+else:
+    lines=s.splitlines()
+    for i,line in enumerate(lines):
+        if "const st=await settingsV14();" in line and "/api/host/${asset}" in line and "return {asset,url:" in line:
+            lines[i]="  "+fixed
+            s="\n".join(lines)+("\n" if s.endswith("\n") else "")
+            changed=True
+            break
+
+if changed:
     p.write_text(s)
     print('V26B fixed Ambassador generated-banner public URL')
-elif "/api/host/${asset}" in s:
+elif "rawBase.endsWith('/')" in s and "/api/host/${asset}" in s:
     print('V26B already installed')
 else:
     raise SystemExit('ERROR: Ambassador banner URL anchor not found')
