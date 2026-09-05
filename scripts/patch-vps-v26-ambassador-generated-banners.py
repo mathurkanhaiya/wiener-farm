@@ -81,16 +81,17 @@ function cleanAmbCodeV26(code){
 }
 function bannerSvgAmbV26(code,width,height){
   const clean=cleanAmbCodeV26(code);
-  const cx=Math.round(width*0.59),cy=Math.round(height*0.758);
-  const size=Math.max(58,Math.min(92,Math.round(width*0.057*(10/Math.max(10,clean.length)))));
-  const stroke=Math.max(2,Math.round(size*0.035));
+  // Center the code in the large right-hand ticket panel and make it prominent.
+  const cx=Math.round(width*0.585),cy=Math.round(height*0.752);
+  const size=Math.max(82,Math.min(110,Math.round(width*0.078*(10/Math.max(10,clean.length)))));
+  const stroke=Math.max(2,Math.round(size*0.028));
   return Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
     <text x="${cx+4}" y="${cy+5}" text-anchor="middle" dominant-baseline="middle"
       font-family="DejaVu Sans,Arial,sans-serif" font-size="${size}" font-weight="900"
-      letter-spacing="2" fill="rgba(50,28,8,.30)">${clean}</text>
+      letter-spacing="3" fill="rgba(50,28,8,.30)">${clean}</text>
     <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
       font-family="DejaVu Sans,Arial,sans-serif" font-size="${size}" font-weight="900"
-      letter-spacing="2" fill="#0b542f" stroke="#f8dc82" stroke-width="${stroke}" paint-order="stroke fill">${clean}</text>
+      letter-spacing="3" fill="#0b542f" stroke="#f8dc82" stroke-width="${stroke}" paint-order="stroke fill">${clean}</text>
   </svg>`);
 }
 async function cleanupAmbBannersV26(){
