@@ -70,6 +70,6 @@ trap - ERR
 echo '=== V24 WITHDRAW AD UNLOCK INSTALLED ==='
 echo 'Requirement: 5 counted sponsor ads per UTC day.'
 echo 'AdsGram block: int-44861'
-echo 'Minimum elapsed view time before count: 14 seconds.'
+echo 'Minimum elapsed view time before count: 15 seconds.'
 echo 'Withdrawal endpoint enforces the requirement server-side.'
 echo 'No balances, payout amounts, or existing withdrawals were modified.'
