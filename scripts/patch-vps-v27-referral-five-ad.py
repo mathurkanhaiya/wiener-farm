@@ -21,12 +21,6 @@ if old in s:
     s=s.replace(old,"A referral qualifies after 5 verified ads.")
     changes+=1
 
-old2="const qualified=refs.filter(r=>r.referral_active===true&&r.referral_reward_eligible!==false).length;return res.json({ok:true,data:{referrals:refs,qualified,leaderboard:lb}})"
-new2="const normalized=refs.map(r=>({...r,referral_active:r.referral_reward_eligible!==false&&(r.referral_active===true||Number(r.total_ads||0)>=5)}));const qualified=normalized.filter(r=>r.referral_active===true).length;return res.json({ok:true,data:{referrals:normalized,qualified,leaderboard:lb}})"
-if old2 in s:
-    s=s.replace(old2,new2,1)
-    changes+=1
-
 marker="\napp.use((_req,res)=>\n  res.status(404).json({ok:false,error:'route_not_enabled_yet'})\n);\n"
 if marker not in s:
     raise SystemExit('ERROR: final backend fallback marker not found')
@@ -40,7 +34,7 @@ async function referralViewV27(uid){
   ]);
   if(!u)return{text:'👥 REFERRALS\n\nOpen WIENER Farm first to create your account.',markup:kb18([[web18('🌭 OPEN WIENER FARM',app18(s))]])};
   const bot=String(s.bot_username||'WienerDogeFarmBot').replace('@',''),link=`https://t.me/${bot}?startapp=ref_${uid}`,a=app18(s);
-  return{text:`👥 REFERRALS\n\nInvited: ${n18(u.referrals_count)}\nActive: ${n18(u.active_referrals_count)}\nEarned: ${fmt18(u.referral_earnings)} WIENER\nReward: +${fmt18(s.referral_active_reward)} WIENER per active referral\n\n✅ Active requirement: 5 verified ads\nThere are no extra 10/20-ad qualification levels.`,markup:kb18([[url18('📤 SHARE INVITE',`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join WIENER Farm and earn rewards with me!')}`)],[web18('👥 OPEN REFERRALS',`${a}?page=invite`)],[cb18('◀️ MAIN MENU','ux:home')]])};
+  return{text:`👥 REFERRALS\n\nInvited: ${n18(u.referrals_count)}\nActive: ${n18(u.active_referrals_count)}\nEarned: ${fmt18(u.referral_earnings)} WIENER\nReward: +${fmt18(s.referral_active_reward)} WIENER per active referral\n\n✅ Active requirement: 5 verified ads\nThere are no extra 10/20-ad qualification levels. Existing referral records are not retroactively reprocessed.`,markup:kb18([[url18('📤 SHARE INVITE',`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join WIENER Farm and earn rewards with me!')}`)],[web18('👥 OPEN REFERRALS',`${a}?page=invite`)],[cb18('◀️ MAIN MENU','ux:home')]])};
 }
 async function handleReferralRuleV27(uid,text,m,q){
   if(!uid)return false;
