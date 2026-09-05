@@ -81,6 +81,15 @@ export const date=(v:string)=>v?new Date(v).toLocaleString():'';
 export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
+export async function buildTonTransfer(amount:string|number,memo:string){
+  const {Buffer}=await import('buffer');
+  const g=globalThis as any;
+  if(!g.Buffer)g.Buffer=Buffer;
+  const {beginCell,toNano}=await import('@ton/core');
+  const nano=toNano(String(amount));
+  const boc=beginCell().storeUint(0,32).storeStringTail(String(memo||'')).endCell().toBoc();
+  return {amount:nano.toString(),payload:Buffer.from(boc).toString('base64')};
+}
 export function pageFromUrl():Tab{const qs=new URLSearchParams(window.location.search),tg=window.Telegram?.WebApp as any,p=qs.get('page')||qs.get('tgWebAppStartParam')||String(tg?.initDataUnsafe?.start_param||'');const map:Record<string,Tab>={home:'home',tasks:'tasks',referral:'invite',invite:'invite',leaderboard:'leaderboard',daily:'daily',claim:'claim',profile:'profile',wallet:'wallet',ads:'ads',earn:'ads',ambassador:'ambassador'};return map[p]||'home'}
 function persistentId(key:string){try{let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;localStorage.setItem(key,id)}return id}catch{return `volatile-${navigator.userAgent.length}-${screen.width}x${screen.height}`}}
 function getDeviceId(){return persistentId('wiener_device_id_v1')}
