@@ -79,15 +79,13 @@ Memo: <code>${o.payment_memo}</code>
 After sending, tap <b>CHECK PAYMENT</b>.`,parse_mode:'HTML','''+buttons
 s=s[:branch]+manager+s[branch_end:]
 
-# V36 top-up card, if installed. Keep its existing buttons too.
+# V36 top-up card, if installed.
 top=s.find('await edit18(q,{text:`💎 TOP-UP PAYMENT')
 if top>=0:
-    top_markup=s.find('markup:kb18([',top)
-    top_end=s.find('])});',top_markup)
-    if top_markup<0 or top_end<0:
+    top_end=s.find('])});',top)
+    if top_end<0:
         raise SystemExit('ERROR: top-up payment boundaries not found')
     top_end+=5
-    buttons=s[top_markup:top_end-2]
     top_new=r'''await edit18(q,{text:`💎 <b>TON Top-up Payment</b>
 
 ➕ ${x.added_completions} completions
@@ -97,7 +95,10 @@ To: <code>${x.payment_address}</code>
 Memo: <code>${x.payment_memo}</code>
 
 ⚠️ Include the memo exactly.
-After sending, tap <b>CHECK PAYMENT</b>.`,parse_mode:'HTML','''+buttons+'});'
+After sending, tap <b>CHECK PAYMENT</b>.`,parse_mode:'HTML',markup:kb18([
+        [cb18('✅ CHECK PAYMENT',`stm30:topcheck:${x.id}`)],
+        [cb18('◀️ BACK TO TASK',`stm30:show:${id}`)]
+      ])});'''
     s=s[:top]+top_new+s[top_end:]
 else:
     print('INFO: V36 top-up card not present; skipped')
