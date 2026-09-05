@@ -1,11 +1,11 @@
 import {useEffect,useMemo,useState} from 'react';
-import {getInitData,money} from './lib';
+import {getInitData,money,PUBLISHABLE_KEY} from './lib';
 
 type TreasuryRow={id:string;type:string;direction:'in'|'out';amount:number;asset:string;network:string;state:string;tx_hash?:string|null;explorer_url?:string|null;from_address?:string|null;to_address?:string|null;reference?:string|null;telegram_id?:number|null;at?:string|null;legacy?:boolean;source?:string|null};
 const short=(v:any,n=18)=>{const x=String(v||'—');return x.length<=n?x:x.slice(0,9)+'…'+x.slice(-7)};
 const stamp=(v:any)=>{if(!v)return '—';try{return new Date(v).toLocaleString()}catch{return String(v)}};
 const cleanErr=(e:any)=>String(e?.message||e||'Request failed').replace(/_/g,' ');
-async function treasuryApi(action:string,body:any={}){const r=await fetch('/functions/v1/wiener-main-treasury',{method:'POST',headers:{'Content-Type':'application/json','apikey':'vps','cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||x?.ok===false)throw new Error(x?.message||x?.error||'Main Treasury request failed');return x.data??x}
+async function treasuryApi(action:string,body:any={}){const r=await fetch('/functions/v1/wiener-main-treasury',{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>({ok:false,error:'invalid_response'}));if(!r.ok||x?.ok===false)throw new Error(x?.message||x?.error||'Main Treasury request failed');return x.data??x}
 
 export function MainTreasuryAdmin({say}:{say:any}){
  const [view,setView]=useState<'overview'|'transactions'>('overview'),[status,setStatus]=useState<any>(null),[rows,setRows]=useState<TreasuryRow[]>([]),[busy,setBusy]=useState(false),[filter,setFilter]=useState('all'),[query,setQuery]=useState(''),[updated,setUpdated]=useState<Date|null>(null);
