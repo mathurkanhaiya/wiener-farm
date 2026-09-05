@@ -59,10 +59,15 @@ async function sendAlertV25(o){
   const uid=Number(o.uid||0),type=String(o.type||'alert'),key=String(o.key||'').slice(0,240),severity=String(o.severity||'info');
   if(!uid||!key)return false;
   if(!await alertAllowedV25(uid,type,!!o.admin,severity))return false;
-  if((await pool.query(`select 1 from public.notification_log where telegram_id=$1 and event_key=$2 and status='sent' limit 1`,[uid,key])).rows.length)return false;
+  const prior=(await pool.query(`select id,status,created_at from public.notification_log where telegram_id=$1 and event_key=$2 order by created_at desc limit 1`,[uid,key])).rows[0]||null;
+  if(prior?.status==='sent')return false;
+  if(prior?.status==='pending'&&new Date(prior.created_at).getTime()>Date.now()-300000)return false;
   if(o.cooldownHours){const q=await pool.query(`select 1 from public.notification_log where telegram_id=$1 and event_type=$2 and status='sent' and created_at>=now()-($3::text||' hours')::interval limit 1`,[uid,type,String(o.cooldownHours)]);if(q.rows.length)return false}
   let log=null;
-  try{log=(await pool.query(`insert into public.notification_log(telegram_id,event_type,event_key,status,metadata) values($1,$2,$3,'pending',$4::jsonb) returning id`,[uid,type,key,JSON.stringify({severity,...(o.meta||{})})])).rows[0]}catch{return false}
+  try{
+    if(prior?.id){await pool.query(`update public.notification_log set status='pending',error=null,metadata=$2::jsonb where id=$1`,[prior.id,JSON.stringify({severity,...(o.meta||{})})]);log={id:prior.id}}
+    else log=(await pool.query(`insert into public.notification_log(telegram_id,event_type,event_key,status,metadata) values($1,$2,$3,'pending',$4::jsonb) returning id`,[uid,type,key,JSON.stringify({severity,...(o.meta||{})})])).rows[0]
+  }catch{return false}
   try{
     const api=typeof safeTg18==='function'?safeTg18:tgV10;
     const m=await api('sendMessage',{chat_id:uid,text:String(o.text||''),disable_web_page_preview:true,reply_markup:o.markup||undefined});
@@ -131,8 +136,8 @@ async function runAlertsV25(){
   if(alertRunBusyV25)return{busy:true};alertRunBusyV25=true;
   const out={withdrawals:0,risk:0,payout_failed:0,tasks:0,ambassador:0,system:0,ads:0,treasury:0};
   try{
-    const since=await stateGetV25('installed_at',new Date().toISOString()),app=await appUrlV25();
-    const fresh=(await pool.query(`select w.*,u.first_name,u.is_banned,u.device_blocked,coalesce(r.risk_score,0) risk_score,coalesce(r.enforcement_state,'normal') enforcement_state from public.withdrawals w left join public.users u on u.telegram_id=w.telegram_id left join public.user_risk_profiles r on r.telegram_id=w.telegram_id where w.created_at>=$1 order by w.created_at asc limit 250`,[since])).rows;
+    const installed=await stateGetV25('installed_at',new Date().toISOString()),lastPoll=await stateGetV25('last_poll_at',installed),pollNow=new Date().toISOString(),lastMs=Date.parse(lastPoll),scanSince=Number.isFinite(lastMs)?new Date(Math.max(Date.parse(installed)||0,lastMs-30*60*1000)).toISOString():installed,app=await appUrlV25();
+    const fresh=(await pool.query(`select w.*,u.first_name,u.is_banned,u.device_blocked,coalesce(r.risk_score,0) risk_score,coalesce(r.enforcement_state,'normal') enforcement_state from public.withdrawals w left join public.users u on u.telegram_id=w.telegram_id left join public.user_risk_profiles r on r.telegram_id=w.telegram_id where w.created_at>=$1 order by w.created_at asc limit 500`,[scanSince])).rows;
     for(const w of fresh){
       const ton=w.method_key==='gram_ton'||String(w.network).toUpperCase()==='TON',asset=ton?'GRAM':'USDT',gross=fmtV25(w.gross_usdt,ton?6:4),recv=fmtV25(w.receive_usdt,ton?6:4),uname=w.username?'@'+w.username:(w.first_name||'User'),wallet=`${app}?page=wallet`;
       await sendAlertV25({uid:w.telegram_id,type:'withdrawal_submitted',key:`withdraw_submitted:${w.id}`,severity:'critical',text:`💸 WITHDRAWAL SUBMITTED\n\nAmount: ${gross} ${asset}\nEstimated receive: ${recv} ${asset}\nNetwork: ${w.network||''}\nStatus: ${String(w.status||'pending').toUpperCase()}\n\nWe'll notify you when it is processed.`,markup:{inline_keyboard:[[{text:'💸 VIEW WITHDRAWAL',web_app:{url:wallet}}]]},meta:{withdrawal_id:w.id}});
@@ -174,6 +179,7 @@ async function runAlertsV25(){
       const admins=await adminsV25('withdrawals'),owner=admins[0];
       if(owner?.telegram_id){try{const x=await tonConfigStatus20(Number(owner.telegram_id)),bal=Number(x?.payout?.ton_balance),pending=Number(x?.pending?.v||0),prev=await stateGetV25('ton_treasury_health','ok');if(Number.isFinite(bal)&&pending>0){const level=bal<pending?'critical':bal<pending*2?'warning':'ok';if(level!=='ok'&&prev!==level){out.treasury+=await sendAdminsV25('withdrawals',{type:'admin_treasury',key:`ton_treasury_low:${level}:${Date.now()}`,severity:level,text:`${level==='critical'?'🔴':'🟠'} TON TREASURY LOW\n\nBalance: ${fmtV25(bal,9)} TON\nPending payouts: ${fmtV25(pending,9)} TON\n\n${level==='critical'?'Available balance is below the pending payout value.':'Reserve is below 2× the pending payout value.'}`,markup:{inline_keyboard:[[{text:'💎 TON CONFIG',callback_data:'cfg20:home'}]]}});await stateSetV25('ton_treasury_health',level)}if(level==='ok'&&prev!=='ok'){out.treasury+=await sendAdminsV25('withdrawals',{type:'admin_treasury',key:`ton_treasury_recovered:${Date.now()}`,severity:'info',text:`🟢 TON TREASURY HEALTHY\n\nBalance: ${fmtV25(bal,9)} TON\nPending payouts: ${fmtV25(pending,9)} TON`});await stateSetV25('ton_treasury_health','ok')}}}catch(e){console.error('alerts_v25_treasury',String(e?.message||e))}}
     }
+    await stateSetV25('last_poll_at',pollNow);
     return out;
   }finally{alertRunBusyV25=false}
 }
