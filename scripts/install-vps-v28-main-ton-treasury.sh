@@ -93,9 +93,9 @@ BEGIN
   END IF;
   IF to_regclass('public.withdrawal_methods') IS NOT NULL THEN
     IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='withdrawal_methods' AND column_name='network') THEN
-      EXECUTE $update public.withdrawal_methods set enabled=false where lower(coalesce(network,''))='polygon'$;
+      EXECUTE $sql$update public.withdrawal_methods set enabled=false where lower(coalesce(network,''))='polygon'$sql$;
     ELSE
-      EXECUTE $update public.withdrawal_methods set enabled=false where lower(method_key) like '%polygon%'$;
+      EXECUTE $sql$update public.withdrawal_methods set enabled=false where lower(method_key) like '%polygon%'$sql$;
     END IF;
   END IF;
 END $do$;
