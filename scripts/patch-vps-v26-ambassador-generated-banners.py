@@ -92,11 +92,11 @@ if n!=1:
 
 old="url:'https://t.me/WienerDogeFarmBot/app'"
 if old in s:
-    s=s.replace(old,"url:\`https://t.me/WienerDogeFarmBot/app?startapp=promo_\${made.code}\`",1)
+    s=s.replace(old,"url:`https://t.me/WienerDogeFarmBot/app?startapp=promo_${made.code}`",1)
 
 # Keep generated-banner references on the broadcast item when the columns exist.
-insert_old="await pool.query(\`insert into public.ambassador_broadcast_items(broadcast_id,ambassador_id,channel_id,channel_username,channel_title,code_1,code_2,message_id,status,posted_at) values($1,$2,$3,$4,$5,$6,null,$7,'posted',now())\`,[broadcastId,a.id,a.channel_id,a.channel_username,a.channel_title,made.code,msg.message_id]);"
-insert_new="await pool.query(\`insert into public.ambassador_broadcast_items(broadcast_id,ambassador_id,channel_id,channel_username,channel_title,code_1,code_2,message_id,status,posted_at) values($1,$2,$3,$4,$5,$6,null,$7,'posted',now())\`,[broadcastId,a.id,a.channel_id,a.channel_username,a.channel_title,made.code,msg.message_id]);\n        await pool.query(\`update public.ambassador_broadcast_items set banner_asset_name=$2,banner_url=$3 where broadcast_id=$1 and ambassador_id=$4 and message_id=$5\`,[broadcastId,banner.asset,banner.url,a.id,msg.message_id]).catch(()=>null);"
+insert_old="await pool.query(`insert into public.ambassador_broadcast_items(broadcast_id,ambassador_id,channel_id,channel_username,channel_title,code_1,code_2,message_id,status,posted_at) values($1,$2,$3,$4,$5,$6,null,$7,'posted',now())`,[broadcastId,a.id,a.channel_id,a.channel_username,a.channel_title,made.code,msg.message_id]);"
+insert_new="await pool.query(`insert into public.ambassador_broadcast_items(broadcast_id,ambassador_id,channel_id,channel_username,channel_title,code_1,code_2,message_id,status,posted_at) values($1,$2,$3,$4,$5,$6,null,$7,'posted',now())`,[broadcastId,a.id,a.channel_id,a.channel_username,a.channel_title,made.code,msg.message_id]);\n        await pool.query(`update public.ambassador_broadcast_items set banner_asset_name=$2,banner_url=$3 where broadcast_id=$1 and ambassador_id=$4 and message_id=$5`,[broadcastId,banner.asset,banner.url,a.id,msg.message_id]).catch(()=>null);"
 if insert_old in s:
     s=s.replace(insert_old,insert_new,1)
 
