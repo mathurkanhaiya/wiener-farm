@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {adApi,adUsageApi,secondaryAdApi,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {trackAdInteraction} from './adInteraction';
+// Direct WATCH flow: no intermediate claim popup; ad opens after loading.
 
 const today=()=>new Date().toISOString().slice(0,10);
 const COOLDOWN_KEY='wiener_adsgram_cooldown_until_v1';
