@@ -24,32 +24,62 @@ for need in [
     if need not in s:
         raise SystemExit("ERROR: required payment feature missing: "+need)
 
-# Scan a deeper recent window on every explicit check.
-old="const t=await tonTreasuryV10B(),txs=await t.client.getTransactions(t.wc.address,{limit:50});let inserted=0;"
-if old not in s:
-    raise SystemExit("ERROR: V30 TON scan anchor not found")
-s=s.replace(old,"const t=await tonTreasuryV10B(),txs=await t.client.getTransactions(t.wc.address,{limit:100});let inserted=0;",1)
+# Fast background scan + deeper paginated scan for explicit CHECK PAYMENT.
+pat=r"async function sponsorScanV30\\(\\)\\{.*?\\n\\}\\n\\nasync function sponsorOrderV30"
+m=re.search(pat,s,re.S)
+if not m:
+    raise SystemExit("ERROR: sponsorScanV30 block not found")
+scanner=r"""async function sponsorScanV30(deep=false){
+  const now=Date.now();
+  if(sponsorScanPromiseV30)return sponsorScanPromiseV30;
+  if(now-sponsorScanAtV30<4500)return{scanned:0,inserted:0,throttled:true};
+  sponsorScanAtV30=now;
+  sponsorScanPromiseV30=(async()=>{
+    const t=await tonTreasuryV10B();let scanned=0,inserted=0,pages=0,lt=null,hash=null;
+    const maxPages=deep?3:1;
+    for(let page=0;page<maxPages;page++){
+      const opts={limit:100};
+      if(lt&&hash){opts.lt=lt;opts.hash=hash;opts.inclusive=true}
+      const txs=await t.client.getTransactions(t.wc.address,opts);
+      if(!txs.length)break;
+      pages++;scanned+=txs.length;
+      for(const tx of txs)try{if(await saveTonDepositV10B(t,tx))inserted++}catch(e){console.error("v42_save_ton",String(e?.message||e))}
+      if(!deep)break;
+      const last=txs[txs.length-1],prevLt=BigInt(last.prevTransactionLt||0n),prevHash=BigInt(last.prevTransactionHash||0n);
+      if(prevLt<=0n||prevHash<=0n)break;
+      const nextLt=prevLt.toString(),nextHash=hashB64V10B(prevHash);
+      if(nextLt===lt&&nextHash===hash)break;
+      lt=nextLt;hash=nextHash;
+    }
+    return{scanned,inserted,pages,deep};
+  })();
+  try{return await sponsorScanPromiseV30}finally{sponsorScanPromiseV30=null}
+}
+
+async function sponsorOrderV30"""
+s=s[:m.start()]+scanner+s[m.end():]
 
 # Explicit app/manager checks must surface TON RPC errors instead of pretending payment was not sent.
 for old,new in [
-    ("if(a==='check_initial'){\n      await sponsorScanV30().catch(()=>null);","if(a==='check_initial'){\n      await sponsorScanV30();"),
-    ("if(a==='topup_status'){\n      await sponsorScanV30().catch(()=>null);","if(a==='topup_status'){\n      await sponsorScanV30();"),
-    ("else if(act==='check'){\n      await sponsorScanV30().catch(()=>null);","else if(act==='check'){\n      await sponsorScanV30();"),
-    ("else if(act==='topcheck'){\n      await sponsorScanV30().catch(()=>null);","else if(act==='topcheck'){\n      await sponsorScanV30();")
+    ("if(a==='check_initial'){\n      await sponsorScanV30().catch(()=>null);","if(a==='check_initial'){\n      await sponsorScanV30(true);"),
+    ("if(a==='topup_status'){\n      await sponsorScanV30().catch(()=>null);","if(a==='topup_status'){\n      await sponsorScanV30(true);"),
+    ("else if(act==='check'){\n      await sponsorScanV30().catch(()=>null);","else if(act==='check'){\n      await sponsorScanV30(true);"),
+    ("else if(act==='topcheck'){\n      await sponsorScanV30().catch(()=>null);","else if(act==='topcheck'){\n      await sponsorScanV30(true);")
 ]:
     if old in s:
         s=s.replace(old,new,1)
 
 # The creator status endpoint used a separate internal backfill whose errors were swallowed.
 # Route it through the same verified scanner so an RPC outage returns a real error.
-st=s.find("if(a==='status'){")
-if st>=0:
+route=s.find("app.post('/functions/v1/wiener-sponsored-task'")
+st=s.find("if(a==='status'){",route if route>=0 else 0)
+if route>=0 and st>=0:
     en=s.find("return res.json({ok:true,data:o})",st)
     if en>st:
         b=s[st:en]
         m=re.search(r"if\(o\.status==='awaiting_payment'\)\{try\{.*?\}catch\{\}o=",b,re.S)
         if m:
-            b=b[:m.start()]+"if(o.status==='awaiting_payment'){await sponsorScanV30();o="+b[m.end():]
+            b=b[:m.start()]+"if(o.status==='awaiting_payment'){await sponsorScanV30(true);o="+b[m.end():]
             s=s[:st]+b+s[en:]
         else:
             print("WARNING: creator status scan block not changed")
