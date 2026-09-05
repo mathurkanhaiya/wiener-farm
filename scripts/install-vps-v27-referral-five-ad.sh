@@ -91,6 +91,19 @@ set referral_active_ads_required=5,
     updated_at=now()
 where id=true;
 
+-- Re-run the existing referral qualification trigger, if present, using the
+-- current 5-ad setting. This preserves the existing reward/idempotency logic.
+update public.users
+set total_ads=total_ads
+where referred_by is not null
+  and telegram_id<>referred_by
+  and coalesce(total_ads,0)>=5
+  and coalesce(referral_reward_eligible,true)=true
+  and coalesce(referral_active,false)=false;
+
+-- If an older trigger does not understand the new setting, normalize only the
+-- active status. Monetary reward amounts/ledger entries are deliberately not
+-- fabricated here.
 update public.users
 set referral_active=true
 where referred_by is not null
