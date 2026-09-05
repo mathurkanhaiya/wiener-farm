@@ -31,32 +31,6 @@ grep -q 'WIENER MAIN TON TREASURY V28' "$SERVER"
 grep -q 'MAIN_TREASURY_SCAN_MS_V28=7000' "$SERVER"
 grep -q "wiener-main-treasury" "$SERVER"
 
-echo '=== RETIRE ACTIVE POLYGON TREASURY ==='
-runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
-DO $do$
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='payout_polygon_enabled') THEN
-    EXECUTE 'update public.app_settings set payout_polygon_enabled=false where id=true';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='treasury_withdraw_enabled') THEN
-    EXECUTE 'update public.app_settings set treasury_withdraw_enabled=false where id=true';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='ton_treasury_scan_enabled') THEN
-    EXECUTE 'update public.app_settings set ton_treasury_scan_enabled=true where id=true';
-  END IF;
-  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='ton_treasury_next_scan_at') THEN
-    EXECUTE 'update public.app_settings set ton_treasury_next_scan_at=now() where id=true';
-  END IF;
-  IF to_regclass('public.withdrawal_methods') IS NOT NULL THEN
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='withdrawal_methods' AND column_name='network') THEN
-      EXECUTE $$update public.withdrawal_methods set enabled=false where lower(coalesce(network,''))='polygon'$$;
-    ELSE
-      EXECUTE $$update public.withdrawal_methods set enabled=false where lower(method_key) like '%polygon%'$$;
-    END IF;
-  END IF;
-END $do$;
-SQL
-
 echo '=== BUILD ADVANCED TREASURY UI ==='
 test -f src/MainTreasuryAdmin.tsx
 npm run build
@@ -83,7 +57,33 @@ if [[ "$code" == "000" || "$code" == "404" || "$code" == "502" ]]; then
   exit 1
 fi
 
-echo '=== V28 READY ==='
+echo '=== RETIRE ACTIVE POLYGON TREASURY ==='
+runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
+DO $do$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='payout_polygon_enabled') THEN
+    EXECUTE 'update public.app_settings set payout_polygon_enabled=false where id=true';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='treasury_withdraw_enabled') THEN
+    EXECUTE 'update public.app_settings set treasury_withdraw_enabled=false where id=true';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='ton_treasury_scan_enabled') THEN
+    EXECUTE 'update public.app_settings set ton_treasury_scan_enabled=true where id=true';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='app_settings' AND column_name='ton_treasury_next_scan_at') THEN
+    EXECUTE 'update public.app_settings set ton_treasury_next_scan_at=now() where id=true';
+  END IF;
+  IF to_regclass('public.withdrawal_methods') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='withdrawal_methods' AND column_name='network') THEN
+      EXECUTE $update public.withdrawal_methods set enabled=false where lower(coalesce(network,''))='polygon'$;
+    ELSE
+      EXECUTE $update public.withdrawal_methods set enabled=false where lower(method_key) like '%polygon%'$;
+    END IF;
+  END IF;
+END $do$;
+SQL
+
+echo '=== V28 READY ===
 echo 'TON is now the active Main Treasury.'
 echo 'Polygon/USDT treasury is retired from active use; historical records are preserved.'
 echo 'TON deposits are scanned every ~7 seconds under normal provider conditions.'
