@@ -38,6 +38,7 @@ function prefKeyV25(type){
   if(type==='referral_qualified'||type==='referral_reward')return'user_referral_rewards';
   if(type==='new_tasks')return'user_new_tasks';
   if(type==='promotion'||type==='promo'||type==='giveaway')return'user_promotions';
+  if(type==='admin_new_user')return'admin_new_users';
   if(type==='admin_withdrawal'||type==='admin_payout_queue'||type==='admin_payout_failed')return'admin_withdrawals';
   if(type==='admin_fraud'||type==='admin_security')return'admin_fraud';
   if(type==='admin_treasury'||type==='admin_ton_scanner')return'admin_treasury';
@@ -104,10 +105,10 @@ function userAlertCardV25(p,isAdmin=false){
 function adminAlertCardV25(p){
   const b=(label,key,on)=>({text:`${on?'✅':'⚪'} ${label}`,callback_data:`al25:at:${key}`});
   return{text:'🔔 ADMIN ALERTS\n\nOperational alerts are routed through your current admin permissions. Critical payout/security alerts cannot be muted.\n\nChoose normal/warning alert categories:',markup:{inline_keyboard:[
-    [b('Withdrawals','admin_withdrawals',p.admin_withdrawals!==false),b('Fraud','admin_fraud',p.admin_fraud!==false)],
-    [b('Treasury','admin_treasury',p.admin_treasury!==false),b('Ads','admin_ads',p.admin_ads!==false)],
-    [b('Tasks','admin_tasks',p.admin_tasks!==false),b('Ambassador','admin_ambassador',p.admin_ambassador!==false)],
-    [b('System','admin_system',p.admin_system!==false)],
+    [b('New Users','admin_new_users',p.admin_new_users!==false),b('Withdrawals','admin_withdrawals',p.admin_withdrawals!==false)],
+    [b('Fraud','admin_fraud',p.admin_fraud!==false),b('Treasury','admin_treasury',p.admin_treasury!==false)],
+    [b('Ads','admin_ads',p.admin_ads!==false),b('Tasks','admin_tasks',p.admin_tasks!==false)],
+    [b('Ambassador','admin_ambassador',p.admin_ambassador!==false),b('System','admin_system',p.admin_system!==false)],
     [{text:'↩️ USER ALERTS',callback_data:'al25:user'},{text:'◀️ ADMIN HOME',callback_data:'adm:home'}]
   ]}};
 }
@@ -127,7 +128,7 @@ async function handleAlertsV25(up,uid,text,m,q){
   }
   if(act==='admin'||act==='at'){
     let a=null;try{a=await adm18(uid)}catch{}if(!a){await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin permission required',show_alert:true});return true}
-    if(act==='at'){const key=parts[2],allowed=['admin_withdrawals','admin_fraud','admin_treasury','admin_ads','admin_tasks','admin_ambassador','admin_system'];if(allowed.includes(key)){const p=await prefV25(uid),next=!(p[key]!==false);await pool.query(`update public.wiener_alert_preferences set "${key}"=$2,updated_at=now() where telegram_id=$1`,[uid,next]);await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:next?'Enabled':'Muted'})}}
+    if(act==='at'){const key=parts[2],allowed=['admin_new_users','admin_withdrawals','admin_fraud','admin_treasury','admin_ads','admin_tasks','admin_ambassador','admin_system'];if(allowed.includes(key)){const p=await prefV25(uid),next=!(p[key]!==false);await pool.query(`update public.wiener_alert_preferences set "${key}"=$2,updated_at=now() where telegram_id=$1`,[uid,next]);await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:next?'Enabled':'Muted'})}}
     await edit18(q,adminAlertCardV25(await prefV25(uid)));if(act==='admin')await safeTg18('answerCallbackQuery',{callback_query_id:q.id,text:'Admin alerts'});return true;
   }
   return false;
@@ -217,7 +218,7 @@ dev_admin_new=r"""const admins=(await pool.query(`select telegram_id from public
 if dev_admin_old in s:
     s=s.replace(dev_admin_old,dev_admin_new,1)
     dev_send_old=r"""await tgV10('sendMessage',{chat_id:Number(admin.telegram_id),text,reply_markup:kb18([[web18('👤 VIEW USER',`https://wiener-farm.vercel.app/?page=admin&user=${a.telegram_id}`)]]),disable_web_page_preview:true});"""
-    dev_send_new=r"""if(blocked){await sendAlertV25({uid:Number(a.telegram_id),type:'security',key:`device_restricted:${a.telegram_id}:${a.created_at||a.alert_id||'new'}`,severity:'critical',text:'🛡 ACCOUNT RESTRICTED\\n\\nWIENER Farm detected activity that requires review.\\nYour app and withdrawal access are restricted until reviewed.',markup:{inline_keyboard:[[{text:'💬 CONTACT SUPPORT',url:'https://t.me/WienerSupport'}]]},meta:{blocked:true}})}for(const admin of admins){const severity=blocked?'critical':same?'warning':'info';await sendAlertV25({uid:Number(admin.telegram_id),type:'admin_security',key:`device_alert:${a.telegram_id}:${a.created_at||a.alert_id||'new'}`,severity,admin:true,text,markup:kb18([[web18('👤 VIEW USER',`https://wiener-farm.vercel.app/?page=admin&user=${a.telegram_id}`)]]),meta:{target_uid:a.telegram_id,blocked,same_device:same}})}"""
+    dev_send_new=r"""if(blocked){await sendAlertV25({uid:Number(a.telegram_id),type:'security',key:`device_restricted:${a.telegram_id}:${a.created_at||a.alert_id||'new'}`,severity:'critical',text:'🛡 ACCOUNT RESTRICTED\\n\\nWIENER Farm detected activity that requires review.\\nYour app and withdrawal access are restricted until reviewed.',markup:{inline_keyboard:[[{text:'💬 CONTACT SUPPORT',url:'https://t.me/WienerSupport'}]]},meta:{blocked:true}})}for(const admin of admins){const severity=blocked?'critical':same?'warning':'info',atype=blocked||same?'admin_fraud':'admin_new_user';await sendAlertV25({uid:Number(admin.telegram_id),type:atype,key:`device_alert:${a.telegram_id}:${a.created_at||a.alert_id||'new'}`,severity,admin:true,text,markup:kb18([[web18('👤 VIEW USER',`https://wiener-farm.vercel.app/?page=admin&user=${a.telegram_id}`)]]),meta:{target_uid:a.telegram_id,blocked,same_device:same}})}"""
     if dev_send_old in s:s=s.replace(dev_send_old,dev_send_new,1)
     else:print('WARNING: V19B device alert send anchor not found')
 else:
