@@ -127,8 +127,8 @@ async function createSponsorTopupV30(uid,orderId,addedRaw){
   const rate=sponsorNumV30(cfg.token_per_usdt||15000),reward=sponsorNumV30(o.reward_per_completion),gross=added/100*.30,worker=added*reward/rate,profit=gross-worker;
   if(profit<0)throw new Error('reward_too_high_for_fixed_price');
   const [usd,t]=await Promise.all([tonUsdV10B(),tonTreasuryV10B()]);
-  const expected=Math.ceil((gross/usd-1e-12)*1e6)/1e6,memo='WTOPUP-'+crypto.randomUUID().replace(/-/g,'').slice(0,8).toUpperCase(),exp=new Date(Date.now()+15*60*1000);
-  return (await pool.query(`insert into public.sponsored_task_topups(order_id,telegram_id,task_id,added_completions,price_usd,worker_pool_wiener,worker_pool_usdt,platform_profit_usdt,package_ton,payment_address,payment_memo,quote_ton_usd,status,payment_status,expires_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'awaiting_payment','awaiting',$13) returning *`,[String(o.id),uid,String(o.task_id),added,gross,added*reward,worker,profit,expected,t.address,memo,usd,exp])).rows[0];
+  const expected=Math.ceil((gross/usd-1e-12)*1e6)/1e6,id=crypto.randomUUID(),memo='WTOPUP-'+crypto.randomUUID().replace(/-/g,'').slice(0,8).toUpperCase(),exp=new Date(Date.now()+15*60*1000);
+  return (await pool.query(`insert into public.sponsored_task_topups(id,order_id,telegram_id,task_id,added_completions,price_usd,worker_pool_wiener,worker_pool_usdt,platform_profit_usdt,package_ton,payment_address,payment_memo,quote_ton_usd,status,payment_status,expires_at) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'awaiting_payment','awaiting',$14) returning *`,[id,String(o.id),uid,String(o.task_id),added,gross,added*reward,worker,profit,expected,t.address,memo,usd,exp])).rows[0];
 }
 
 async function sponsorManagerDataV30(uid){
