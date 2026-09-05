@@ -27,9 +27,15 @@ if(a==='withdraw_ad_start'){
  if(count>=5)return res.json({ok:true,data:{count,required:5,unlocked:true,block_id:'int-44861'}});
  await pool.query(`update public.withdraw_ad_sessions set status='expired' where telegram_id=$1 and status='started' and started_at<now()-interval '5 minutes'`,[id]);
  const existing=(await pool.query(`select id,started_at from public.withdraw_ad_sessions where telegram_id=$1 and status='started' order by started_at desc limit 1`,[id])).rows[0];
- if(existing)return res.json({ok:true,data:{session_id:existing.id,count,required:5,unlocked:false,block_id:'int-44861',resume:true}});
+ if(existing){await pool.query(`update public.withdraw_ad_sessions set started_at=now() where id=$1 and telegram_id=$2`,[existing.id,id]);return res.json({ok:true,data:{session_id:existing.id,count,required:5,unlocked:false,block_id:'int-44861',resume:true}})};
  const q=await pool.query(`insert into public.withdraw_ad_sessions(telegram_id,day,block_id,status,counted) values($1,(now() at time zone 'utc')::date,'int-44861','started',false) returning id,started_at`,[id]);
  return res.json({ok:true,data:{session_id:q.rows[0].id,count,required:5,unlocked:false,block_id:'int-44861'}});
+}
+if(a==='withdraw_ad_fail'){
+ const sid=String(b.session_id||'').trim();
+ if(sid)await pool.query(`update public.withdraw_ad_sessions set status='early_close' where id=$1 and telegram_id=$2 and counted=false and status='started'`,[sid,id]);
+ const count=await withdrawAdCountV24(id);
+ return res.json({ok:true,data:{count,required:5,unlocked:count>=5}});
 }
 if(a==='withdraw_ad_credit'){
  const sid=String(b.session_id||'').trim();
@@ -38,7 +44,7 @@ if(a==='withdraw_ad_credit'){
  if(!row)throw new Error('withdraw_ad_session_invalid');
  if(row.counted===true||row.status==='counted'){const count=await withdrawAdCountV24(id);return res.json({ok:true,data:{count,required:5,unlocked:count>=5,already_counted:true}})}
  const elapsed=Date.now()-new Date(row.started_at).getTime();
- if(elapsed<14000)throw new Error('watch_full_withdraw_ad');
+ if(elapsed<15000)throw new Error('watch_full_withdraw_ad');
  const before=await withdrawAdCountV24(id);
  if(before>=5){await pool.query(`update public.withdraw_ad_sessions set status='limit_reached' where id=$1 and telegram_id=$2`,[sid,id]);return res.json({ok:true,data:{count:before,required:5,unlocked:true}})}
  const done=(await pool.query(`update public.withdraw_ad_sessions set counted=true,status='counted',completed_at=now() where id=$1 and telegram_id=$2 and counted=false and status='started' and day=(now() at time zone 'utc')::date returning id`,[sid,id])).rows[0];
