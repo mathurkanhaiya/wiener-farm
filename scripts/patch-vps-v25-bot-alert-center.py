@@ -149,17 +149,17 @@ async function runAlertsV25(){
     }
 
     if(await tableV25('wiener_payout_attempts')){
-      const failed=(await pool.query(`select a.*,w.telegram_id,w.username,w.network from public.wiener_payout_attempts a left join public.withdrawals w on w.id=a.withdrawal_id where a.state='failed' and a.created_at>=$1 order by a.created_at asc limit 100`,[since])).rows;
+      const failed=(await pool.query(`select a.*,w.telegram_id,w.username,w.network from public.wiener_payout_attempts a left join public.withdrawals w on w.id=a.withdrawal_id where a.state='failed' and a.created_at>=$1 order by a.created_at asc limit 100`,[scanSince])).rows;
       for(const a of failed){const reason=String(a.failure_code||a.error||'payout_failed').replace(/_/g,' ').slice(0,180);out.payout_failed+=await sendAdminsV25('withdrawals',{type:'admin_payout_failed',key:`payout_failed:${a.withdrawal_id}:${a.retry_count||0}`,severity:'critical',text:`🔴 PAYOUT FAILED\n\nWithdrawal: ${String(a.withdrawal_id).slice(0,8)}\n👤 ${a.username?'@'+a.username:'UID '+(a.telegram_id||'—')}\nAmount: ${fmtV25(a.amount_usdt,9)} ${String(a.network).toUpperCase()==='TON'?'GRAM':'USDT'}\n\nReason: ${reason}\n\nNo unsafe automatic retry was made.`,markup:{inline_keyboard:[[{text:'💸 OPEN PAY CENTER',callback_data:'wpay:home'}]]},meta:{withdrawal_id:a.withdrawal_id}})}
     }
 
     if(await tableV25('exclusive_task_orders')){
-      const rows=(await pool.query(`select id,title,target_completions,payment_received_ton,tx_hash,activated_at from public.exclusive_task_orders where status='live' and activated_at>=$1 order by activated_at asc limit 100`,[since])).rows;
+      const rows=(await pool.query(`select id,title,target_completions,payment_received_ton,tx_hash,activated_at from public.exclusive_task_orders where status='live' and activated_at>=$1 order by activated_at asc limit 100`,[scanSince])).rows;
       for(const o of rows)out.tasks+=await sendAdminsV25('tasks',{type:'admin_tasks',key:`task_activated:${o.id}`,severity:'info',text:`✅ TASK PAYMENT RECEIVED\n\n${String(o.title||'Sponsored task').slice(0,80)}\nCompletions: ${Number(o.target_completions||0).toLocaleString()}\nReceived: ${fmtV25(o.payment_received_ton,9)} TON\n\nPayment verified and task is LIVE.`,markup:{inline_keyboard:[[{text:'✅ OPEN TASKS',web_app:{url:`${app}?page=tasks`}}]]},meta:{order_id:o.id}})
     }
 
     if(await tableV25('ambassador_broadcast_items')&&await tableV25('ambassador_broadcasts')){
-      const rows=(await pool.query(`select i.id,i.channel_username,i.channel_title,i.error,b.completed_at from public.ambassador_broadcast_items i join public.ambassador_broadcasts b on b.id=i.broadcast_id where i.status='failed' and b.completed_at>=$1 order by b.completed_at asc limit 100`,[since])).rows;
+      const rows=(await pool.query(`select i.id,i.channel_username,i.channel_title,i.error,b.completed_at from public.ambassador_broadcast_items i join public.ambassador_broadcasts b on b.id=i.broadcast_id where i.status='failed' and b.completed_at>=$1 order by b.completed_at asc limit 100`,[scanSince])).rows;
       for(const x of rows)out.ambassador+=await sendAdminsV25('ambassadors',{type:'admin_ambassador',key:`ambassador_publish_failed:${x.id}`,severity:'warning',text:`🟠 AMBASSADOR PUBLISH FAILED\n\nChannel: ${x.channel_username||x.channel_title||'Unknown'}\nReason: ${String(x.error||'Posting permission unavailable').replace(/_/g,' ').slice(0,180)}\n\nCheck the channel connection and bot posting permission.`,markup:{inline_keyboard:[[{text:'🖥 OPEN ADMIN',web_app:{url:`${app}?page=admin`}}]]},meta:{item_id:x.id}})
     }
 
