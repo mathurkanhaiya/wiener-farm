@@ -54,7 +54,7 @@ if(a==='withdraw_ad_credit'){
  return res.json({ok:true,data:{count,required:5,unlocked:count>=5}});
 }
 """
-guard="if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<5)throw new Error(`withdraw_ads_required_${withdrawAdCount}_of_5`);const amount=num(b.amount_wiener);"
+guard="if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<5){if(typeof sendAdminsV25==='function')void sendAdminsV25('withdrawals',{type:'admin_fraud',key:\`withdraw_gate_bypass:\${id}:\${Math.floor(Date.now()/21600000)}\`,severity:'warning',text:\`🟠 WITHDRAWAL GATE BYPASS ATTEMPT\\n\\nUID: \${id}\\nWithdrawal ads: \${withdrawAdCount}/5\\n\\nDirect withdrawal request was blocked server-side.\`,meta:{target_uid:id,count:withdrawAdCount}}).catch(()=>null);throw new Error(\`withdraw_ads_required_\${withdrawAdCount}_of_5\`)}const amount=num(b.amount_wiener);"
 
 s=s[:pos]+insert+guard+s[pos+len(needle):]
 p.write_text(s)
