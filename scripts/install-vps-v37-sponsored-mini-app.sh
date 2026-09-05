@@ -6,10 +6,17 @@ git fetch origin main
 
 BACKEND=/opt/wiener-backend/server.mjs
 BACKUP=/opt/wiener-backend/server.mjs.pre-v37-mini-app
-PATCH=/tmp/v37-sponsored-mini-app.py
+V35=/tmp/v35b-addtask.py
+V36=/tmp/v36-sponsored.py
+V37=/tmp/v37-sponsored-mini-app.py
 
-git show origin/main:scripts/patch-vps-v37-sponsored-mini-app.py > "$PATCH"
-python3 -m py_compile "$PATCH"
+git show origin/main:scripts/patch-vps-v35b-addtask-fix.py > "$V35"
+git show origin/main:scripts/patch-vps-v36-sponsored-insights.py > "$V36"
+git show origin/main:scripts/patch-vps-v37-sponsored-mini-app.py > "$V37"
+
+python3 -m py_compile "$V35"
+python3 -m py_compile "$V36"
+python3 -m py_compile "$V37"
 
 cp "$BACKEND" "$BACKUP"
 
@@ -19,8 +26,18 @@ rollback() {
 }
 trap rollback ERR
 
-python3 "$PATCH"
+if ! grep -q "WIENER ADDTASK V35B" "$BACKEND"; then
+  python3 "$V35"
+fi
+
+if ! grep -q "WIENER SPONSORED INSIGHTS V36" "$BACKEND"; then
+  python3 "$V36"
+fi
+
+python3 "$V37"
+
 node --check "$BACKEND"
+grep -q "WIENER SPONSORED INSIGHTS V36" "$BACKEND"
 grep -q "WIENER SPONSORED MINI APP V37" "$BACKEND"
 
 pm2 restart wiener-api --update-env
@@ -30,4 +47,4 @@ pm2 save >/dev/null
 trap - ERR
 
 echo "=== V37 READY ==="
-echo "/addtask supports Channel + Group + Mini App (Launch Tracked)"
+echo "/addtask: analytics + history + smart alerts + Mini App (Launch Tracked)"
