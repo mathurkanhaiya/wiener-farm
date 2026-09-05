@@ -150,7 +150,7 @@ function userAlertCardV25(p,isAdmin=false){
   const rows=[
     [b('Farm Ready','user_farm_ready',p.user_farm_ready!==false),b('Daily Reminder','user_daily_reminder',p.user_daily_reminder!==false)],
     [b('Referral Rewards','user_referral_rewards',p.user_referral_rewards!==false),b('New Tasks','user_new_tasks',p.user_new_tasks!==false)],
-    [b('Promotions','user_promotions',p.user_promotions===true)]
+    [b('Promotions','user_promotions',p.user_promotions!==false)]
   ];
   if(isAdmin)rows.push([{text:'🛡 ADMIN ALERTS',callback_data:'al25:admin'}]);
   rows.push([{text:'◀️ MAIN MENU',callback_data:'ux:home'}]);
