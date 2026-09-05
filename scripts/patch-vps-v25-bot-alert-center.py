@@ -9,7 +9,61 @@ if not p.exists():
 s=p.read_text()
 TAG='// === WIENER BOT ALERT CENTER V25 ==='
 if TAG in s:
-    print('V25 bot alert center already installed')
+    changed=0
+
+    if "'al25:admin'" not in s[s.find('async function adminHome19'):s.find('async function adminHome19')+5000]:
+        old_admin="[cb18('⚙️ SYSTEM','adm:system'),cb18('📜 AUDIT','adm:audit')]"
+        new_admin="[cb18('⚙️ SYSTEM','adm:system'),cb18('🔔 ALERTS','al25:admin')],[cb18('📜 AUDIT','adm:audit')]"
+        if old_admin in s:
+            s=s.replace(old_admin,new_admin,1)
+            changed+=1
+
+    helper_tag='// === WIENER BOT ALERT CENTER V25B ACCOUNT HOOK ==='
+    if helper_tag not in s:
+        helper=r"""
+// === WIENER BOT ALERT CENTER V25B ACCOUNT HOOK ===
+async function notifyAccountActionV25B(target,banned){
+  try{
+    const app=await appUrlV25();
+    const key=(banned?'account_restricted:':'account_restored:')+String(target)+':'+String(Date.now());
+    if(banned){
+      await sendAlertV25({uid:Number(target),type:'security',key,severity:'critical',text:'🛡 ACCOUNT RESTRICTED\\n\\nYour WIENER Farm account access has been restricted.\\nIf you believe this is a mistake, contact WIENER Support.',markup:{inline_keyboard:[[{text:'💬 CONTACT SUPPORT',url:'https://t.me/WienerSupport'}]]}});
+    }else{
+      await sendAlertV25({uid:Number(target),type:'account_restored',key,severity:'critical',text:'✅ ACCOUNT ACCESS RESTORED\\n\\nYour WIENER Farm account has been unrestricted.\\nYou can use the Mini App normally again.',markup:{inline_keyboard:[[{text:'🌭 OPEN WIENER FARM',web_app:{url:app}}]]}});
+    }
+  }catch(e){console.error('v25b_account_alert',String(e?.message||e))}
+}
+// === END WIENER BOT ALERT CENTER V25B ACCOUNT HOOK ===
+"""
+        end_tag='// === END WIENER BOT ALERT CENTER V25 ==='
+        if end_tag in s:
+            s=s.replace(end_tag,end_tag+'\\n'+helper,1)
+            changed+=1
+
+    full_old="await ban18(uid,target,cmd==='ban',parts.slice(2).join(' ')||'Admin action');await safeTg18('sendMessage'"
+    full_new="await ban18(uid,target,cmd==='ban',parts.slice(2).join(' ')||'Admin action');await notifyAccountActionV25B(target,cmd==='ban');await safeTg18('sendMessage'"
+    if full_old in s and full_new not in s:
+        s=s.replace(full_old,full_new,1)
+        changed+=1
+
+    old_cmd="await tgV10('sendMessage',{chat_id:uid,text:cmd==='ban'?"
+    if old_cmd in s and "notifyAccountActionV25B(target,cmd==='ban');"+old_cmd not in s:
+        pos=s.find(old_cmd)
+        if pos>=0:
+            s=s[:pos]+"await notifyAccountActionV25B(target,cmd==='ban');"+s[pos:]
+            changed+=1
+
+    cb_old="const x=await userInspector18(String(target));if(x)await edit18(q,x.text,x.markup);await answer18(q,ban?'User banned':'User fully unbanned');return true"
+    cb_new="await notifyAccountActionV25B(target,ban);"+cb_old
+    if cb_old in s and cb_new not in s:
+        s=s.replace(cb_old,cb_new,1)
+        changed+=1
+
+    if changed:
+        p.write_text(s)
+        print(f'V25 repair applied; changes={changed}')
+    else:
+        print('V25 already installed; no repair changes needed')
     raise SystemExit(0)
 
 if 'handleAdminParityV19' not in s or 'notification_log' not in s:
