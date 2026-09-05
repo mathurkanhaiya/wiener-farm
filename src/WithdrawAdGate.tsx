@@ -54,6 +54,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
 
   const watch=async()=>{
     if(busy||unlocked)return;
+    let sid='';
     try{
       setBusy(true);
       setMessage('');
@@ -65,6 +66,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
         return;
       }
 
+      sid=String(start.session_id||'');
       let tries=0;
       while(!window.Adsgram?.init&&tries<20){
         await new Promise(r=>window.setTimeout(r,100));
@@ -74,7 +76,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
       if(!ad)throw new Error('sponsor_ad_unavailable');
 
       await ad.show();
-      const done=await gateApi('withdraw_ad_credit',{session_id:start.session_id});
+      const done=await gateApi('withdraw_ad_credit',{session_id:sid});
       const nextCount=Number(done.count||0);
       const nextRequired=Number(done.required||required);
       const nextUnlocked=!!done.unlocked;
@@ -83,6 +85,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
       setUnlocked(nextUnlocked);
       setMessage(nextUnlocked?'✅ Withdrawal unlocked for today.':`✅ Ad counted · ${nextCount}/${nextRequired}`);
     }catch(e:any){
+      if(sid)try{await gateApi('withdraw_ad_fail',{session_id:sid})}catch{}
       const raw=String(e?.message||e);
       if(raw.includes('watch_full_withdraw_ad'))setMessage('Watch the full sponsor ad before returning. Short views do not count.');
       else if(raw.includes('withdraw_ad_session'))setMessage('Ad session expired. Tap WATCH AD and try again.');
