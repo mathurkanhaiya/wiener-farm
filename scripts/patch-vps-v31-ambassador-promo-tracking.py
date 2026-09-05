@@ -70,11 +70,37 @@ if anchor not in s:
     raise SystemExit('ERROR: V26 helper end marker missing')
 s=s.replace(anchor,helper+'\n'+anchor,1)
 
-pat=r"async function promoFinalizeV6\(id,sid\)\{.*?\}"
-matches=list(re.finditer(pat,s,re.S))
-if not matches:
+start=s.rfind("async function promoFinalizeV6(id,sid){")
+if start<0:
     raise SystemExit('ERROR: promoFinalizeV6 body not found')
-m=matches[-1]
+brace=s.find('{',start)
+depth=0
+end=-1
+quote=None
+esc=False
+i=brace
+while i<len(s):
+    ch=s[i]
+    if quote:
+        if esc:
+            esc=False
+        elif ch=='\\':
+            esc=True
+        elif ch==quote:
+            quote=None
+    else:
+        if ch in ("'",'"','`'):
+            quote=ch
+        elif ch=='{':
+            depth+=1
+        elif ch=='}':
+            depth-=1
+            if depth==0:
+                end=i+1
+                break
+    i+=1
+if end<0:
+    raise SystemExit('ERROR: promoFinalizeV6 closing brace not found')
 new=r'''async function promoFinalizeV6(id,sid){
   const data=await rpc('finalize_promo_reward_if_ready',[id,sid]);
   if(data?.status==='credited'){
@@ -90,7 +116,7 @@ new=r'''async function promoFinalizeV6(id,sid){
   }
   return data;
 }'''
-s=s[:m.start()]+new+s[m.end():]
+s=s[:start]+new+s[end:]
 
 # Disable the old V26 hook path if it remains elsewhere, so normal promos never
 # produce invalid_ambassador_code noise and Ambassador codes are tracked once.
