@@ -101,7 +101,7 @@ BEGIN
 END $do$;
 SQL
 
-echo '=== V28 READY ===
+echo '=== V28 READY ==='
 echo 'TON is now the active Main Treasury.'
 echo 'Polygon/USDT treasury is retired from active use; historical records are preserved.'
 echo 'TON deposits are scanned every ~7 seconds under normal provider conditions.'
