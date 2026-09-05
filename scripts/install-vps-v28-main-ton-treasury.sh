@@ -9,11 +9,16 @@ export WIENER_BACKEND_FILE="$SERVER"
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP="$SERVER.v28-$STAMP.bak"
 OLD_APP=$(readlink -f /opt/wiener-app/current 2>/dev/null || true)
+FRONT_BACKUP="/tmp/wiener-v28-front-$STAMP"
+HAD_MAIN_TREASURY_UI=0
 
 rollback(){
   rc=$?
   echo 'V28 failed; restoring backend/app.' >&2
   cp -f "$BACKUP" "$SERVER" 2>/dev/null || true
+  if [[ -f "$FRONT_BACKUP/AdminHub.tsx" ]]; then cp -f "$FRONT_BACKUP/AdminHub.tsx" "$CODE/src/AdminHub.tsx" || true; fi
+  if [[ -f "$FRONT_BACKUP/WithdrawV2.tsx" ]]; then cp -f "$FRONT_BACKUP/WithdrawV2.tsx" "$CODE/src/WithdrawV2.tsx" || true; fi
+  if [[ "$HAD_MAIN_TREASURY_UI" == "1" && -f "$FRONT_BACKUP/MainTreasuryAdmin.tsx" ]]; then cp -f "$FRONT_BACKUP/MainTreasuryAdmin.tsx" "$CODE/src/MainTreasuryAdmin.tsx" || true; elif [[ "$HAD_MAIN_TREASURY_UI" == "0" ]]; then rm -f "$CODE/src/MainTreasuryAdmin.tsx" || true; fi
   if [[ -n "$OLD_APP" && -e "$OLD_APP" ]]; then ln -sfn "$OLD_APP" /opt/wiener-app/current || true; fi
   pm2 restart wiener-api --update-env >/dev/null 2>&1 || true
   exit "$rc"
@@ -22,10 +27,23 @@ trap rollback ERR
 
 cd "$CODE"
 cp "$SERVER" "$BACKUP"
+mkdir -p "$FRONT_BACKUP"
+cp -f src/AdminHub.tsx "$FRONT_BACKUP/AdminHub.tsx"
+cp -f src/WithdrawV2.tsx "$FRONT_BACKUP/WithdrawV2.tsx"
+if [[ -f src/MainTreasuryAdmin.tsx ]]; then HAD_MAIN_TREASURY_UI=1; cp -f src/MainTreasuryAdmin.tsx "$FRONT_BACKUP/MainTreasuryAdmin.tsx"; fi
+
+if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
+  echo 'origin/main is unavailable. Run: git fetch origin main' >&2
+  exit 1
+fi
+git show origin/main:scripts/patch-vps-v28-main-ton-treasury.py > /tmp/wiener-v28-backend.py
+git show origin/main:scripts/patch-frontend-v28-main-ton-treasury.py > /tmp/wiener-v28-frontend.py
+git show origin/main:src/MainTreasuryAdmin.tsx > src/MainTreasuryAdmin.tsx
 
 echo '=== PATCH MAIN TON TREASURY ==='
-python3 -m py_compile scripts/patch-vps-v28-main-ton-treasury.py
-python3 scripts/patch-vps-v28-main-ton-treasury.py
+python3 -m py_compile /tmp/wiener-v28-backend.py /tmp/wiener-v28-frontend.py
+python3 /tmp/wiener-v28-backend.py
+python3 /tmp/wiener-v28-frontend.py
 node --check "$SERVER"
 grep -q 'WIENER MAIN TON TREASURY V28' "$SERVER"
 grep -q 'MAIN_TREASURY_SCAN_MS_V28=7000' "$SERVER"
