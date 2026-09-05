@@ -13,7 +13,7 @@ if TAG in s:
 if 'WIENER VPS TON RELIABILITY V21' not in s:
     raise SystemExit('ERROR: V21 TON reliability must be installed first')
 
-# Normal TON scans should be eligible again after seven seconds. Provider backoff remains authoritative on failures.
+# Keep the scanner eligible before the 7-second worker tick. Provider backoff remains authoritative on failures.
 old_success="ton_treasury_scan_cursor_lt=$1,ton_treasury_scan_failures=0,ton_treasury_next_scan_at=now()+interval '45 seconds',ton_treasury_last_success_at=now()"
 new_success="ton_treasury_scan_cursor_lt=$1,ton_treasury_scan_failures=0,ton_treasury_last_scan_at=now(),ton_treasury_next_scan_at=now()+interval '5 seconds',ton_treasury_last_success_at=now()"
 if old_success in s:
