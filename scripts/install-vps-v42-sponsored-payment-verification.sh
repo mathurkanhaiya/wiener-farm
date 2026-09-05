@@ -9,7 +9,8 @@ export WIENER_BACKEND_FILE="$SERVER"
 cd "$CODE"
 git fetch origin main
 
-if ! grep -q "WIENER SPONSORED REWARD CONSTRAINT FIX V41" "$SERVER"; then
+V41_OK=$(runuser -u postgres -- psql -d wiener_farm_final -tA -c "select case when sponsored_min_reward=10 and sponsored_max_reward=10 then 'yes' else 'no' end from public.app_settings where id=true limit 1")
+if [ "$V41_OK" != "yes" ]; then
   git show origin/main:scripts/install-vps-v41-sponsored-task-constraint-fix.sh > /tmp/v41.sh
   bash /tmp/v41.sh
 fi
