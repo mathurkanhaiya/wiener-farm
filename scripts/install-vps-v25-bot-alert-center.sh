@@ -17,6 +17,7 @@ echo '=== V25 BOT ALERT CENTER PRECHECK ==='
 echo "backend_file=$BACKEND"
 [[ -f "$BACKEND" ]] || { echo 'ERROR: live backend file not found'; exit 1; }
 [[ -f "$ROOT/scripts/patch-vps-v25-bot-alert-center.py" ]] || { echo 'ERROR: V25 patcher missing'; exit 1; }
+python3 -m py_compile "$ROOT/scripts/patch-vps-v25-bot-alert-center.py"
 node --check "$BACKEND"
 grep -q 'handleAdminParityV19' "$BACKEND" || { echo 'ERROR: V19 admin/bot parity is not installed'; exit 1; }
 echo 'precheck=PASS'
