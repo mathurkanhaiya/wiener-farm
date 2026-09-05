@@ -39,7 +39,7 @@ create table if not exists public.wiener_alert_preferences(
   user_daily_reminder boolean not null default true,
   user_referral_rewards boolean not null default true,
   user_new_tasks boolean not null default true,
-  user_promotions boolean not null default false,
+  user_promotions boolean not null default true,
   admin_new_users boolean not null default true,
   admin_withdrawals boolean not null default true,
   admin_fraud boolean not null default true,
@@ -54,6 +54,14 @@ create table if not exists public.wiener_alert_preferences(
 
 alter table public.wiener_alert_preferences
   add column if not exists admin_new_users boolean not null default true;
+
+alter table public.wiener_alert_preferences
+  alter column user_promotions set default true;
+
+update public.wiener_alert_preferences
+set user_promotions=true
+where user_promotions=false
+  and abs(extract(epoch from (updated_at-created_at))) < 1;
 
 create table if not exists public.wiener_alert_state(
   state_key text primary key,
