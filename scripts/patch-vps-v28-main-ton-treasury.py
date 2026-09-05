@@ -15,10 +15,10 @@ if 'WIENER VPS TON RELIABILITY V21' not in s:
 
 # Normal TON scans should be eligible again after seven seconds. Provider backoff remains authoritative on failures.
 old_success="ton_treasury_scan_cursor_lt=$1,ton_treasury_scan_failures=0,ton_treasury_next_scan_at=now()+interval '45 seconds',ton_treasury_last_success_at=now()"
-new_success="ton_treasury_scan_cursor_lt=$1,ton_treasury_scan_failures=0,ton_treasury_last_scan_at=now(),ton_treasury_next_scan_at=now()+interval '7 seconds',ton_treasury_last_success_at=now()"
+new_success="ton_treasury_scan_cursor_lt=$1,ton_treasury_scan_failures=0,ton_treasury_last_scan_at=now(),ton_treasury_next_scan_at=now()+interval '5 seconds',ton_treasury_last_success_at=now()"
 if old_success in s:
     s=s.replace(old_success,new_success,1)
-elif "ton_treasury_next_scan_at=now()+interval '7 seconds'" not in s:
+elif "ton_treasury_next_scan_at=now()+interval '5 seconds'" not in s:
     raise SystemExit('ERROR: V21 TON success cooldown anchor not found')
 s=s.replace("set ton_treasury_scan_failures=$1,ton_treasury_next_scan_at=now()+($2::text||' seconds')::interval", "set ton_treasury_scan_failures=$1,ton_treasury_last_scan_at=now(),ton_treasury_next_scan_at=now()+($2::text||' seconds')::interval", 1)
 
