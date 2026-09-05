@@ -40,6 +40,7 @@ create table if not exists public.wiener_alert_preferences(
   user_referral_rewards boolean not null default true,
   user_new_tasks boolean not null default true,
   user_promotions boolean not null default false,
+  admin_new_users boolean not null default true,
   admin_withdrawals boolean not null default true,
   admin_fraud boolean not null default true,
   admin_treasury boolean not null default true,
@@ -50,6 +51,9 @@ create table if not exists public.wiener_alert_preferences(
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.wiener_alert_preferences
+  add column if not exists admin_new_users boolean not null default true;
 
 create table if not exists public.wiener_alert_state(
   state_key text primary key,
