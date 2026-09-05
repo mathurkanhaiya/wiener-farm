@@ -15,20 +15,14 @@ if "import {MainTreasuryAdmin} from './MainTreasuryAdmin';" not in s:
 if "'treasury'" not in re.search(r"type MoneyTab=.*?;",s).group(0):
     s=re.sub(r"type MoneyTab=", "type MoneyTab='treasury'|", s, count=1)
 
-# Keep local AdminHub customizations: patch only the MoneyCenter fragments.
+# Replace only MoneyCenter with a known-valid block. This avoids fragile bracket
+# insertion while preserving every unrelated local AdminHub customization.
 m=re.search(r"function MoneyCenter\(\{d,setD,say,reload\}.*?(?=\nfunction WithdrawalOverview)",s,re.S)
 if not m: raise SystemExit('ERROR: MoneyCenter block missing')
-block=m.group(0)
-block=block.replace("useState<MoneyTab>('withdrawals')","useState<MoneyTab>('treasury')")
-if '["treasury","Main Treasury"]' not in block:
-    block=block.replace('items={[[', 'items={[["treasury","Main Treasury"],',1)
-if "tab==='treasury'" not in block:
-    needle="/>{tab==='withdrawals'"
-    if needle in block:
-        block=block.replace(needle,"/>{tab==='treasury'&&<section className=\"adminx-embed\"><MainTreasuryAdmin say={say}/></section>} {tab==='withdrawals'",1)
-    else:
-        raise SystemExit('ERROR: MoneyCenter render anchor missing')
+block="""function MoneyCenter({d,setD,say,reload}:{d:any;setD:any;say:any;reload:any}){const [tab,setTab]=useState<MoneyTab>('treasury');return <div className=\"adminx-page\"><Subnav value={tab} setValue={setTab} items={[[\"treasury\",\"Main Treasury\"],[\"withdrawals\",\"Withdrawals\"],[\"payouts\",\"Payout Control\"],[\"rewards\",\"Rewards\"],[\"internal\",\"Internal Transfer\"]]}/>{tab==='treasury'&&<section className=\"adminx-embed\"><MainTreasuryAdmin say={say}/></section>} {tab==='withdrawals'&&<WithdrawalOverview rows={d.withdrawals||[]}/>} {tab==='rewards'&&<RewardSettings value={d.settings} setValue={(v:any)=>setD({...d,settings:v})} say={say} reload={reload}/>} {tab==='payouts'&&<section className=\"adminx-embed\"><AdminWithdrawUpgrade say={say}/></section>} {tab==='internal'&&<section className=\"adminx-embed\"><InternalTransferAdmin say={say}/></section>}</div>}"""
 s=s[:m.start()]+block+s[m.end():]
+if 'items={[["treasury","Main Treasury"],["withdrawals","Withdrawals"]' not in s:
+    raise SystemExit('ERROR: Main Treasury MoneyCenter validation failed')
 admin.write_text(s)
 
 if withdraw.exists():
