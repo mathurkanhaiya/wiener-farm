@@ -11,6 +11,12 @@ export function EconomyUiPatch(){
         const title=card.querySelector('h3')?.textContent?.trim()||'';
         if(title.startsWith('Bonus Ads'))card.remove();
       });
+      document.querySelectorAll('.ad-result-card,.farm-claim-modal').forEach((card)=>{
+        card.querySelectorAll('p').forEach((p)=>{
+          const t=p.textContent?.trim().toLowerCase()||'';
+          if(t.includes('bonus not unlocked')||t.includes('advertiser bonus'))p.remove();
+        });
+      });
       document.querySelectorAll('.amb-info-grid').forEach((grid)=>{
         const cards=grid.querySelectorAll(':scope > div');
         if(cards[1]&&cards[1].textContent?.trim()!=='1code/drop')cards[1].innerHTML='<b>1</b><span>code/drop</span>';
@@ -38,5 +44,5 @@ export function EconomyUiPatch(){
     sync();
     return()=>observer?.disconnect();
   },[]);
-  return <style>{`.treasury-home-badge{font-size:0!important}.treasury-home-badge::after{content:'UP TO 375';font-size:9px!important}.treasury-tap span{font-size:0!important}.treasury-tap span::after{content:'Rewards up to 375 WIENER';font-size:11px!important}`}</style>;
+  return <style>{`.treasury-home-badge{font-size:0!important}.treasury-home-badge::after{content:'UP TO 375';font-size:9px!important}.treasury-tap span{font-size:0!important}.treasury-tap span::after{content:'Rewards up to 375 WIENER';font-size:11px!important}.ad-reward-breakdown,.ad-result-tip,.ad-bonus-guide,.farm-claim-breakdown,.farm-bonus-guide{display:none!important}`}</style>;
 }
