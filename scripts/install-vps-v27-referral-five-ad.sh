@@ -15,42 +15,33 @@ if [[ ! -f "$BACKEND" && -f /opt/wiener-backend/server.mjs ]]; then BACKEND=/opt
 export WIENER_BACKEND_FILE="$BACKEND"
 BACKUP="${BACKEND}.v27-backup-${STAMP}"
 
-echo '=== V27 REFERRAL FIVE-AD PRECHECK ==='
+echo '=== V27 REFERRAL FIVE-AD DISPLAY/PARITY PRECHECK ==='
 echo "backend_file=$BACKEND"
 [[ -f "$BACKEND" ]] || { echo 'ERROR: live backend not found'; exit 1; }
 [[ -f "$ROOT/scripts/patch-vps-v27-referral-five-ad.py" ]] || { echo 'ERROR: V27 patcher missing'; exit 1; }
 python3 -m py_compile "$ROOT/scripts/patch-vps-v27-referral-five-ad.py"
 node --check "$BACKEND"
 
-COLS="$(runuser -u postgres -- psql -d "$DB" -Atqc "
-select count(*) from information_schema.columns
-where table_schema='public' and table_name='users'
-and column_name in ('telegram_id','referred_by','total_ads','referral_active','referral_reward_eligible','active_referrals_count');
-")"
-[[ "$COLS" == "6" ]] || { echo "ERROR: referral user columns incomplete ($COLS/6)"; exit 1; }
+REQ="$(runuser -u postgres -- psql -d "$DB" -Atqc "select referral_active_ads_required from public.app_settings where id=true")"
+echo "backend_referral_required_ads=$REQ"
+if [[ "$REQ" != "5" ]]; then
+  echo 'ERROR: backend referral rule is not currently 5 ads.'
+  echo 'Refusing to change it automatically because that could retroactively reward old referrals.'
+  echo 'No database rows, balances, or referral rewards were changed.'
+  exit 2
+fi
 
-SETTING="$(runuser -u postgres -- psql -d "$DB" -Atqc "
-select count(*) from information_schema.columns
-where table_schema='public' and table_name='app_settings'
-and column_name='referral_active_ads_required';
-")"
-[[ "$SETTING" == "1" ]] || { echo 'ERROR: referral_active_ads_required setting missing'; exit 1; }
-echo 'precheck=PASS'
-
-echo '=== CURRENT REFERRAL STATE ==='
-runuser -u postgres -- psql -d "$DB" -P pager=off -c "
-select referral_active_ads_required as current_required_ads
-from public.app_settings where id=true;
-
+echo '=== SNAPSHOT OLD REFERRAL STATE (READ ONLY) ==='
+BEFORE="$(runuser -u postgres -- psql -d "$DB" -Atqc "
 select
-  count(*) filter(where referred_by is not null) as referred_users,
-  count(*) filter(where referred_by is not null and coalesce(total_ads,0)>=5 and coalesce(referral_reward_eligible,true)=true) as eligible_5plus,
-  count(*) filter(where referred_by is not null and referral_active=true and coalesce(referral_reward_eligible,true)=true) as active_now,
-  count(*) filter(where referred_by is not null and coalesce(total_ads,0)>=5 and coalesce(referral_reward_eligible,true)=true and coalesce(referral_active,false)=false) as needs_activation
+  count(*) filter(where referred_by is not null)::text||'|'||
+  count(*) filter(where referred_by is not null and referral_active=true)::text||'|'||
+  coalesce(sum(referral_earnings),0)::text
 from public.users;
-"
+")"
+echo "before=$BEFORE"
 
-echo '=== DRY-RUN BACKEND PATCH ==='
+echo '=== DRY-RUN BOT/API PATCH ==='
 EXT="${BACKEND##*.}"
 DRYRUN="/tmp/wiener-v27-dryrun-${STAMP}.${EXT}"
 cp -a "$BACKEND" "$DRYRUN"
@@ -68,7 +59,7 @@ rollback(){
 }
 trap rollback ERR
 
-echo '=== PATCH LIVE BOT/API ==='
+echo '=== PATCH LIVE BOT/API DISPLAY ==='
 python3 "$ROOT/scripts/patch-vps-v27-referral-five-ad.py"
 node --check "$BACKEND"
 pm2 restart wiener-api --update-env
@@ -82,68 +73,27 @@ if [[ "$WEBHOOK" == "000" || "$WEBHOOK" == "404" || "$WEBHOOK" == "502" ]]; then
   exit 1
 fi
 
-echo '=== APPLY ONE CURRENT REFERRAL RULE ==='
-runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 <<'SQL'
-begin;
-
-update public.app_settings
-set referral_active_ads_required=5,
-    updated_at=now()
-where id=true;
-
--- Re-run the existing referral qualification trigger, if present, using the
--- current 5-ad setting. This preserves the existing reward/idempotency logic.
-update public.users
-set total_ads=total_ads
-where referred_by is not null
-  and telegram_id<>referred_by
-  and coalesce(total_ads,0)>=5
-  and coalesce(referral_reward_eligible,true)=true
-  and coalesce(referral_active,false)=false;
-
--- If an older trigger does not understand the new setting, normalize only the
--- active status. Monetary reward amounts/ledger entries are deliberately not
--- fabricated here.
-update public.users
-set referral_active=true
-where referred_by is not null
-  and telegram_id<>referred_by
-  and coalesce(total_ads,0)>=5
-  and coalesce(referral_reward_eligible,true)=true
-  and coalesce(referral_active,false)=false;
-
-update public.users u
-set active_referrals_count=(
-  select count(*)::int
-  from public.users r
-  where r.referred_by=u.telegram_id
-    and r.referral_active=true
-    and coalesce(r.referral_reward_eligible,true)=true
-)
-where exists(
-  select 1 from public.users r where r.referred_by=u.telegram_id
-);
-
-commit;
-SQL
-
-echo '=== VERIFY CURRENT RULE ==='
-runuser -u postgres -- psql -d "$DB" -P pager=off -c "
-select referral_active_ads_required as required_ads
-from public.app_settings where id=true;
-
+echo '=== VERIFY NO RETROACTIVE REFERRAL CHANGES ==='
+AFTER="$(runuser -u postgres -- psql -d "$DB" -Atqc "
 select
-  count(*) filter(where referred_by is not null and coalesce(total_ads,0)>=5 and coalesce(referral_reward_eligible,true)=true) as eligible_5plus,
-  count(*) filter(where referred_by is not null and coalesce(total_ads,0)>=5 and coalesce(referral_reward_eligible,true)=true and referral_active=true) as active_5plus,
-  count(*) filter(where referred_by is not null and coalesce(total_ads,0)>=5 and coalesce(referral_reward_eligible,true)=true and coalesce(referral_active,false)=false) as remaining_mismatch
+  count(*) filter(where referred_by is not null)::text||'|'||
+  count(*) filter(where referred_by is not null and referral_active=true)::text||'|'||
+  coalesce(sum(referral_earnings),0)::text
 from public.users;
-"
+")"
+echo "after=$AFTER"
+if [[ "$BEFORE" != "$AFTER" ]]; then
+  echo 'ERROR: referral state changed during display-only V27 install.'
+  echo 'Backend was restored; review database state before continuing.'
+  exit 1
+fi
 
 pm2 save >/dev/null
 trap - ERR
 
-echo '=== V27 REFERRAL FIVE-AD RULE INSTALLED ==='
-echo 'Current rule: every eligible referral becomes ACTIVE at 5 verified ads.'
-echo 'Old 10/20-ad qualification display is removed.'
-echo 'Existing invalid/same-device referrals remain ineligible.'
-echo 'No balances, referral reward amounts, payout settings, or wallet secrets were changed.'
+echo '=== V27 NON-RETROACTIVE REFERRAL BOT FIX INSTALLED ==='
+echo 'Current backend rule confirmed: 5 verified ads.'
+echo 'Bot now shows one rule only: 5 verified ads = ACTIVE referral.'
+echo 'No 10/20-ad reward levels are shown.'
+echo 'Existing referral rows were NOT reprocessed, activated, or rewarded.'
+echo 'No balances, referral earnings, payout settings, or wallet secrets were changed.'
