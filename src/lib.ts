@@ -105,7 +105,8 @@ export async function missionApi(action:'status'|'claim',body:any={}){return pos
 export async function ambassadorApi(action:string,body:any={}){
   if(action==='admin_publish_drop'){
     const url=`${AMBASSADOR_PUBLISH_API}?v=one-code-20260901`;
-    return post(url,'publish',body);
+    const x=await fetchJson(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action:'publish',initData:getInitData(),...body})},120000);
+    return normalizeUiNumbers(x.data??x);
   }
   return post(AMBASSADOR_API,action,body)
 }
