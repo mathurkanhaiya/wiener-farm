@@ -4,12 +4,15 @@ set -Eeuo pipefail
 CODE=/opt/wiener-code
 BACKEND=/opt/wiener-backend
 SERVER="$BACKEND/server.mjs"
+[ -f "$SERVER" ] || SERVER="$BACKEND/server.js"
+export WIENER_BACKEND_FILE="$SERVER"
 HOSTDIR=/opt/wiener-host-assets
 TEMPLATE="$HOSTDIR/ambassador-promo-template"
 FALLBACK="$HOSTDIR/promo-code"
 SOURCE_URL='https://pixlinkhost.vercel.app/i/n5ni34AOgQ'
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP="$SERVER.v26-amb-banner-$STAMP.bak"
+[ -f "$SERVER" ] || { echo 'ERROR: live Wiener backend not found'; exit 1; }
 OLD_APP=$(readlink -f /opt/wiener-app/current 2>/dev/null || true)
 NEW_RELEASE=''
 
@@ -78,12 +81,38 @@ runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
 alter table public.ambassador_broadcast_items
   add column if not exists banner_asset_name text,
   add column if not exists banner_url text;
+
+create table if not exists public.ambassador_claim_attributions(
+  id bigserial primary key,
+  ambassador_id text not null,
+  promo_id text,
+  broadcast_id text,
+  code text not null,
+  telegram_id bigint not null,
+  claimed_at timestamptz not null default now(),
+  unique(code,telegram_id)
+);
+
+create index if not exists idx_amb_claim_attr_ambassador
+  on public.ambassador_claim_attributions(ambassador_id,claimed_at desc);
+create index if not exists idx_amb_claim_attr_code
+  on public.ambassador_claim_attributions(code);
+
+create index if not exists idx_ambassador_promos_code
+  on public.ambassador_promos(code);
+create index if not exists idx_promo_claims_code_user
+  on public.promo_claims(code,telegram_id);
 SQL
 
 echo '=== PATCH BACKEND ==='
 cd "$CODE"
+python3 -m py_compile scripts/patch-vps-v26-ambassador-generated-banners.py
+
 python3 scripts/patch-vps-v26-ambassador-generated-banners.py
 node --check "$SERVER"
+grep -q "const c='AMBA'+crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();" "$SERVER"
+grep -q "WIENER AMBASSADOR GENERATED BANNERS V26" "$SERVER"
+grep -q "trackAmbassadorClaimV26" "$SERVER"
 
 echo '=== BUILD MINI APP ==='
 npm run build
@@ -108,6 +137,6 @@ fi
 asset_code=$(curl -sS -o /dev/null -w '%{http_code}' https://api.viralaitools.xyz/host/promo-code || true)
 echo "Ambassador route protected smoke: HTTP $code"
 echo "Existing promo template public smoke: HTTP $asset_code"
-echo 'V26 installed. Next Ambassador publish will generate one unique AMB banner per active channel.'
+echo 'V26 installed. Next Ambassador publish will generate one unique AMBAxxxxxx banner per active channel, post it automatically, and audit claim attribution.'
 
 trap - ERR
