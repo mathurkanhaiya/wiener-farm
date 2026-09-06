@@ -22,10 +22,12 @@ const fresh=(type:'mini_app'|'private_channel'='mini_app')=>({
   category:'official',reward:10,url:'',enabled:true,sort_order:0,task_type:type
 });
 
+const isPrivateStored=(x:any)=>x?.task_type==='telegram'&&x?.verification==='none'&&PRIVATE_RE.test(String(x?.url||''));
+
 export function AdminMiniAppTaskCreator({say}:{say:(s:string)=>void}){
   const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[rows,setRows]=useState<any[]>([]);
   const [form,setForm]=useState<any>(fresh());
-  const load=async()=>{try{const d=await api('admin_get');setRows((d.tasks||[]).filter((x:any)=>x.task_type==='mini_app'||x.task_type==='private_channel'))}catch{}};
+  const load=async()=>{try{const d=await api('admin_get');setRows((d.tasks||[]).filter((x:any)=>x.task_type==='mini_app'||isPrivateStored(x)))}catch{}};
   useEffect(()=>{load()},[]);
   const isPrivate=form.task_type==='private_channel';
   const parsed=parseMini(String(form.url||'').trim());
@@ -42,7 +44,7 @@ export function AdminMiniAppTaskCreator({say}:{say:(s:string)=>void}){
       title,
       description:String(form.description||'').trim()||null,
       category:form.category||'official',
-      task_type:isPrivate?'private_channel':'mini_app',
+      task_type:isPrivate?'telegram':'mini_app',
       reward:Number(form.reward),
       url,
       telegram_chat_id:null,
@@ -71,6 +73,6 @@ export function AdminMiniAppTaskCreator({say}:{say:(s:string)=>void}){
       <label className="adminx-switch"><input type="checkbox" checked={form.enabled!==false} onChange={e=>setForm({...form,enabled:e.target.checked})}/><span>Task enabled</span></label>
       <div className="adminx-form-actions"><button type="button" onClick={()=>setOpen(false)}>CANCEL</button><button type="button" className="adminx-primary" disabled={busy||!valid} onClick={save}>{busy?'SAVING…':isPrivate?'CREATE PRIVATE CHANNEL TASK':'CREATE MINI APP TASK'}</button></div>
     </div>}
-    {!open&&rows.length>0&&<div className="adminx-list">{rows.slice(0,10).map((x:any)=><div key={x.id}><div><b>{x.title}</b><small>{x.task_type==='private_channel'?'PRIVATE CHANNEL · NO VERIFY':'MINI APP'} · {String(x.category||'official').toUpperCase()} · {x.completed_count||0} completions</small></div><div><strong>+{x.reward}</strong><span className={`aui-badge ${x.enabled!==false?'good':'bad'}`}>{x.enabled!==false?'ACTIVE':'OFF'}</span></div></div>)}</div>}
+    {!open&&rows.length>0&&<div className="adminx-list">{rows.slice(0,10).map((x:any)=><div key={x.id}><div><b>{x.title}</b><small>{isPrivateStored(x)?'PRIVATE CHANNEL · NO VERIFY':'MINI APP'} · {String(x.category||'official').toUpperCase()} · {x.completed_count||0} completions</small></div><div><strong>+{x.reward}</strong><span className={`aui-badge ${x.enabled!==false?'good':'bad'}`}>{x.enabled!==false?'ACTIVE':'OFF'}</span></div></div>)}</div>}
   </section>;
 }
