@@ -14,6 +14,14 @@ if(fixed===src)throw new Error('V21B could not repair expected matcher patterns'
 fs.writeFileSync('/tmp/prebuild-vps-v21-fixed.mjs',fixed);
 await import(`file:///tmp/prebuild-vps-v21-fixed.mjs?v=${Date.now()}`);
 
+// Repair a legacy escaped newline accidentally committed at the top of lib.ts.
+const libPath='src/lib.ts';
+if(fs.existsSync(libPath)){
+  const before=fs.readFileSync(libPath,'utf8');
+  const after=before.replace("const viteEnv=(import.meta as any).env||{};\\n// V45 TON iOS browser compatibility","const viteEnv=(import.meta as any).env||{};\n// V45 TON iOS browser compatibility");
+  if(after!==before)fs.writeFileSync(libPath,after);
+}
+
 // Spin & Earn uses the same WIENER mark already used by the main app.
 const spinPath='src/SpinEarn.tsx';
 if(fs.existsSync(spinPath)){
