@@ -13,3 +13,11 @@ fixed=fixed.replace(
 if(fixed===src)throw new Error('V21B could not repair expected matcher patterns');
 fs.writeFileSync('/tmp/prebuild-vps-v21-fixed.mjs',fixed);
 await import(`file:///tmp/prebuild-vps-v21-fixed.mjs?v=${Date.now()}`);
+
+// Spin & Earn uses the same WIENER mark already used by the main app.
+const spinPath='src/SpinEarn.tsx';
+if(fs.existsSync(spinPath)){
+  const before=fs.readFileSync(spinPath,'utf8');
+  const after=before.replace("const WIENER_ICON='/favicon.ico';","const WIENER_ICON='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';");
+  if(after!==before)fs.writeFileSync(spinPath,after);
+}
