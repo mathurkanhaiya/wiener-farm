@@ -3,7 +3,7 @@ import {getInitData,hapticImpact,hapticNotify,PUBLISHABLE_KEY} from './lib';
 
 const TON_ICON='https://pixlinkhost.vercel.app/i/1AcOzN0LcQ';
 const SPIN_ICON='https://pixlinkhost.vercel.app/i/b2gDIirJ5A';
-const WIENER_ICON='/favicon.ico';
+const WIENER_ICON='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';
 const SPIN_API='/functions/v1/wiener-spin';
 const TON_WALLET_API='/functions/v1/wiener-ton-wallet';
 
