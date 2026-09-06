@@ -106,7 +106,7 @@ python3 /tmp/v49.py
 node --check "$SERVER"
 grep -q "WIENER SPIN SECURITY V49" "$SERVER"
 
-# Verify schema exists and PUBLIC has no table privileges.
+# Verify schema exists and PUBLIC has no direct table grants.
 runuser -u postgres -- psql -v ON_ERROR_STOP=1 -d "$DB" -Atc "
 SELECT CASE WHEN
   to_regclass('public.wiener_spin_state') IS NOT NULL AND
@@ -114,7 +114,12 @@ SELECT CASE WHEN
   to_regclass('public.wiener_spin_ad_sessions') IS NOT NULL AND
   to_regclass('public.wiener_spin_withdrawals') IS NOT NULL
 THEN 'spin_schema_ok' ELSE 'spin_schema_missing' END;
-SELECT CASE WHEN has_table_privilege('public','public.wiener_spin_events','SELECT') THEN 'public_privilege_bad' ELSE 'public_privileges_ok' END;
+SELECT CASE WHEN EXISTS(
+  SELECT 1 FROM information_schema.table_privileges
+  WHERE table_schema='public'
+    AND table_name IN ('wiener_spin_state','wiener_spin_events','wiener_spin_ad_sessions','wiener_spin_withdrawals')
+    AND grantee='PUBLIC'
+) THEN 'public_privilege_bad' ELSE 'public_privileges_ok' END;
 "
 
 pm2 restart wiener-api --update-env
