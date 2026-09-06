@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/prebuild-vps-v21b.mjs && node scripts/prebuild-spin-icon-fix.mjs && node scripts/prebuild-spin-v50-share-bonus-fixed.mjs && node scripts/prebuild-spin-login-popup.mjs && vite build",
+    "build": "node scripts/prebuild-vps-v21b.mjs && node scripts/prebuild-spin-icon-fix.mjs && node scripts/prebuild-spin-v50-share-bonus-fixed.mjs && node scripts/prebuild-spin-home-popup.mjs && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview"
   },
