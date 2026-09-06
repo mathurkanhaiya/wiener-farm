@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/prebuild-vps-v21b.mjs && vite build",
+    "build": "node scripts/prebuild-vps-v21b.mjs && node scripts/prebuild-spin-icon-fix.mjs && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview"
   },
@@ -13,7 +13,7 @@
     "@ton/core": "^0.59.1",
     "@tonconnect/ui": "2.0.9",
     "lottie-react": "^2.4.1",
-    "pako": "^2.1.0",
+    "pako": "^2.4.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "buffer": "^6.0.3"
