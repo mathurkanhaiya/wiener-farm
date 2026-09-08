@@ -28,6 +28,11 @@ cd "$CODE"
 git pull --ff-only
 cp "$SERVER" "$BACKUP"
 
+# A failed earlier V72 run can leave only this tracked frontend file partially
+# modified in the working tree. Restore just that file to the committed source
+# before applying the idempotent V72 patch. No other local files are touched.
+git checkout -- src/Ambassador.tsx
+
 echo '=== DATABASE ==='
 runuser -u postgres -- psql -d wiener_farm_final -v ON_ERROR_STOP=1 <<'SQL'
 alter table public.ambassador_settings
@@ -41,6 +46,7 @@ node --check "$SERVER"
 grep -q 'WIENER AMBASSADOR WEEKLY PRIZE TOGGLE V72' "$SERVER"
 grep -q 'weekly_prizes_enabled' "$SERVER"
 grep -q 'TURN WEEKLY PRIZES OFF' src/Ambassador.tsx
+! grep -q 'prizesEnabled?{prizesEnabled?' src/Ambassador.tsx
 
 echo '=== BUILD MINI APP ==='
 npm run build
