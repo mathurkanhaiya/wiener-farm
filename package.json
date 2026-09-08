@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/prebuild-safe.mjs && node scripts/prebuild-daily-bio-gate.mjs && node scripts/prebuild-dynamic-wiener-rate.mjs && node scripts/prebuild-ambassador-weekly-prize-toggle.mjs && node scripts/prebuild-spin-v73.mjs && vite build",
+    "build": "node scripts/prebuild-safe.mjs && node scripts/prebuild-daily-bio-gate.mjs && node scripts/prebuild-dynamic-wiener-rate.mjs && node scripts/prebuild-ambassador-weekly-prize-toggle.mjs && node scripts/prebuild-spin-v73.mjs && node scripts/prebuild-daily-claim-lock.mjs && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview"
   },
