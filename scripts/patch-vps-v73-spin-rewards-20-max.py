@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import os
+import os,re
 
 backend=Path(os.environ.get('WIENER_BACKEND_FILE','/opt/wiener-backend/server.mjs'))
 if not backend.exists():
@@ -11,25 +11,25 @@ if not backend.exists(): raise SystemExit('ERROR: live Wiener backend not found'
 if not frontend.exists(): raise SystemExit('ERROR: SpinEarn.tsx not found')
 
 s=backend.read_text()
-old="""const prizesV48=[
-  {type:'wiener',amount:5,index:0,weight:24000},{type:'wiener',amount:10,index:2,weight:20000},{type:'wiener',amount:20,index:4,weight:15000},
-  {type:'wiener',amount:30,index:6,weight:10000},{type:'wiener',amount:50,index:8,weight:6000},{type:'spin',amount:1,index:3,weight:12000},
-  {type:'spin',amount:2,index:7,weight:4000},{type:'ton',amount:.0001,index:1,weight:5000},{type:'ton',amount:.0003,index:5,weight:2000},
-  {type:'ton',amount:.001,index:9,weight:1500},{type:'ton',amount:.005,index:11,weight:500}
-];"""
 new="""const prizesV48=[
   {type:'wiener',amount:5,index:0,weight:28000},{type:'wiener',amount:8,index:2,weight:22000},{type:'wiener',amount:10,index:4,weight:16000},
   {type:'wiener',amount:15,index:6,weight:9000},{type:'wiener',amount:20,index:8,weight:4000},{type:'spin',amount:1,index:3,weight:12000},
   {type:'spin',amount:2,index:7,weight:4000},{type:'ton',amount:.0001,index:1,weight:3000},{type:'ton',amount:.0003,index:5,weight:1200},
   {type:'ton',amount:.001,index:9,weight:700},{type:'ton',amount:.005,index:11,weight:100}
 ];"""
-if old in s:
-    s=s.replace(old,new,1)
-elif new not in s:
-    raise SystemExit('ERROR: Spin backend prize table anchor not found')
 
-# Keep TON budget fallback within the new WIENER maximum.
-s=s.replace("prize={type:'wiener',amount:20,index:4,weight:0}","prize={type:'wiener',amount:20,index:8,weight:0}")
+# Replace the actual live prize table regardless of spacing or previous reward tweaks.
+pat=r"const\s+prizesV48\s*=\s*\[(?:(?!\n\s*\];).|\n)*?\n\s*\];"
+m=re.search(pat,s,re.S)
+if m:
+    current=m.group(0)
+    if current!=new:
+        s=s[:m.start()]+new+s[m.end():]
+elif new not in s:
+    raise SystemExit('ERROR: live Spin prizesV48 table not found')
+
+# Keep TON budget fallback within the new WIENER maximum and correct wheel index.
+s=re.sub(r"prize=\{type:'wiener',amount:(?:20|30|50),index:\d+,weight:0\}","prize={type:'wiener',amount:20,index:8,weight:0}",s)
 backend.write_text(s)
 
 f=frontend.read_text()
@@ -46,14 +46,17 @@ newseg="""const segments=[
 if oldseg in f:
     f=f.replace(oldseg,newseg,1)
 elif newseg not in f:
-    raise SystemExit('ERROR: Spin frontend segments anchor not found')
+    # Fallback for harmless formatting changes: replace only the segments block.
+    segpat=r"const\s+segments\s*=\s*\[(?:(?!\n\]\s+as\s+const;).|\n)*?\n\]\s+as\s+const;"
+    sm=re.search(segpat,f,re.S)
+    if not sm: raise SystemExit('ERROR: Spin frontend segments block not found')
+    f=f[:sm.start()]+newseg+f[sm.end():]
 
-# Remove the duplicate/early result banner above the controls. The wheel landing remains the visible result.
+# Remove duplicate/early result banner above controls; wheel/lower result remains.
 oldwin='{prize&&<div className="spin-win"><img src={rewardIcon} alt=""/><small>YOU WON</small><strong>{rewardText}</strong></div>}'
-if oldwin in f:
-    f=f.replace(oldwin,'',1)
+f=f.replace(oldwin,'',1)
 
-# Remove now-unused derived result-only values/import usage while keeping prize state for spin landing/idempotency flow.
+# Remove values/import used only by the removed duplicate banner.
 f=f.replace(" const rewardIcon=prize?.type==='ton'?TON_ICON:prize?.type==='spin'?SPIN_ICON:WIENER_ICON;\n",'')
 f=f.replace(" const rewardText=useMemo(()=>!prize?'':prize.type==='ton'?`${fmtTon(prize.amount)} TON`:prize.type==='spin'?`+${prize.amount} ${prize.amount===1?'Spin':'Spins'}`:`${prize.amount} WIENER`,[prize]);\n",'')
 f=f.replace("import {useEffect,useMemo,useRef,useState} from 'react';","import {useEffect,useRef,useState} from 'react';")
