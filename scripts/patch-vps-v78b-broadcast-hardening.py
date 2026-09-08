@@ -29,6 +29,12 @@ if old not in s:
     raise SystemExit('ERROR: V78 draft/target block anchor missing')
 s=s.replace(old,new,1)
 
+# Buttons are optional: do not silently attach a default button.
+s=s.replace(
+"  if(!b.length)b=[{text:'🌭 OPEN WIENER FARM',url:'https://t.me/WienerDogeFarmBot/app'}];\n  return{inline_keyboard:b.slice(0,8).map(x=>[{text:String(x.text||'OPEN').slice(0,64),url:String(x.url||'https://t.me/WienerDogeFarmBot/app')}])};",
+"  if(!b.length)return undefined;\n  return{inline_keyboard:b.slice(0,8).map(x=>[{text:String(x.text||'OPEN').slice(0,64),url:String(x.url)}])};",
+1)
+
 # Add 3-day and new-user audience filters using fields already used by Wiener bot code.
 s=s.replace(
 "if(f==='active1')return 'Private · active 24h';if(f==='active7')return 'Private · active 7d';if(f==='active30')return 'Private · active 30d';",
