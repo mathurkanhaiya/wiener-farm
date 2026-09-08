@@ -10,15 +10,24 @@ if(s.includes(MARK)){
   process.exit(0);
 }
 
-const head="function DailyCard({data,run}:{data:Snapshot;run:any}){const u:any=data.user,{done,currentDay,currentWeek,nextDay,nextWeek,multiplier,reward,stars}=nextDaily(data),displayDay=done?Math.max(1,currentDay):nextDay,displayWeek=done?currentWeek:nextWeek,starSlots=[0,1,2,3];return <section";
-if(!s.includes(head)) throw new Error('Daily claim lock anchor missing: DailyCard head');
+// DailyBioClaimGate runs before this patch and adds its own state to DailyCard.
+// Patch the current function shape instead of depending on one exact old string.
+const fn=/function DailyCard\(\{data,run\}:\{data:Snapshot;run:any\}\)\{const ([\s\S]*?),u:any=data\.user,/;
+const match=s.match(fn);
+if(!match) throw new Error('Daily claim lock anchor missing: DailyCard state');
+let state=match[1];
+if(!state.includes('[clock,setClock]')) state=`${state},[clock,setClock]=useState(Date.now())`;
+s=s.replace(fn,`function DailyCard({data,run}:{data:Snapshot;run:any}){const ${state},u:any=data.user,`);
 
-const replacement="function DailyCard({data,run}:{data:Snapshot;run:any}){const u:any=data.user,[clock,setClock]=useState(Date.now()),{done,currentDay,currentWeek,nextDay,nextWeek,multiplier,reward,stars}=nextDaily(data),displayDay=done?Math.max(1,currentDay):nextDay,displayWeek=done?currentWeek:nextWeek,starSlots=[0,1,2,3];useEffect(()=>{if(!done)return;const x=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(x)},[done]);const nextReset=Date.UTC(new Date(clock).getUTCFullYear(),new Date(clock).getUTCMonth(),new Date(clock).getUTCDate()+1),left=Math.max(0,nextReset-clock),sec=Math.ceil(left/1000),hh=Math.floor(sec/3600),mm=Math.floor(sec%3600/60),ss=sec%60,claimLockText=`🔒 CLAIMED · NEXT IN ${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;/* ${MARK} */return <section";
-s=s.replace(head,replacement);
+const handlerAnchor='const claimDaily=async()=>';
+const pos=s.indexOf(handlerAnchor);
+if(pos<0) throw new Error('Daily claim lock anchor missing: claimDaily handler');
+const timerCode=`useEffect(()=>{if(!done)return;const x=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(x)},[done]);const nextReset=Date.UTC(new Date(clock).getUTCFullYear(),new Date(clock).getUTCMonth(),new Date(clock).getUTCDate()+1),left=Math.max(0,nextReset-clock),sec=Math.ceil(left/1000),hh=Math.floor(sec/3600),mm=Math.floor(sec%3600/60),ss=sec%60,claimLockText=\`🔒 CLAIMED · NEXT IN \${String(hh).padStart(2,'0')}:\${String(mm).padStart(2,'0')}:\${String(ss).padStart(2,'0')}\`;/* ${MARK} */`;
+s=s.slice(0,pos)+timerCode+s.slice(pos);
 
-const oldButton="{done?`CLAIMED · WEEK ${displayWeek} DAY ${displayDay}`:displayDay===7?`CLAIM DAY 7 + ⭐ · ${money(reward)} WIENER`:`CLAIM ${money(reward)} WIENER`}";
-if(!s.includes(oldButton)) throw new Error('Daily claim lock anchor missing: button label');
-s=s.replace(oldButton,"{done?claimLockText:displayDay===7?`CLAIM DAY 7 + ⭐ · ${money(reward)} WIENER`:`CLAIM ${money(reward)} WIENER`}");
+const label=/\{done\?`CLAIMED · WEEK \$\{displayWeek\} DAY \$\{displayDay\}`:/;
+if(!label.test(s)) throw new Error('Daily claim lock anchor missing: button label');
+s=s.replace(label,'{done?claimLockText:');
 
 fs.writeFileSync(file,s);
 console.log('Daily Bonus now locks after claim and shows live reset countdown');
