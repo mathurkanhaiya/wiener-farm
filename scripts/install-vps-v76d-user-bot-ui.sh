@@ -26,7 +26,7 @@ python3 "$PATCH"
 node --check "$BACKEND"
 grep -q 'WIENER USER BOT UI V76' "$BACKEND"
 grep -q 'WIENER USER COMMAND SYNC OVERRIDE V76D' "$BACKEND"
-\ npm=''
+
 pm2 restart wiener-api --update-env
 sleep 2
 pm2 save >/dev/null
