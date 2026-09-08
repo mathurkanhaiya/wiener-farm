@@ -49,6 +49,20 @@ s=s.replace(
 "await bc78SetSession(admin,{step:'bc78_audience',audience_v78:'all',filter_v78:null,broadcast_id_v78:null,source_chat_id:null,source_message_id:null,media_kind:null});",
 1)
 
+# Hard-enforce admin access even if the shared helper ever returns false instead of throwing.
+s=s.replace(
+"async function broadcastStart78(admin){return bc78Home(admin)}",
+"async function broadcastStart78(admin){if(!(await adm18(admin)))throw new Error('admin_required');return bc78Home(admin)}",
+1)
+s=s.replace(
+"const d=String(q?.data||'');if(!d.startsWith('bc78:'))return false;await adm18(admin);const z=d.split(':')",
+"const d=String(q?.data||'');if(!d.startsWith('bc78:'))return false;if(!(await adm18(admin)))return false;const z=d.split(':')",
+1)
+s=s.replace(
+"async function bc78Command(admin,cmd){\n  await adm18(admin);",
+"async function bc78Command(admin,cmd){\n  if(!(await adm18(admin)))throw new Error('admin_required');",
+1)
+
 # Marker for installer verification.
 s=s.replace('// === WIENER ADVANCED BROADCAST CENTER V78 ===', '// === WIENER ADVANCED BROADCAST CENTER V78 ===\n// === WIENER ADVANCED BROADCAST CENTER V78B HARDENING ===',1)
 p.write_text(s)
