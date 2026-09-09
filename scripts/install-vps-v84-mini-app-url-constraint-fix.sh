@@ -9,7 +9,7 @@ SERVER=/opt/wiener-backend/server.mjs
 
 cd "$CODE"
 
-echo '=== V84 MINI APP URL CONSTRAINT FIX ==='
+echo '=== V84B MINI APP URL CONSTRAINT FIX ==='
 
 echo 'Current constraint:'
 runuser -u postgres -- psql -d "$DB" -P pager=off -c "select conname,pg_get_constraintdef(oid) from pg_constraint where conrelid='public.tasks'::regclass and conname='tasks_mini_app_url_check';"
@@ -17,14 +17,8 @@ runuser -u postgres -- psql -d "$DB" -P pager=off -c "select conname,pg_get_cons
 echo 'Stuck order target values:'
 runuser -u postgres -- psql -d "$DB" -P pager=off -x -c "select id,title,task_kind,target_url,target_ref,payment_memo,status,payment_status from public.exclusive_task_orders where payment_memo='WTASK-C21D3424';"
 
-echo 'Working Mini App task examples:'
-runuser -u postgres -- psql -d "$DB" -P pager=off -c "select id,title,url,task_type,verification,enabled from public.tasks where task_type='mini_app' order by created_at desc limit 10;"
-
-# The product accepts Telegram Mini App deep links in either form:
-#   https://t.me/BotName/short_name
-#   https://t.me/BotName?startapp=payload
-# The old DB check was stricter than the app/backend validator and rejected valid
-# short names such as /Arcade. Replace only this one constraint.
+# PostgreSQL's regex engine rejects very large bounded repetitions such as {0,512}.
+# Keep bounded parts small, use +/* for the payload, and enforce total URL length separately.
 runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 <<'SQL'
 BEGIN;
 ALTER TABLE public.tasks DROP CONSTRAINT IF EXISTS tasks_mini_app_url_check;
@@ -33,8 +27,12 @@ ALTER TABLE public.tasks
   CHECK (
     task_type IS DISTINCT FROM 'mini_app'
     OR (
-      url ~ '^https://t[.]me/[A-Za-z0-9_]{5,32}/[A-Za-z0-9_]{1,64}([?]startapp=[A-Za-z0-9._~%+-]{0,512})?$'
-      OR url ~ '^https://t[.]me/[A-Za-z0-9_]{5,32}[?]startapp=[A-Za-z0-9._~%+-]{1,512}$'
+      url IS NOT NULL
+      AND length(url) <= 700
+      AND (
+        url ~ '^https://t[.]me/[A-Za-z0-9_]{5,32}/[A-Za-z0-9_]{1,64}([?]startapp=[A-Za-z0-9._~%+-]*)?$'
+        OR url ~ '^https://t[.]me/[A-Za-z0-9_]{5,32}[?]startapp=[A-Za-z0-9._~%+-]+$'
+      )
     )
   ) NOT VALID;
 ALTER TABLE public.tasks VALIDATE CONSTRAINT tasks_mini_app_url_check;
@@ -47,7 +45,7 @@ runuser -u postgres -- psql -d "$DB" -P pager=off -c "select conname,pg_get_cons
 pm2 restart wiener-api --update-env >/dev/null
 pm2 save >/dev/null
 
-echo 'Waiting for V83/V82 automatic reconciliation...'
+echo 'Waiting for automatic reconciliation...'
 sleep 10
 
 echo '=== TARGET PAYMENT AFTER FIX ==='
@@ -80,4 +78,4 @@ order by o.activated_at asc nulls first;"
 
 curl -fsS http://127.0.0.1:3000/health; echo
 
-echo '=== V84 DONE ==='
+echo '=== V84B DONE ==='
