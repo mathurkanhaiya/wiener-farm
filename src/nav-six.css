@@ -1,0 +1,29 @@
+.bottom-nav{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  column-gap:2px!important;
+  overflow:visible!important;
+}
+.bottom-nav>button:not(.admin-fab){
+  min-width:0!important;
+  width:100%!important;
+  padding:4px 2px!important;
+  border-radius:16px!important;
+}
+.bottom-nav>button:not(.admin-fab) .aicon,
+.bottom-nav>button:not(.admin-fab) .tg-lottie{
+  width:22px!important;
+  height:22px!important;
+}
+.bottom-nav>button:not(.admin-fab)>span{
+  font-size:9px!important;
+  line-height:1.05!important;
+  margin-top:2px!important;
+  white-space:nowrap!important;
+}
+@media(max-width:390px){
+  .bottom-nav{padding:5px 5px!important;column-gap:1px!important;}
+  .bottom-nav>button:not(.admin-fab){padding:3px 1px!important;border-radius:14px!important;}
+  .bottom-nav>button:not(.admin-fab) .aicon,
+  .bottom-nav>button:not(.admin-fab) .tg-lottie{width:20px!important;height:20px!important;}
+  .bottom-nav>button:not(.admin-fab)>span{font-size:8px!important;}
+}
