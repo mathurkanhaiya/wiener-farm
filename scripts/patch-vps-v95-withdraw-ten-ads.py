@@ -1,47 +1,55 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import os, sys
+import os, re, sys
 
 p=Path(os.environ.get('WIENER_BACKEND_FILE','/opt/wiener-backend/server.js'))
-s=p.read_text()
-start=s.find('// === WIENER WITHDRAW AD UNLOCK V24 ===')
+original_text=p.read_text()
+s=original_text
+marker='// === WIENER WITHDRAW AD UNLOCK V24 ==='
+start=s.find(marker)
 if start < 0:
     raise SystemExit('ERROR: V24 withdrawal ad gate marker not found')
-end=s.find("if(a==='withdraw'){", start)
-if end < 0:
-    raise SystemExit('ERROR: withdrawal route after V24 marker not found')
 
-section=s[start:end]
-original=section
-replacements={
-    'required:5':'required:10',
-    'count>=5':'count>=10',
-    'before>=5':'before>=10',
-}
-for old,new in replacements.items():
-    section=section.replace(old,new)
+# Limit edits to the V24 withdrawal gate and the withdraw handler immediately after it.
+amount_pos=s.find('const amount=num(b.amount_wiener);', start)
+if amount_pos < 0:
+    raise SystemExit('ERROR: withdrawal amount anchor not found after V24 marker')
+window_end=amount_pos+len('const amount=num(b.amount_wiener);')
+block=s[start:window_end]
 
-# Update the server-side withdrawal bypass guard immediately following V24.
-guard_old="if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<5){"
-guard_new="if(a==='withdraw'){const withdrawAdCount=await withdrawAdCountV24(id);if(withdrawAdCount<10){"
-if guard_old in s:
-    s=s.replace(guard_old,guard_new,1)
-elif guard_new not in s:
-    raise SystemExit('ERROR: V24 withdrawal guard anchor not found')
+# Upgrade all V24 status/start/credit response thresholds from 5 -> 10.
+block=block.replace('required:5','required:10')
+block=block.replace('count>=5','count>=10')
+block=block.replace('before>=5','before>=10')
 
-s=s[:start]+section+s[end:]
-s=s.replace('Withdrawal ads: ${withdrawAdCount}/5','Withdrawal ads: ${withdrawAdCount}/10',1)
-s=s.replace('withdraw_ads_required_${withdrawAdCount}_of_5','withdraw_ads_required_${withdrawAdCount}_of_10',1)
+# Live backend has changed formatting across later patches, so match the guard semantically.
+block,n_guard=re.subn(r'(withdrawAdCount\s*<\s*)5\b',r'\g<1>10',block,count=1)
+if n_guard == 0 and not re.search(r'withdrawAdCount\s*<\s*10\b',block):
+    raise SystemExit('ERROR: withdrawal enforcement guard not found in live V24 block')
 
-# Validation: every API response and both enforcement guards must now use 10.
-check=s[start:s.find('const amount=num(b.amount_wiener);',start)+len('const amount=num(b.amount_wiener);')]
-required_tokens=['required:10','count>=10','before>=10','withdrawAdCount<10','/10','_of_10']
+# Upgrade user/admin error text regardless of whitespace/minification differences.
+block=block.replace('Withdrawal ads: ${withdrawAdCount}/5','Withdrawal ads: ${withdrawAdCount}/10')
+block=block.replace('withdraw_ads_required_${withdrawAdCount}_of_5','withdraw_ads_required_${withdrawAdCount}_of_10')
+
+# Some live revisions stringify the error with a different quote style; catch the stable suffix.
+block=block.replace('_of_5`','_of_10`')
+block=block.replace('_of_5\'','_of_10\'')
+block=block.replace('_of_5"','_of_10"')
+
+s=s[:start]+block+s[window_end:]
+
+# Strong validation before touching disk.
+check=s[start:start+len(block)]
+required_tokens=['required:10','count>=10','before>=10']
 missing=[x for x in required_tokens if x not in check]
 if missing:
     raise SystemExit('ERROR: V95 validation failed, missing: '+', '.join(missing))
+if not re.search(r'withdrawAdCount\s*<\s*10\b',check):
+    raise SystemExit('ERROR: V95 validation failed: server-side withdraw guard is not 10')
+if re.search(r'withdrawAdCount\s*<\s*5\b',check):
+    raise SystemExit('ERROR: V95 validation failed: old 5-ad server guard still present')
 
-# Make reruns idempotent; no write if already fully upgraded.
-if s == p.read_text():
+if s == original_text:
     print('V95 already installed: withdrawal requirement is 10 ads')
     sys.exit(0)
 
