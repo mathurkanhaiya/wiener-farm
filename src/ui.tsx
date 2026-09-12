@@ -3,6 +3,7 @@ import type {Snapshot,Tab} from './lib';
 import {money} from './lib';
 import {AnimatedIcon,type IconName} from './icons';
 import {LANGUAGES,useI18n,type LangCode} from './i18n';
+import './nav-six.css';
 
 const WIENER_LOGO='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';
 function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" loading="eager" decoding="sync" fetchPriority="high" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
