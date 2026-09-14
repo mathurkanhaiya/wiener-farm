@@ -16,5 +16,8 @@ if(!s.includes(adsgramIcon)){
  if(!s.includes(oldIcon))throw new Error('Adsgram icon anchor missing');
  s=s.replace(oldIcon,adsgramIcon);
 }
+// Keep icon alignment without the square tile's background, border or shadow.
+s=s.replace('<div className="square play">'+adsgramIcon+'</div>',
+ '<div style={{width:44,height:44,flexShrink:0,display:"grid",placeItems:"center",background:"transparent",border:0,boxShadow:"none"}}>'+adsgramIcon+'</div>');
 if(s!==original)fs.writeFileSync(p,s);
 console.log('USL Ads removed from frontend');
