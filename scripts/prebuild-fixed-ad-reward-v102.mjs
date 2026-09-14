@@ -4,7 +4,11 @@ let s=fs.readFileSync(p,'utf8');
 // Remove client interaction / advertiser-click tracking and league visit bonuses from monetary ad flow.
 s=s.replace("import {adApi,adUsageApi,secondaryAdApi,getInitData,type Snapshot} from './lib';","import {adApi,adUsageApi,secondaryAdApi,type Snapshot} from './lib';");
 s=s.replace("import {trackAdInteraction} from './adInteraction';\n",'');
-s=s.replace(/const sleep=\(ms:number\)=>new Promise\(r=>setTimeout\(r,ms\)\);\n/,'');
+// Callback-verification retries still need sleep after league bonuses are removed.
+// Restore it too when rebuilding a checkout patched by an earlier V102 build.
+if(!s.includes('const sleep=(ms:number)=>')){
+ s='const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));\n'+s;
+}
 s=s.replace("type Result={source:Source;reward:number;bonus_unlocked:boolean;interaction_detected:boolean;league_visit_points:number};","type Result={source:Source;reward:number};");
 s=s.replace(/\nasync function leagueVisitBonus[\s\S]*?return Number\(x\?\.awarded_points\|\|0\);\n}\n/,'\n');
 s=s.replace(",[leagueRefresh,setLeagueRefresh]=useState(0)","");
