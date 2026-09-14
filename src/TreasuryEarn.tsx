@@ -4,7 +4,8 @@ import {getInitData} from './lib';
 
 type State={keys:number;points:number;points_per_key:number;keys_today:number;daily_key_limit:number;attempts_today:number;daily_attempt_limit:number;cooldown_seconds:number;block_id:string;recent:Array<{reward:number;created_at:string}>};
 const CHEST='https://surf-earn.top/template/img/games/treasury/treasure-chest.png';
-async function api(action:string,body:any={}){const r=await fetch('/functions/v1/wiener-treasury',{method:'POST',headers:{'Content-Type':'application/json'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const x=await r.json().catch(()=>null);if(!r.ok||!x?.ok)throw Error(x?.message||x?.error||'Treasury service unavailable');return x.data}
+const TREASURY_API='/functions/v1/wiener-treasury-v2';
+async function api(action:string,body:any={}){const r=await fetch(TREASURY_API,{method:'POST',headers:{'Content-Type':'application/json','cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const raw=await r.text();let x:any=null;try{x=raw?JSON.parse(raw):null}catch{}if(!r.ok||!x?.ok)throw Error(x?.message||x?.error||'Treasury service unavailable');return x.data}
 export function TreasuryEarn({refresh,say}:{refresh:any;say:any}){
  const [page,setPage]=useState(false),[st,setSt]=useState<State|null>(null),[busy,setBusy]=useState(false),[cd,setCd]=useState(0),[win,setWin]=useState<number|null>(null);
  const load=async()=>{const x=await api('status');setSt(x);setCd(Number(x.cooldown_seconds||0));return x};
