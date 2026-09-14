@@ -45,17 +45,31 @@ ROUTE=/opt/wiener-code/scripts/v104-treasury-route.txt
 [ -s "$ROUTE" ] || { echo 'Treasury route source missing'; exit 1; }
 python3 - "$SERVER" "$ROUTE" <<'PY'
 from pathlib import Path
-import re,sys
-p=Path(sys.argv[1]); route=Path(sys.argv[2]).read_text().rstrip()+"\n"; s=p.read_text(); marker='// V104 SECURE WIENER TREASURY'
-# Replace an earlier V104 route instead of leaving stale Treasury logic active.
+import sys
+p=Path(sys.argv[1])
+route=Path(sys.argv[2]).read_text().rstrip()+"\n"
+s=p.read_text()
+marker='// V104 SECURE WIENER TREASURY'
+
+def first_listen_after(text,start):
+    candidates=[]
+    for needle in ('app.listen(','server.listen('):
+        pos=text.find(needle,start)
+        if pos >= 0:
+            candidates.append(pos)
+    return min(candidates) if candidates else len(text)
+
 if marker in s:
     start=s.index(marker)
-    listen=[x for x in (s.find('app.listen(',start),s.find('server.listen(',start)) if 'server.listen(' in s[start:] else -1) if x>=0]
-    end=min(listen) if listen else len(s)
+    end=first_listen_after(s,start)
     s=s[:start]+route+'\n'+s[end:]
 else:
-    positions=[x for x in (s.rfind('app.listen('),s.rfind('server.listen(')) if x>=0]
-    pos=max(positions) if positions else len(s)
+    candidates=[]
+    for needle in ('app.listen(','server.listen('):
+        pos=s.rfind(needle)
+        if pos >= 0:
+            candidates.append(pos)
+    pos=max(candidates) if candidates else len(s)
     s=s[:pos]+route+'\n'+s[pos:]
 p.write_text(s)
 PY
