@@ -9,5 +9,12 @@ s=s.replace(/\nasync function uslApi\([\s\S]*?(?=\nexport function Ads\()/,'\n')
 if(/UslAdsBlock|uslApi|loadUslSdk|TowerAds|uslads\.com/.test(s)){
  throw new Error('USL cleanup incomplete: inspect AdsPage.tsx before building');
 }
+// Apply the custom Adsgram icon after earlier frontend patches.
+const oldIcon="<AnimatedIcon name=\"ads\" active={!mainDisabled}/>";
+const adsgramIcon="<img src=\"https://pixlinkhost.vercel.app/i/2O4rXYYJTA\" alt=\"Adsgram\" width={44} height={44} style={{display:'block',objectFit:'contain',background:'transparent'}}/>";
+if(!s.includes(adsgramIcon)){
+ if(!s.includes(oldIcon))throw new Error('Adsgram icon anchor missing');
+ s=s.replace(oldIcon,adsgramIcon);
+}
 if(s!==original)fs.writeFileSync(p,s);
 console.log('USL Ads removed from frontend');
