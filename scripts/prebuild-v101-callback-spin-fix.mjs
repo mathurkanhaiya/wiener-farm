@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 
+// Safe/idempotent V101 frontend compatibility patcher.
 function patchOptional(path, oldText, newText, label, appliedMarker=''){
   let s=fs.readFileSync(path,'utf8');
   if((appliedMarker&&s.includes(appliedMarker))||s.includes(newText)){console.log(`V101 ${label}: already applied`);return;}
