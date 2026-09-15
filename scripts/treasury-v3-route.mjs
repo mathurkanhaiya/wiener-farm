@@ -1,5 +1,5 @@
-// Fresh isolated Wiener Treasury V3. Paste/inject this after `app` and `pool` exist.
-import crypto from 'node:crypto';
+// Fresh isolated Wiener Treasury V3. Inject this after `app` and `pool` exist.
+// Uses the existing server-level `crypto` binding; do not import/redeclare crypto here.
 const TV3_BLOCK='45064';
 function tv3Auth(raw){
   const token=String(process.env.BOT_TOKEN||process.env.TELEGRAM_BOT_TOKEN||process.env.TELEGRAM_TOKEN||'');
