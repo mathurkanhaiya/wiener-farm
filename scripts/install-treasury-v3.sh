@@ -21,14 +21,25 @@ s=p.read_text()
 start='// === TREASURY V3 START ==='
 end='// === TREASURY V3 END ==='
 if start in s:
- a=s.index(start); b=s.index(end,a)+len(end); s=s[:a]+s[b:]
+    a=s.index(start)
+    b=s.index(end,a)+len(end)
+    s=s[:a]+s[b:]
 route=Path('/opt/wiener-code/scripts/treasury-v3-route.mjs').read_text()
-route=route.replace("import crypto from 'node:crypto';","const crypto = await import('node:crypto');")
 s += '\n'+start+'\n'+route+'\n'+end+'\n'
 p.write_text(s)
 PY
+if ! node --check "$BACK"; then
+  cp "$BACK.treasury-v3.bak" "$BACK"
+  echo 'Treasury V3 injection failed syntax validation; backend restored.' >&2
+  exit 1
+fi
 pm2 restart wiener-api --update-env
+sleep 2
+if ! curl -fsS -o /dev/null -w '%{http_code}' 'http://127.0.0.1:3000/treasury-v3-reward?userId=1' | grep -Eq '^(200|204)$'; then
+  cp "$BACK.treasury-v3.bak" "$BACK"
+  pm2 restart wiener-api --update-env
+  echo 'Treasury V3 health check failed; backend restored.' >&2
+  exit 1
+fi
 pm2 save
-npm ci
-npm run build
-printf '\nTreasury V3 installed. AdsGram block 45064 Reward URL:\nhttps://api.viralaitools.xyz/treasury-v3-reward?userId=[userId]\n'
+printf '\nTreasury V3 backend installed and locally verified.\nAdsGram block: 45064\nReward URL: https://api.viralaitools.xyz/treasury-v3-reward?userId=[userId]\n'
