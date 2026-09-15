@@ -6,24 +6,17 @@ const BLOCK_ID='int-44861';
 const REQUIRED=10;
 
 async function gateApi(action:string,body:any={}){
-  const controller=new AbortController();
-  const timer=window.setTimeout(()=>controller.abort(),15000);
-  try{
-    const r=await fetch('/functions/v1/wiener-ton-wallet',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},
-      cache:'no-store',
-      signal:controller.signal,
-      body:JSON.stringify({action,initData:getInitData(),...body}),
-    });
-    const raw=await r.text();
-    let x:any={ok:false,error:'invalid_response'};
-    if(raw){try{x=JSON.parse(raw)}catch{x={ok:false,error:raw.slice(0,180)}}}
-    if(!r.ok||!x.ok)throw new Error(x.message||x.error||'withdraw_ad_request_failed');
-    return x.data??x;
-  }finally{
-    window.clearTimeout(timer);
-  }
+  const r=await fetch('/functions/v1/wiener-ton-wallet',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},
+    cache:'no-store',
+    body:JSON.stringify({action,initData:getInitData(),...body}),
+  });
+  const raw=await r.text();
+  let x:any={ok:false,error:'invalid_response'};
+  if(raw){try{x=JSON.parse(raw)}catch{x={ok:false,error:raw.slice(0,180)}}}
+  if(!r.ok||!x.ok)throw new Error(x.message||x.error||'withdraw_ad_request_failed');
+  return x.data??x;
 }
 
 export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
@@ -87,7 +80,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
       if(sid)try{await gateApi('withdraw_ad_fail',{session_id:sid})}catch{}
       const raw=String(e?.message||e);
       if(raw.includes('backend_upgrade_required'))setMessage('Withdrawal unlock is updating. Please try again shortly.');
-      else if(raw.includes('watch_full_withdraw_ad'))setMessage('Watch the full sponsor ad before returning. Short views do not count.');
+      else if(raw.includes('watch_full_withdraw_ad'))setMessage('Watch the sponsor ad until Adsgram reports completion, then return.');
       else if(raw.includes('withdraw_ad_session'))setMessage('Ad session expired. Tap WATCH NEXT AD and try again.');
       else setMessage('Sponsor ad is unavailable right now. Try again shortly.');
     }finally{
@@ -130,7 +123,7 @@ export function WithdrawAdGate({data,setTab}:{data:Snapshot;setTab:any}){
       <div className="withdraw-gate-sub"><span>{unlocked?'Complete':'Daily sponsor progress'}</span><span>{unlocked?'10/10':`${left} ad${left===1?'':'s'} remaining`}</span></div>
       {unlocked?<div className="withdraw-gate-done">✓ UNLOCKED FOR TODAY</div>:<button className="primary" disabled={busy} onClick={watch}>{busy?'OPENING AD…':count===0?'START · WATCH AD':`WATCH NEXT AD · ${count}/${REQUIRED}`}</button>}
       {message&&<div className="withdraw-gate-message">{message}</div>}
-      {!unlocked&&<div className="withdraw-gate-note">Only completed sponsor views count. Progress resets daily at 00:00 UTC. Watching 1 ad does not open the withdrawal form.</div>}
+      {!unlocked&&<div className="withdraw-gate-note">Only Adsgram-completed sponsor views count. Progress resets daily at 00:00 UTC. Watching 1 ad does not open the withdrawal form.</div>}
     </section>
     {unlocked&&<WalletV2 data={data} setTab={setTab}/>}
   </div>;
