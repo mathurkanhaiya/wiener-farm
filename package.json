@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/prebuild-safe.mjs && node scripts/prebuild-v2-admin-testing.mjs && node scripts/prebuild-daily-bio-gate.mjs && node scripts/prebuild-dynamic-wiener-rate.mjs && node scripts/prebuild-ambassador-weekly-prize-toggle.mjs && node scripts/prebuild-spin-v73.mjs && node scripts/prebuild-daily-claim-lock.mjs && node scripts/prebuild-fix-league-timer.mjs && node scripts/prebuild-full-ui-translator.mjs && node scripts/audit-user-ui-i18n.mjs && node scripts/prebuild-v101-callback-spin-fix.mjs && node scripts/prebuild-fixed-ad-reward-v102.mjs && node scripts/prebuild-usl-ads-v103.mjs && vite build",
+    "build": "node scripts/prebuild-safe.mjs && node scripts/prebuild-v2-admin-testing.mjs && node scripts/prebuild-daily-bio-gate.mjs && node scripts/prebuild-dynamic-wiener-rate.mjs && node scripts/prebuild-ambassador-weekly-prize-toggle.mjs && node scripts/prebuild-spin-v73.mjs && node scripts/prebuild-daily-claim-lock.mjs && node scripts/prebuild-fix-league-timer.mjs && node scripts/prebuild-full-ui-translator.mjs && node scripts/audit-user-ui-i18n.mjs && node scripts/prebuild-v101-callback-spin-fix.mjs && node scripts/prebuild-fixed-ad-reward-v102.mjs && node scripts/prebuild-usl-ads-v103.mjs && node scripts/prebuild-v109-main-ad-up-to-20.mjs && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview"
   },
