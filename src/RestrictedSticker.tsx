@@ -11,7 +11,9 @@ const STICKER_URL='https://wiener-farm.vercel.app/api/host/restricted-cross';
 
 async function ungzip(bytes:Uint8Array){
   if(typeof DecompressionStream==='undefined')throw new Error('gzip_unsupported');
-  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  const copy=new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  const stream=new Blob([copy.buffer]).stream().pipeThrough(new DecompressionStream('gzip'));
   return new TextDecoder().decode(await new Response(stream).arrayBuffer());
 }
 
