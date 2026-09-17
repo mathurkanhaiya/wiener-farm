@@ -1,2 +1,110 @@
-.app-shell>.bottom-nav.game-nav{display:flex!important;align-items:stretch!important;justify-content:space-between!important;overflow:visible!important;padding:7px 5px max(5px,env(safe-area-inset-bottom))!important;position:fixed!important}
-.game-nav-left,.game-nav-right{display:flex!important;align-items:stretch!important;height:100%!important;min-width:0!important;flex:1 1 0!important}.game-nav-left{justify-content:flex-start!important;padding-right:38px!important}.game-nav-right{justify-content:flex-end!important;padding-left:38px!important}.game-nav-left>button,.game-nav-right>button{flex:1 1 0!important;min-width:0!important;height:100%!important;margin:0!important;padding:4px 1px!important;border-radius:14px!important}.game-nav-left>button .aicon,.game-nav-right>button .aicon,.game-nav-left>button .tg-lottie,.game-nav-right>button .tg-lottie{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important}.game-nav-left>button>span,.game-nav-right>button>span{display:block!important;font-size:8.5px!important;line-height:1!important;margin-top:2px!important;white-space:nowrap!important}.app-shell>.bottom-nav.game-nav>.play-nav{position:absolute!important;z-index:8!important;left:50%!important;top:0!important;transform:translateX(-50%)!important;width:76px!important;height:100%!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-end!important;gap:1px!important;overflow:visible!important}.play-nav .play-orb{position:absolute!important;left:50%;top:-34px!important;transform:translateX(-50%);width:66px!important;height:66px!important;border-radius:50%!important;display:grid!important;place-items:center!important;background:linear-gradient(155deg,#ffe05b 0%,#ff9d13 43%,#ff5a12 100%)!important;border:3px solid rgba(255,215,92,.7)!important;box-shadow:0 8px 24px rgba(255,120,15,.38),inset 0 2px 2px rgba(255,255,255,.52),inset 0 -7px 12px rgba(126,25,0,.2)!important;transition:transform .18s ease,filter .18s ease!important}.play-nav .play-orb b{font-size:25px!important;line-height:1!important;color:#fff!important;transform:translateX(2px);filter:drop-shadow(0 2px 2px rgba(70,15,0,.28))}.play-nav strong{font-size:9px!important;line-height:1!important;letter-spacing:.5px!important;font-weight:950!important;margin-bottom:5px!important;color:rgba(255,255,255,.72)!important}.play-nav i{position:absolute;bottom:-1px;width:26px;height:3px;border-radius:99px;background:transparent;box-shadow:none}.play-nav.active .play-orb{transform:translateX(-50%) scale(1.07);filter:saturate(1.12) brightness(1.05)}.play-nav.active strong{color:#ffd761!important}.play-nav.active i{background:#ffad20;box-shadow:0 0 10px rgba(255,164,24,.7)}.play-nav:active .play-orb{transform:translateX(-50%) scale(.94)!important}.games-hub{padding:8px 0 92px}.games-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px;border-radius:24px;background:radial-gradient(circle at 88% 18%,rgba(255,157,24,.22),transparent 32%),linear-gradient(145deg,rgba(255,159,24,.12),rgba(255,255,255,.035));border:1px solid rgba(255,185,58,.17);box-shadow:inset 0 1px rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.18)}.games-hero small{font-size:9px;font-weight:900;letter-spacing:1.8px;color:#ffbd42}.games-hero h1{margin:5px 0 4px;font-size:26px}.games-hero p{margin:0;font-size:11px;opacity:.55}.games-hero-icon{font-size:44px}.games-coming{margin-top:12px;padding:18px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}.games-coming span{display:block;font-size:9px;letter-spacing:1.4px;font-weight:900;opacity:.5}.games-coming b{display:block;margin-top:6px;font-size:16px}.games-coming p{font-size:11px;line-height:1.55;opacity:.55;margin-bottom:0}@media(max-width:390px){.game-nav-left{padding-right:34px!important}.game-nav-right{padding-left:34px!important}.game-nav-left>button .aicon,.game-nav-right>button .aicon,.game-nav-left>button .tg-lottie,.game-nav-right>button .tg-lottie{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important}.game-nav-left>button>span,.game-nav-right>button>span{font-size:7.5px!important}.play-nav .play-orb{width:60px!important;height:60px!important;top:-29px!important}.play-nav .play-orb b{font-size:22px!important}}
+/* Navigation presentation only. Keep the existing six destinations and handlers. */
+.app-shell > .bottom-nav.game-nav{
+  --play-size:76px;
+  position:fixed!important;left:50%!important;right:auto!important;
+  bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+  transform:translateX(-50%)!important;
+  width:calc(100% - 20px)!important;max-width:700px!important;
+  height:84px!important;box-sizing:border-box!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr) var(--play-size) minmax(0,1fr)!important;
+  align-items:stretch!important;gap:4px!important;padding:8px 10px!important;
+  overflow:visible!important;border-radius:48px!important;
+  background:linear-gradient(125deg,#111016 0%,#17151d 48%,#242129 100%)!important;
+  border:2px solid #66502d!important;
+  box-shadow:0 12px 30px #0008,inset 0 2px 0 #e5b66426,inset 0 -3px 0 #0008!important;
+  backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
+  z-index:30!important;
+}
+.app-shell > .game-nav .game-nav-left,
+.app-shell > .game-nav .game-nav-right{
+  display:flex!important;align-items:stretch!important;justify-content:space-around!important;
+  min-width:0!important;height:100%!important;padding:0!important;gap:2px!important;
+}
+.app-shell > .game-nav .game-nav-left{grid-column:1}
+.app-shell > .game-nav .game-nav-right{grid-column:3}
+.app-shell > .game-nav .game-nav-left > button,
+.app-shell > .game-nav .game-nav-right > button{
+  appearance:none!important;-webkit-appearance:none!important;
+  position:relative!important;display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;gap:5px!important;
+  flex:1 1 0!important;min-width:0!important;width:auto!important;height:100%!important;
+  margin:0!important;padding:3px 0 7px!important;
+  background:transparent!important;background-image:none!important;
+  border:0!important;border-radius:16px!important;box-shadow:none!important;
+  color:#aaa2b3!important;font:inherit!important;font-weight:800!important;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.app-shell > .game-nav .game-nav-left > button > span:not(.aicon),
+.app-shell > .game-nav .game-nav-right > button > span:not(.aicon){
+  display:block!important;max-width:100%;margin:0!important;
+  font-size:clamp(9px,2.5vw,12px)!important;line-height:1.2!important;
+  letter-spacing:.02em!important;text-transform:uppercase;white-space:nowrap!important;
+}
+.app-shell > .game-nav .game-nav-left > button .aicon,
+.app-shell > .game-nav .game-nav-right > button .aicon{
+  display:block!important;flex:none!important;
+  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
+  margin:0!important;color:inherit!important;
+}
+.app-shell > .game-nav .game-nav-left > button.active,
+.app-shell > .game-nav .game-nav-right > button.active{
+  color:#ffd17b!important;background:transparent!important;border:0!important;box-shadow:none!important;
+}
+.app-shell > .game-nav .game-nav-left > button::after,
+.app-shell > .game-nav .game-nav-right > button::after{
+  content:"";position:absolute;bottom:1px;left:32%;right:32%;height:3px;border-radius:5px;
+  background:linear-gradient(90deg,#ff720d,#ffcb43);opacity:0;
+}
+.app-shell > .game-nav .game-nav-left > button.active::after,
+.app-shell > .game-nav .game-nav-right > button.active::after{opacity:1}
+.app-shell > .bottom-nav.game-nav > .play-nav{
+  appearance:none!important;-webkit-appearance:none!important;
+  position:absolute!important;left:50%!important;right:auto!important;top:-34px!important;bottom:auto!important;
+  transform:translateX(-50%)!important;width:var(--play-size)!important;min-width:0!important;
+  height:calc(var(--play-size) + 12px)!important;margin:0!important;padding:0!important;
+  display:block!important;overflow:visible!important;border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;color:#fff!important;z-index:8!important;
+  cursor:pointer;isolation:auto!important;
+}
+.app-shell > .game-nav > .play-nav::before,
+.app-shell > .game-nav > .play-nav::after{content:none!important}
+.app-shell > .game-nav .play-nav .play-orb{
+  position:absolute!important;inset:0 auto auto 0!important;transform:none!important;
+  box-sizing:border-box!important;width:var(--play-size)!important;height:var(--play-size)!important;
+  margin:0!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;
+  padding-top:12px!important;border-radius:50%!important;
+  background:linear-gradient(145deg,#ffae17 0%,#ff8308 45%,#ff5700 100%)!important;
+  border:3px solid #ffaf2e!important;
+  box-shadow:0 0 0 5px #a35b162e,0 8px 24px #ff76004d,inset 0 2px 2px #ffe18b66,inset 0 -5px 8px #c6490033!important;
+  transition:filter .16s ease!important;
+}
+.app-shell > .game-nav .play-nav .play-orb b{
+  font-size:27px!important;line-height:1!important;color:#fff5dc!important;
+  transform:translateX(2px);filter:drop-shadow(0 2px 2px #9b350066);
+}
+.app-shell > .game-nav .play-nav strong{
+  position:absolute!important;top:49px!important;left:0!important;right:0!important;
+  margin:0!important;font-size:12px!important;line-height:1!important;
+  font-weight:900!important;letter-spacing:1px!important;color:#fff8e7!important;text-align:center;
+}
+.app-shell > .game-nav .play-nav i{
+  position:absolute!important;bottom:0!important;left:calc(50% - 14px)!important;
+  width:28px!important;height:3px!important;border-radius:8px!important;
+  background:#a7793d!important;box-shadow:none!important;
+}
+.app-shell > .game-nav .play-nav.active i{background:#ffae25!important;box-shadow:0 0 12px #ff930088!important}
+.app-shell > .game-nav .play-nav.active .play-orb{filter:brightness(1.1)!important}
+.app-shell > .game-nav .play-nav:active{transform:translateX(-50%)!important}
+.app-shell > .game-nav .play-nav:active .play-orb{filter:brightness(.93)!important}
+.app-shell > .game-nav button:focus-visible{outline:2px solid #ffe095!important;outline-offset:3px!important}
+.app-shell:has(> .game-nav) > .content{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important}
+@media(max-width:360px){
+  .app-shell > .bottom-nav.game-nav{--play-size:66px;padding-inline:7px!important;gap:2px!important}
+  .app-shell > .game-nav .play-nav strong{top:43px!important;font-size:11px!important}
+  .app-shell > .game-nav .play-nav .play-orb{padding-top:9px!important}
+  .app-shell > .game-nav .play-nav .play-orb b{font-size:25px!important}
+  .app-shell > .game-nav .game-nav-left > button .aicon,
+  .app-shell > .game-nav .game-nav-right > button .aicon{width:25px!important;height:25px!important;min-width:25px!important;min-height:25px!important}
+}
+
+.games-hub{padding:8px 0 92px}.games-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px;border-radius:24px;background:radial-gradient(circle at 88% 18%,rgba(255,157,24,.22),transparent 32%),linear-gradient(145deg,rgba(255,159,24,.12),rgba(255,255,255,.035));border:1px solid rgba(255,185,58,.17);box-shadow:inset 0 1px rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.18)}.games-hero small{font-size:9px;font-weight:900;letter-spacing:1.8px;color:#ffbd42}.games-hero h1{margin:5px 0 4px;font-size:26px}.games-hero p{margin:0;font-size:11px;opacity:.55}.games-hero-icon{font-size:44px}.games-coming{margin-top:12px;padding:18px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}.games-coming span{display:block;font-size:9px;letter-spacing:1.4px;font-weight:900;opacity:.5}.games-coming b{display:block;margin-top:6px;font-size:16px}.games-coming p{font-size:11px;line-height:1.55;opacity:.55;margin-bottom:0}
