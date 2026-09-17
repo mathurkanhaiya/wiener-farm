@@ -1,34 +1,33 @@
 /* Navigation presentation only. Keep the existing six destinations and handlers. */
 .app-shell > .bottom-nav.game-nav{
-  --play-size:76px;
+  --play-size:40px;
   position:fixed!important;left:50%!important;right:auto!important;
-  bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+  bottom:calc(6px + env(safe-area-inset-bottom,0px))!important;
   transform:translateX(-50%)!important;
-  width:calc(100% - 20px)!important;max-width:700px!important;
-  height:84px!important;box-sizing:border-box!important;
-  display:grid!important;grid-template-columns:minmax(0,1fr) var(--play-size) minmax(0,1fr)!important;
-  align-items:stretch!important;gap:4px!important;padding:8px 10px!important;
-  overflow:visible!important;border-radius:48px!important;
+  width:calc(100% - 16px)!important;max-width:480px!important;
+  height:62px!important;box-sizing:border-box!important;
+  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  align-items:stretch!important;gap:2px!important;padding:5px 6px!important;
+  overflow:visible!important;border-radius:28px!important;
   background:linear-gradient(125deg,#111016 0%,#17151d 48%,#242129 100%)!important;
-  border:2px solid #66502d!important;
+  border:1px solid #66502d!important;
   box-shadow:0 12px 30px #0008,inset 0 2px 0 #e5b66426,inset 0 -3px 0 #0008!important;
   backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
   z-index:30!important;
 }
 .app-shell > .game-nav .game-nav-left,
 .app-shell > .game-nav .game-nav-right{
-  display:flex!important;align-items:stretch!important;justify-content:space-around!important;
+  display:contents!important;
   min-width:0!important;height:100%!important;padding:0!important;gap:2px!important;
 }
-.app-shell > .game-nav .game-nav-left{grid-column:1}
-.app-shell > .game-nav .game-nav-right{grid-column:3}
+
 .app-shell > .game-nav .game-nav-left > button,
 .app-shell > .game-nav .game-nav-right > button{
   appearance:none!important;-webkit-appearance:none!important;
   position:relative!important;display:flex!important;flex-direction:column!important;
-  align-items:center!important;justify-content:center!important;gap:5px!important;
+  align-items:center!important;justify-content:center!important;gap:4px!important;
   flex:1 1 0!important;min-width:0!important;width:auto!important;height:100%!important;
-  margin:0!important;padding:3px 0 7px!important;
+  margin:0!important;padding:3px 0 6px!important;
   background:transparent!important;background-image:none!important;
   border:0!important;border-radius:16px!important;box-shadow:none!important;
   color:#aaa2b3!important;font:inherit!important;font-weight:800!important;
@@ -37,13 +36,13 @@
 .app-shell > .game-nav .game-nav-left > button > span:not(.aicon),
 .app-shell > .game-nav .game-nav-right > button > span:not(.aicon){
   display:block!important;max-width:100%;margin:0!important;
-  font-size:clamp(9px,2.5vw,12px)!important;line-height:1.2!important;
+  font-size:clamp(9px,2.5vw,11px)!important;line-height:1.2!important;
   letter-spacing:.02em!important;text-transform:uppercase;white-space:nowrap!important;
 }
 .app-shell > .game-nav .game-nav-left > button .aicon,
 .app-shell > .game-nav .game-nav-right > button .aicon{
   display:block!important;flex:none!important;
-  width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
+  width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;
   margin:0!important;color:inherit!important;
 }
 .app-shell > .game-nav .game-nav-left > button.active,
@@ -59,9 +58,9 @@
 .app-shell > .game-nav .game-nav-right > button.active::after{opacity:1}
 .app-shell > .bottom-nav.game-nav > .play-nav{
   appearance:none!important;-webkit-appearance:none!important;
-  position:absolute!important;left:50%!important;right:auto!important;top:-34px!important;bottom:auto!important;
-  transform:translateX(-50%)!important;width:var(--play-size)!important;min-width:0!important;
-  height:calc(var(--play-size) + 12px)!important;margin:0!important;padding:0!important;
+  position:relative!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  transform:none!important;width:100%!important;min-width:0!important;
+  height:100%!important;margin:0!important;padding:0!important;
   display:block!important;overflow:visible!important;border:0!important;border-radius:0!important;
   background:transparent!important;box-shadow:none!important;color:#fff!important;z-index:8!important;
   cursor:pointer;isolation:auto!important;
@@ -69,42 +68,34 @@
 .app-shell > .game-nav > .play-nav::before,
 .app-shell > .game-nav > .play-nav::after{content:none!important}
 .app-shell > .game-nav .play-nav .play-orb{
-  position:absolute!important;inset:0 auto auto 0!important;transform:none!important;
+  position:absolute!important;inset:-10px auto auto 50%!important;transform:translateX(-50%)!important;
   box-sizing:border-box!important;width:var(--play-size)!important;height:var(--play-size)!important;
-  margin:0!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;
-  padding-top:12px!important;border-radius:50%!important;
+  margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:0!important;border-radius:50%!important;
   background:linear-gradient(145deg,#ffae17 0%,#ff8308 45%,#ff5700 100%)!important;
-  border:3px solid #ffaf2e!important;
-  box-shadow:0 0 0 5px #a35b162e,0 8px 24px #ff76004d,inset 0 2px 2px #ffe18b66,inset 0 -5px 8px #c6490033!important;
+  border:2px solid #ffaf2e!important;
+  box-shadow:0 0 0 3px #a35b162e,0 4px 12px #ff760033,inset 0 2px 2px #ffe18b66,inset 0 -5px 8px #c6490033!important;
   transition:filter .16s ease!important;
 }
 .app-shell > .game-nav .play-nav .play-orb b{
-  font-size:27px!important;line-height:1!important;color:#fff5dc!important;
+  font-size:17px!important;line-height:1!important;color:#fff5dc!important;
   transform:translateX(2px);filter:drop-shadow(0 2px 2px #9b350066);
 }
 .app-shell > .game-nav .play-nav strong{
-  position:absolute!important;top:49px!important;left:0!important;right:0!important;
-  margin:0!important;font-size:12px!important;line-height:1!important;
-  font-weight:900!important;letter-spacing:1px!important;color:#fff8e7!important;text-align:center;
+  position:absolute!important;top:auto!important;bottom:7px!important;left:0!important;right:0!important;
+  margin:0!important;font-size:clamp(9px,2.5vw,11px)!important;line-height:1.2!important;
+  font-weight:900!important;letter-spacing:.02em!important;color:#fff8e7!important;text-align:center;
 }
 .app-shell > .game-nav .play-nav i{
-  position:absolute!important;bottom:0!important;left:calc(50% - 14px)!important;
-  width:28px!important;height:3px!important;border-radius:8px!important;
-  background:#a7793d!important;box-shadow:none!important;
+  position:absolute!important;bottom:0!important;left:32%!important;right:32%!important;
+  width:auto!important;height:3px!important;border-radius:8px!important;
+  background:transparent!important;box-shadow:none!important;
 }
 .app-shell > .game-nav .play-nav.active i{background:#ffae25!important;box-shadow:0 0 12px #ff930088!important}
 .app-shell > .game-nav .play-nav.active .play-orb{filter:brightness(1.1)!important}
-.app-shell > .game-nav .play-nav:active{transform:translateX(-50%)!important}
+.app-shell > .game-nav .play-nav:active{transform:none!important}
 .app-shell > .game-nav .play-nav:active .play-orb{filter:brightness(.93)!important}
 .app-shell > .game-nav button:focus-visible{outline:2px solid #ffe095!important;outline-offset:3px!important}
-.app-shell:has(> .game-nav) > .content{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important}
-@media(max-width:360px){
-  .app-shell > .bottom-nav.game-nav{--play-size:66px;padding-inline:7px!important;gap:2px!important}
-  .app-shell > .game-nav .play-nav strong{top:43px!important;font-size:11px!important}
-  .app-shell > .game-nav .play-nav .play-orb{padding-top:9px!important}
-  .app-shell > .game-nav .play-nav .play-orb b{font-size:25px!important}
-  .app-shell > .game-nav .game-nav-left > button .aicon,
-  .app-shell > .game-nav .game-nav-right > button .aicon{width:25px!important;height:25px!important;min-width:25px!important;min-height:25px!important}
-}
+.app-shell:has(> .game-nav) > .content{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))!important}
 
 .games-hub{padding:8px 0 92px}.games-hero{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px;border-radius:24px;background:radial-gradient(circle at 88% 18%,rgba(255,157,24,.22),transparent 32%),linear-gradient(145deg,rgba(255,159,24,.12),rgba(255,255,255,.035));border:1px solid rgba(255,185,58,.17);box-shadow:inset 0 1px rgba(255,255,255,.08),0 18px 40px rgba(0,0,0,.18)}.games-hero small{font-size:9px;font-weight:900;letter-spacing:1.8px;color:#ffbd42}.games-hero h1{margin:5px 0 4px;font-size:26px}.games-hero p{margin:0;font-size:11px;opacity:.55}.games-hero-icon{font-size:44px}.games-coming{margin-top:12px;padding:18px;border-radius:20px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}.games-coming span{display:block;font-size:9px;letter-spacing:1.4px;font-weight:900;opacity:.5}.games-coming b{display:block;margin-top:6px;font-size:16px}.games-coming p{font-size:11px;line-height:1.55;opacity:.55;margin-bottom:0}
