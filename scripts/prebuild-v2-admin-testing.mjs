@@ -12,14 +12,14 @@ const importAnchor="import {RestrictedSticker} from './RestrictedSticker';";
 if(!s.includes(importAnchor))throw new Error('V92 import anchor not found');
 s=s.replace(importAnchor,`${importAnchor}\nimport {V2App} from './v2/V2App';\n// ${marker}`);
 
-const stateAnchor="const [tab,setTab]=useState<Tab>('home'),[data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[toast,setToast]=useState(''),[mandatory,setMandatory]=useState<any>(null),[multiBlocked,setMultiBlocked]=useState(false),[farmClaimOpen,setFarmClaimOpen]=useState(false);const openedSent=useRef(false),openAdShown=useRef(false);";
-if(!s.includes(stateAnchor))throw new Error('V92 state anchor not found');
-const stateReplacement="const [tab,setTab]=useState<Tab>('home'),[data,setData]=useState<Snapshot|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[toast,setToast]=useState(''),[mandatory,setMandatory]=useState<any>(null),[multiBlocked,setMultiBlocked]=useState(false),[farmClaimOpen,setFarmClaimOpen]=useState(false),[v2Testing,setV2Testing]=useState(()=>new URLSearchParams(window.location.search).get('v2')==='1');const openedSent=useRef(false),openAdShown=useRef(false);";
-s=s.replace(stateAnchor,stateReplacement);
+// Keep this prebuild resilient when App.tsx formatting/navigation changes.
+const stateNeedle="[farmClaimOpen,setFarmClaimOpen]=useState(false);const openedSent=useRef(false),openAdShown=useRef(false);";
+if(!s.includes(stateNeedle))throw new Error('V92 state anchor not found');
+s=s.replace(stateNeedle,"[farmClaimOpen,setFarmClaimOpen]=useState(false),[v2Testing,setV2Testing]=useState(()=>new URLSearchParams(window.location.search).get('v2')==='1');const openedSent=useRef(false),openAdShown=useRef(false);");
 
 const gateAnchor="return <div className=\"app-shell\"><EconomyUiPatch/>";
 if(!s.includes(gateAnchor))throw new Error('V92 render anchor not found');
-const gate=`if(data.is_admin&&v2Testing)return <V2App data={data} refresh={refresh} say={say} run={run} runFarm={runFarm} onExit={()=>{setV2Testing(false);try{const u=new URL(window.location.href);u.searchParams.delete('v2');window.history.replaceState({},'',u.toString())}catch{}}}/>;\n ${gateAnchor}`;
+const gate=`if(data.is_admin&&v2Testing)return <V2App data={data} refresh={refresh} say={say} run={run} runFarm={runFarm} onExit={()=>{setV2Testing(false);try{const u=new URL(window.location.href);u.searchParams.delete('v2');window.history.replaceState({},'',u.toString())}catch{}}}/>;\n${gateAnchor}`;
 s=s.replace(gateAnchor,gate);
 
 const adminAnchor="{tab==='admin'&&data.is_admin&&<><AdminBoundary name=\"Admin Control Center\"><AdminHub say={say}/></AdminBoundary>";
