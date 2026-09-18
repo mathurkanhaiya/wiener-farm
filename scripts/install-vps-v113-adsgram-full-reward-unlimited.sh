@@ -55,7 +55,9 @@ x=x.replace('<div className="wf-ad-heading"><h2>Ads Task</h2><span>Daily rewards
 import re
 x=re.sub(r'<div className="wf-ad-progress-label"><span>Today\'s progress</span><b>\{used\} / \{s\.daily_ad_limit\}</b></div><div className="wf-ad-progress"[^>]*>.*?</div>','<div className="wf-ad-progress-label"><span>Completed today</span><b>{used}</b></div>',x,count=1)
 # No result modal for main AdsGram. Successful callback credits reward, refreshes balance and returns to Ads page.
-x=x.replace("const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0)});","const finish=(src:Source,st:any)=>{if(src!=='main')setResult({source:src,reward:Number(st?.reward||0)})};")
+# Result type may have been expanded again by V109/V110 prebuilds. Keep secondary compatible; main never opens this popup.
+x=re.sub(r"type Result=\\{source:Source;reward:number(?:;[^}]*)?\\};","type Result={source:Source;reward:number};",x,count=1)
+x=re.sub(r"const finish=\\(src:Source,st:any\\)=>\\{if\\(src!=='main'\\)setResult\\([^;]+\\)\\};","const finish=(src:Source,st:any)=>{if(src!=='main')setResult({source:src,reward:Number(st?.reward||0)})};",x,count=1)
 start=x.find('{result&&<div className="ad-result-backdrop">')
 if start>=0:
     end=x.find('</>;',start)
@@ -72,6 +74,7 @@ grep -Fq "AdsGram — Unlimited" src/AdsPage.tsx
 ! grep -Fq "result.full_reward" src/AdsPage.tsx
 ! grep -Fq "3-second advertiser visit detected" src/AdsPage.tsx
 ! grep -Fq "Today's progress" src/AdsPage.tsx
+grep -Fq "type Result={source:Source;reward:number};" src/AdsPage.tsx
 grep -Fq "if(src!=='main')setResult" src/AdsPage.tsx
 ! grep -Fq "mainAdStrictV111" "$BACKEND"
 npm run build
