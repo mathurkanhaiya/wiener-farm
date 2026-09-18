@@ -1,4 +1,5 @@
-const viteEnv=(import.meta as any).env||{};\n// V45 TON iOS browser compatibility
+const viteEnv=(import.meta as any).env||{};
+// V45 TON iOS browser compatibility
 // Legacy names are kept only so older components compile. Runtime traffic is same-origin VPS only.
 export const SUPABASE_URL='';
 export const PUBLISHABLE_KEY='vps';
