@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {adApi,adUsageApi,secondaryAdApi,getInitData,type Snapshot} from './lib';
+import {adApi,adUsageApi,secondaryAdApi,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {SpinEarn} from './SpinEarn';
 import {DailyLottery} from './DailyLottery';
@@ -9,7 +9,6 @@ const today=()=>new Date().toISOString().slice(0,10);
 const COOLDOWN_KEY='wiener_adsgram_cooldown_until_v1';
 const SECOND_COOLDOWN_KEY='wiener_bonus_ads_cooldown_until_v1';
 const saved=(key:string)=>{try{return Number(localStorage.getItem(key)||0)}catch{return 0}};
-const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 type Source='main'|'secondary';
 type Result={source:'secondary';reward:number};
 
@@ -17,7 +16,7 @@ type Result={source:'secondary';reward:number};
 export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
  const initialUsed=data.user?.ads_day===today()?Number(data.user?.ads_watched_today||0):0;
  const [busy,setBusy]=useState<Source|null>(null),[cooldownUntil,setCooldownUntil]=useState(()=>saved(COOLDOWN_KEY)),[secondCooldownUntil,setSecondCooldownUntil]=useState(()=>saved(SECOND_COOLDOWN_KEY)),[now,setNow]=useState(Date.now()),[mainUsed,setMainUsed]=useState(initialUsed),[second,setSecond]=useState({used:0,limit:10,reward:10,full_reward:10,block_id:'int-44228'}),[adsReady,setAdsReady]=useState(false),[result,setResult]=useState<Result|null>(null);
- const s=data.settings,used=mainUsed,cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000)),secondCooldown=Math.max(0,Math.ceil((secondCooldownUntil-now)/1000));
+ const s=data.settings,cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000)),secondCooldown=Math.max(0,Math.ceil((secondCooldownUntil-now)/1000));
  const syncMain=async()=>{const st:any=await adUsageApi();setMainUsed(Number(st?.used||0));const left=Number(st?.cooldown_seconds||0);if(left>0){const until=Date.now()+left*1000;setCooldownUntil(until);try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}}else if(saved(COOLDOWN_KEY)<=Date.now()){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}return st};
  useEffect(()=>{let active=true;Promise.all([adUsageApi(),secondaryAdApi('stats')]).then(([mainStatus,bonus]:any[])=>{if(!active)return;setMainUsed(Number(mainStatus?.used||0));const left=Number(mainStatus?.cooldown_seconds||0);if(left>0){const until=Date.now()+left*1000;setCooldownUntil(until);try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}}else if(saved(COOLDOWN_KEY)<=Date.now()){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}setSecond(bonus);setAdsReady(true)}).catch(()=>{if(active){say('Unable to load ad progress');setAdsReady(true)}});return()=>{active=false}},[]);
  useEffect(()=>{if(!cooldownUntil&&!secondCooldownUntil)return;const id=setInterval(()=>{const t=Date.now();setNow(t);if(cooldownUntil&&t>=cooldownUntil){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}if(secondCooldownUntil&&t>=secondCooldownUntil){setSecondCooldownUntil(0);try{localStorage.removeItem(SECOND_COOLDOWN_KEY)}catch{}}},500);return()=>clearInterval(id)},[cooldownUntil,secondCooldownUntil]);
