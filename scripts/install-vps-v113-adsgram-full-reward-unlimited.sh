@@ -51,6 +51,11 @@ x=x.replace("type Result={source:Source;reward:number;bonus_unlocked:boolean;int
 x=x.replace("const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0),bonus_unlocked:!!(st?.bonus_unlocked??st?.interaction_detected),interaction_detected:!!st?.interaction_detected});","const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0)});")
 x=x.replace("mainAtLimit?'DAILY LIMIT REACHED':",'')
 x=x.replace('<div className="wf-ad-heading"><h2>Ads Task</h2><span>Daily rewards</span></div>','<div className="wf-ad-heading"><h2>Ads Task</h2><span>Unlimited rewards</span></div>')
+# V109/V110 newer card: remove visible 4/50 progress + progress bar entirely.
+import re
+x=re.sub(r'<div className="wf-ad-progress-label"><span>Today\'s progress</span><b>\{used\} / \{s\.daily_ad_limit\}</b></div><div className="wf-ad-progress"[^>]*>.*?</div>','<div className="wf-ad-progress-label"><span>Completed today</span><b>{used}</b></div>',x,count=1)
+# No result modal for main AdsGram. Successful callback credits reward, refreshes balance and returns to Ads page.
+x=x.replace("const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0)});","const finish=(src:Source,st:any)=>{if(src!=='main')setResult({source:src,reward:Number(st?.reward||0)})};")
 start=x.find('{result&&<div className="ad-result-backdrop">')
 if start>=0:
     end=x.find('</>;',start)
@@ -66,6 +71,8 @@ grep -Fq "const mainAtLimit=false" src/AdsPage.tsx
 grep -Fq "AdsGram — Unlimited" src/AdsPage.tsx
 ! grep -Fq "result.full_reward" src/AdsPage.tsx
 ! grep -Fq "3-second advertiser visit detected" src/AdsPage.tsx
+! grep -Fq "Today's progress" src/AdsPage.tsx
+grep -Fq "if(src!=='main')setResult" src/AdsPage.tsx
 ! grep -Fq "mainAdStrictV111" "$BACKEND"
 npm run build
 npm run typecheck
