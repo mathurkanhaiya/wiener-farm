@@ -24,35 +24,8 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
  const setCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}};
  const setSecondCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setSecondCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(SECOND_COOLDOWN_KEY,String(until))}catch{}};
  const finishSecondary=(st:any)=>setResult({source:'secondary',reward:Number(st?.reward||0)});
- const verifyMainReward=async(sessionId:string)=>{
-  const deadline=Date.now()+180000;
-  let last:any=null;
-  while(Date.now()<deadline){
-   try{
-    const st:any=await adApi('complete',{session_id:sessionId} as any);
-    last=st;
-    if(st?.status==='credited')return st;
-    const status=String(st?.status||'').toLowerCase();
-    if(['expired','failed','rejected'].includes(status))break;
-   }catch(e:any){
-    last=e;
-    const msg=String(e?.message||e||'');
-    // AdsGram's server callback can arrive well after c.show() resolves.
-    // Keep the same session alive and retry only verification-pending failures.
-    if(!/adsgram_ad_not_verified|pending|verif|confirmation|not.*credited|not.*confirmed|try again/i.test(msg))throw e;
-   }
-   await sleep(2000);
-  }
-  // One final check catches a callback that landed on the deadline.
-  try{
-   const st:any=await adApi('complete',{session_id:sessionId} as any);
-   if(st?.status==='credited')return st;
-   last=st;
-  }catch(e:any){last=e}
-  if(last instanceof Error)throw last;
-  throw Error('Sponsor verification is still pending. Your completed ad will be credited only after server confirmation.');
- };
- const watch=async(src:Source)=>{if(busy)return;if(src==='main'&&!s.adsgram_block_id){say('Ads are temporarily unavailable');return}if(src==='main'&&cooldown>0){say(`Next ad in ${cooldown}s`);return}if(src==='secondary'&&secondCooldown>0){say(`Next ad in ${secondCooldown}s`);return}if(src==='secondary'&&second.used>=second.limit){say('Daily ad limit reached');return}try{setBusy(src);setResult(null);if(src==='main'){const x=await adApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||s.adsgram_block_id)});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');const st=await verifyMainReward(String(x.session_id));setMainUsed(v=>Math.max(v+1,Number(st?.used||0)));setCooldown(Number(st.cooldown_seconds||20));await syncMain().catch(()=>{});}else{const x=await secondaryAdApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||'int-44228')});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');const st:any=await secondaryAdApi('reward',{session_id:x.session_id} as any);const stats:any=await secondaryAdApi('stats');setSecond(stats);setSecondCooldown(20);finishSecondary(st);}await refresh()}catch(e:any){say(String(e?.message||'Ad was not completed'))}finally{setBusy(null)}};
+
+ const watch=async(src:Source)=>{if(busy)return;if(src==='main'&&!s.adsgram_block_id){say('Ads are temporarily unavailable');return}if(src==='main'&&cooldown>0){say(`Next ad in ${cooldown}s`);return}if(src==='secondary'&&secondCooldown>0){say(`Next ad in ${secondCooldown}s`);return}if(src==='secondary'&&second.used>=second.limit){say('Daily ad limit reached');return}try{setBusy(src);setResult(null);if(src==='main'){const x=await adApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||s.adsgram_block_id)});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');setCooldown(20);await syncMain().catch(()=>{});}else{const x=await secondaryAdApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||'int-44228')});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');const st:any=await secondaryAdApi('reward',{session_id:x.session_id} as any);const stats:any=await secondaryAdApi('stats');setSecond(stats);setSecondCooldown(20);finishSecondary(st);}await refresh()}catch(e:any){say(String(e?.message||'Ad was not completed'))}finally{setBusy(null)}};
  const mainAtLimit=false,secondAtLimit=second.used>=second.limit;
  const mainDisabled=Boolean(busy)||mainAtLimit||cooldown>0,secondDisabled=Boolean(busy)||secondAtLimit||secondCooldown>0;
  if(!adsReady)return <><div className="page-title"><h2>ADS TASK</h2></div><div className="ads-unified-loading"><div className="card ad-card ad-skeleton"/><div className="card ad-card ad-skeleton"/></div></>;
