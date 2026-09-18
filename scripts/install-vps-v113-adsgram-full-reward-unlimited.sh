@@ -46,6 +46,17 @@ x=x.replace("const mainAtLimit=used>=Number(s.daily_ad_limit||0),secondAtLimit=s
             "const mainAtLimit=false,secondAtLimit=second.used>=second.limit;")
 x=x.replace("<h3>AdsGram — {s.daily_ad_limit} ads</h3><p>{Number(s.ad_reward||5)} WIENER · {used}/{s.daily_ad_limit} today</p>",
             "<h3>AdsGram — Unlimited</h3><p>{Number(s.ad_reward||5)} WIENER · {used} completed today</p>")
+# Clean legacy V109/V110 result UI that can survive earlier prebuilds.
+x=x.replace("type Result={source:Source;reward:number;bonus_unlocked:boolean;interaction_detected:boolean};","type Result={source:Source;reward:number};")
+x=x.replace("const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0),bonus_unlocked:!!(st?.bonus_unlocked??st?.interaction_detected),interaction_detected:!!st?.interaction_detected});","const finish=(src:Source,st:any)=>setResult({source:src,reward:Number(st?.reward||0)});")
+x=x.replace("mainAtLimit?'DAILY LIMIT REACHED':",'')
+x=x.replace('<div className="wf-ad-heading"><h2>Ads Task</h2><span>Daily rewards</span></div>','<div className="wf-ad-heading"><h2>Ads Task</h2><span>Unlimited rewards</span></div>')
+start=x.find('{result&&<div className="ad-result-backdrop">')
+if start>=0:
+    end=x.find('</>;',start)
+    if end<0: raise SystemExit('ERROR: V113 result popup end anchor missing')
+    popup='{result&&<div className="ad-result-backdrop"><div className="ad-result-card bonus"><div className="ad-result-badge">✅</div><small>AD COMPLETED</small><div className="ad-result-earned">+{result.reward} WIENER</div><h3>Reward credited successfully.</h3><button className="primary" type="button" onClick={()=>setResult(null)}>WATCH NEXT / CLOSE</button></div></div>}'
+    x=x[:start]+popup+x[end:]
 f.write_text(x)
 print('V113 source/backend patch applied')
 PY
@@ -53,6 +64,8 @@ PY
 node --check "$BACKEND"
 grep -Fq "const mainAtLimit=false" src/AdsPage.tsx
 grep -Fq "AdsGram — Unlimited" src/AdsPage.tsx
+! grep -Fq "result.full_reward" src/AdsPage.tsx
+! grep -Fq "3-second advertiser visit detected" src/AdsPage.tsx
 ! grep -Fq "mainAdStrictV111" "$BACKEND"
 npm run build
 npm run typecheck
