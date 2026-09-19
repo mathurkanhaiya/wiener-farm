@@ -10,6 +10,7 @@ import './styles.css';
 import './styles-spin-card-clean.css';
 import './styles-spin-notifications.css';
 import './nav-six.css';
+import './styles-rich-pro.css';
 
 const hasTelegramSession=()=>Boolean(window.Telegram?.WebApp?.initData);
 
