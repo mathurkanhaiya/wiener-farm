@@ -1,4 +1,6 @@
 import {createContext,useContext,useEffect,useMemo,useState,type ReactNode} from 'react';
+import {EXTRA_PACKS} from './i18n-extra';
+import {POPUP_PACKS} from './i18n-popups';
 
 export type LangCode='en'|'hi'|'bn'|'am'|'es'|'nl'|'ar'|'de'|'fr'|'it'|'pt'|'pt-BR'|'tr'|'pl'|'uk'|'ru'|'id'|'fil'|'vi'|'th'|'ms'|'ja'|'ko'|'zh-CN'|'zh-TW';
 export type Language={code:LangCode;name:string;native:string;flag:string;rtl?:boolean};
@@ -78,5 +80,5 @@ function initial():LangCode{try{const saved=localStorage.getItem(STORAGE) as Lan
 
 type I18nValue={lang:LangCode;language:Language;setLang:(x:LangCode)=>void;t:(key:string,fallback?:string)=>string};
 const Ctx=createContext<I18nValue>({lang:'en',language:LANGUAGES[0],setLang:()=>{},t:(k,f)=>f||en[k]||k});
-export function I18nProvider({children}:{children:ReactNode}){const[lang,setLangState]=useState<LangCode>(initial);const language=LANGUAGES.find(x=>x.code===lang)||LANGUAGES[0];const setLang=(x:LangCode)=>{setLangState(x);try{localStorage.setItem(STORAGE,x)}catch{}};useEffect(()=>{document.documentElement.lang=lang;document.documentElement.dir=language.rtl?'rtl':'ltr';document.body.dataset.lang=lang},[lang,language.rtl]);const value=useMemo<I18nValue>(()=>({lang,language,setLang,t:(key,fallback)=>packs[lang]?.[key]||en[key]||fallback||key}),[lang,language]);return <Ctx.Provider value={value}>{children}</Ctx.Provider>}
+export function I18nProvider({children}:{children:ReactNode}){const[lang,setLangState]=useState<LangCode>(initial);const language=LANGUAGES.find(x=>x.code===lang)||LANGUAGES[0];const setLang=(x:LangCode)=>{setLangState(x);try{localStorage.setItem(STORAGE,x)}catch{}};useEffect(()=>{document.documentElement.lang=lang;document.documentElement.dir=language.rtl?'rtl':'ltr';document.body.dataset.lang=lang},[lang,language.rtl]);const value=useMemo<I18nValue>(()=>({lang,language,setLang,t:(key,fallback)=>POPUP_PACKS[lang]?.[key]||EXTRA_PACKS[lang]?.[key]||packs[lang]?.[key]||en[key]||fallback||key}),[lang,language]);return <Ctx.Provider value={value}>{children}</Ctx.Provider>}
 export const useI18n=()=>useContext(Ctx);

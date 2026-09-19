@@ -8,7 +8,13 @@ type AdminState={league:any;participants:number;events:number;next_prize_pool:nu
 const days=['M','T','W','T','F','S','S'];
 const nameOf=(r:Partial<Row>)=>r.username?`@${r.username}`:(r.first_name||`User ${r.telegram_id||''}`);
 const initialOf=(r:Partial<Row>)=>String(r.first_name||r.username||'W').slice(0,1).toUpperCase();
-const leftMs=(end?:string)=>end?Math.max(0,new Date(`${end}T00:00:00Z`).getTime()-Date.now()):0;
+const leftMs=(end?:string)=>{
+ if(!end)return 0;
+ const raw=String(end).trim();
+ const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(raw);
+ const ts=Date.parse(dateOnly?raw+'T00:00:00Z':raw);
+ return Number.isFinite(ts)?Math.max(0,ts-Date.now()):0;
+};
 const fmtLeft=(ms:number)=>{const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000);return `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`};
 const poolPrize=(rank:number,pool:number)=>{const base=rank===1?10000:rank===2?7000:rank===3?5000:rank===4?3500:rank===5?3000:(rank>=6&&rank<=10)?2000:(rank>=11&&rank<=20)?750:(rank>=21&&rank<=30)?400:0;return Math.round(base*(pool/50000)*100)/100};
 

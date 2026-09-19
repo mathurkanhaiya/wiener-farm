@@ -2,6 +2,8 @@ import {useEffect} from 'react';
 import {useI18n} from './i18n';
 import {EXTRA_PACKS} from './i18n-extra';
 import {POPUP_PACKS} from './i18n-popups';
+import {FULL_UI_PACKS} from './FullUiTranslator';
+import {V75_PACKS} from './i18n-v75';
 
 const exact:Record<string,string>={
  'TOTAL BALANCE':'home.totalBalance','Sessions':'home.sessions','Ads':'nav.ads','Referrals':'common.referrals',
@@ -54,6 +56,16 @@ function dynamicTranslate(original:string,tr:(key:string,fallback?:string)=>stri
  if((m=original.match(/^Ends\s+(.+)$/i)))return fill(tr('dynamic.ends',original),m[1]);
  if((m=original.match(/^Next ad in\s+(.+)$/i)))return fill(tr('dynamic.nextAd','Next ad in {value}'),m[1]);
  if((m=original.match(/^You could[’']ve earned\s+(.+?)\s+more WIENER\s+by visiting the advertiser\.?$/i)))return fill(tr('dynamic.couldEarn','You could have earned {value} more WIENER by visiting the advertiser.'),m[1]);
+ if((m=original.match(/^CLAIM DAY 7 \+ ⭐ · ([\d.,]+) WIENER$/i)))return `${tr('common.claim','Claim')} ${m[1]} WIENER · ⭐`;
+ if((m=original.match(/^CLAIM ([\d.,]+) WIENER$/i)))return `${tr('common.claim','Claim')} ${m[1]} WIENER`;
+ if((m=original.match(/^Week (\d+) · Day (\d+) claimed$/i)))return `#${m[1]} · ${fill(tr('dynamic.dayOf','Day {value} of 7'),m[2])} · ${tr('daily.claimedToday','Claimed')}`;
+ if((m=original.match(/^Week (\d+) · Day (\d+) of 7$/i)))return `#${m[1]} · ${fill(tr('dynamic.dayOf','Day {value} of 7'),m[2])}`;
+ if((m=original.match(/^Minimum withdrawal is ([\d.]+) TON$/i)))return `${tr('wallet.minimum','Minimum')} ${m[1]} TON`;
+ if((m=original.match(/^WATCH AD · (\d+\/\d+)$/i)))return `${tr('common.watch','Watch')} · ${m[1]}`;
+ if((m=original.match(/^AdsGram — (\d+) ads$/i)))return `AdsGram — ${m[1]} ${tr('nav.ads','Ads')}`;
+ if((m=original.match(/^Bonus Ads — (\d+) ads$/i)))return `${tr('nav.ads','Ads')} — ${m[1]}`;
+ if((m=original.match(/^(.+ WIENER · \d+\/\d+) today$/i)))return fill(tr('dynamic.adsToday','{value} today'),m[1]);
+ if((m=original.match(/^WATCH AD → \+1 SPIN \((\d+) left\)$/i)))return `${tr('common.watch','Watch')} → +1 SPIN (${m[1]})`;
  return null;
 }
 
@@ -62,7 +74,7 @@ export function LocalizedSurface(){
  useEffect(()=>{
   let stopped=false;
   const tr=(key:string,fallback?:string)=>POPUP_PACKS[lang]?.[key]||EXTRA_PACKS[lang]?.[key]||t(key,fallback);
-  const translate=(source:string)=>{if(lang==='en'||technicalOnly(source))return source;const key=exact[source];if(key)return tr(key,source);return dynamicTranslate(source,tr)||source};
+  const translate=(source:string)=>{if(lang==='en'||technicalOnly(source))return source;const clean=source.replace(/^[^\p{L}\p{N}@]+/u,'').replace(/[→✓×]+$/u,'').trim();const vpack=V75_PACKS[lang] as any,fpack=FULL_UI_PACKS[lang] as any;const ci=(obj:any)=>Object.entries(obj||{}).find(([k])=>k.toLocaleLowerCase()===clean.toLocaleLowerCase())?.[1] as string|undefined;const newest=vpack?.[source]||vpack?.[clean]||ci(vpack);if(newest)return newest;const direct=fpack?.[source]||fpack?.[clean]||ci(fpack);if(direct)return direct;const key=exact[source]||exact[clean]||Object.entries(exact).find(([k])=>k.toLocaleLowerCase()===clean.toLocaleLowerCase())?.[1];if(key)return tr(key,source);const dyn=dynamicTranslate(source,tr)||dynamicTranslate(clean,tr);if(dyn)return dyn;if(/(?:verification failed|request failed|could not load|something went wrong|SDK unavailable|Block ID is not configured|temporarily unavailable)/i.test(source))return tr('common.unavailable','Temporarily unavailable');if(/invite link copied/i.test(source))return tr('invite.copied','Invite link copied');if(/no (?:partner |sponsored )?tasks? (?:right now|here)/i.test(source))return tr('tasks.none','No tasks right now.');if(/account restricted/i.test(source))return tr('system.restricted','Account restricted');return source};
   const applyAttrs=(el:Element)=>{
    if(skip(el))return;
    const attrs=['placeholder','title','aria-label'] as const;
