@@ -1,6 +1,6 @@
-import React from 'react';
+import React, {lazy, Suspense} from 'react';
 import {createRoot} from 'react-dom/client';
-import App from './App';
+const App=lazy(()=>import('./App'));
 import GuestApp from './GuestApp';
 import {I18nProvider} from './i18n';
 import {LocalizedSurface} from './LocalizedSurface';
@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')!).render(
       <StabilityLayer>
         <LocalizedSurface/>
         <SpinNotificationLayer/>
-        {hasTelegramSession()?<App/>:<GuestApp/>}
+        <Suspense fallback={<div className="center-screen" role="status">Opening your farm…</div>}>{hasTelegramSession()?<App/>:<GuestApp/>}</Suspense>
       </StabilityLayer>
     </I18nProvider>
   </React.StrictMode>
