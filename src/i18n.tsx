@@ -77,6 +77,7 @@ const packs:Partial<Record<LangCode,Dict>>={
 };
 
 const STORAGE='wiener_language_v1';
+function hasCloudStorageSupport():boolean{try{const tw=(window as any).Telegram?.WebApp;return Boolean(tw&&typeof tw.isVersionAtLeast==='function'&&tw.isVersionAtLeast('6.9'))}catch{return false}}
 function getCookie(name:string):string|null{try{const match=document.cookie.match(new RegExp('(^| )'+name+'=([^;]+)'));return match?decodeURIComponent(match[2]):null}catch{return null}}
 function deviceLang():LangCode{try{const raw=(window.Telegram?.WebApp as any)?.initDataUnsafe?.user?.language_code||navigator.language||'en',v=String(raw).toLowerCase();if(v.startsWith('pt-br'))return'pt-BR';if(v.startsWith('zh-tw')||v.startsWith('zh-hk'))return'zh-TW';if(v.startsWith('zh'))return'zh-CN';if(v.startsWith('fil')||v.startsWith('tl'))return'fil';const short=v.split('-')[0] as LangCode;return LANGUAGES.some(x=>x.code===short)?short:'en'}catch{return'en'}}
 function initial():LangCode{try{const saved=(localStorage.getItem(STORAGE)||sessionStorage.getItem(STORAGE)||getCookie(STORAGE)) as LangCode|null;if(saved&&LANGUAGES.some(x=>x.code===saved))return saved}catch{}return deviceLang()}
@@ -89,11 +90,13 @@ export function I18nProvider({children}:{children:ReactNode}){
 
   useEffect(()=>{
     try{
-      (window.Telegram?.WebApp as any)?.CloudStorage?.getItem?.(STORAGE,(err:any,val:string)=>{
-        if(!err&&val&&LANGUAGES.some(x=>x.code===val)&&val!==lang){
-          setLangState(val as LangCode);
-        }
-      });
+      if(hasCloudStorageSupport()){
+        (window.Telegram?.WebApp as any)?.CloudStorage?.getItem?.(STORAGE,(err:any,val:string)=>{
+          if(!err&&val&&LANGUAGES.some(x=>x.code===val)&&val!==lang){
+            setLangState(val as LangCode);
+          }
+        });
+      }
     }catch{}
   },[]);
 
@@ -102,7 +105,11 @@ export function I18nProvider({children}:{children:ReactNode}){
     try{localStorage.setItem(STORAGE,x)}catch{}
     try{sessionStorage.setItem(STORAGE,x)}catch{}
     try{document.cookie=`${STORAGE}=${encodeURIComponent(x)};path=/;max-age=31536000;SameSite=Lax`}catch{}
-    try{(window.Telegram?.WebApp as any)?.CloudStorage?.setItem?.(STORAGE,x)}catch{}
+    try{
+      if(hasCloudStorageSupport()){
+        (window.Telegram?.WebApp as any)?.CloudStorage?.setItem?.(STORAGE,x);
+      }
+    }catch{}
     try{window.dispatchEvent(new CustomEvent('wiener_language_change',{detail:x}))}catch{}
   };
 
