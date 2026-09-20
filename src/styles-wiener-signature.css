@@ -107,22 +107,68 @@ input::placeholder{color:#6f625a!important}
 /* Home — Wiener Vault */
 .home-stack{gap:16px!important}
 .home-stack>.hero{
-  padding:22px 20px 18px!important;
+  padding:24px 20px 20px!important;
   background:
     radial-gradient(circle at 85% 5%,rgba(255,173,27,.18),transparent 28%),
     linear-gradient(145deg,#24150d,#17100d 58%,#120c0a)!important;
   border-color:rgba(255,143,20,.27)!important;
+  border-radius:22px!important;
 }
 .hero:after{
-  content:"WIENER VAULT";position:absolute;left:18px;top:15px;
-  font-size:9px;font-weight:1000;letter-spacing:2px;color:rgba(255,174,55,.58)
+  content:none!important;display:none!important;
 }
-.hero>.eyebrow{padding-top:15px!important}
-.hero.card>.hero-balance{margin:13px 0 2px!important}
+.hero>.eyebrow{
+  padding-top:0!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:2px!important;
+  color:rgba(255,255,255,.55)!important;
+}
+.hero.card>.hero-balance{
+  margin:12px 0 4px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:10px!important;
+}
 .hero.card>.hero-balance>strong{
   color:#fff7ed!important;
-  font-size:clamp(45px,12vw,62px)!important;
-  text-shadow:0 12px 38px rgba(255,114,0,.08)
+  font-size:clamp(40px,11vw,56px)!important;
+  text-shadow:0 12px 38px rgba(255,114,0,.08);
+  font-weight:900!important;
+  line-height:1!important;
+  letter-spacing:-0.03em!important;
+}
+.hero.card>.hero-balance>.coin{
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  border-radius:50%!important;
+  background:linear-gradient(135deg,#ffe86e 0%,#f59e0b 100%)!important;
+  color:#451a03!important;
+  font-size:18px!important;
+  font-weight:900!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  box-shadow:0 0 16px rgba(245,158,11,.35),inset 0 1px 1px #fff!important;
+  border:1.5px solid rgba(255,255,255,.45)!important;
+}
+.hero.card>.hero-balance>.currency-unit,
+.hero.card>.hero-balance>b{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:28px!important;
+  height:28px!important;
+  padding:0 8px!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  color:#ffd85a!important;
+  background:rgba(255,216,90,.12)!important;
+  border:1px solid rgba(255,216,90,.25)!important;
+  border-radius:8px!important;
+  letter-spacing:0!important;
+  line-height:1!important;
 }
 .hero .muted{font-size:13px!important}
 .hero .stats{

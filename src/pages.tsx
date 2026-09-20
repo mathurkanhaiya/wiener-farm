@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {api,cleanUserText,date,money,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {DailyBioClaimGate} from './DailyBioClaimGate';
+import {useI18n} from './i18n';
 
 const today=()=>new Date().toISOString().slice(0,10);
 function nextDaily(data:Snapshot){
@@ -21,30 +22,62 @@ function nextDaily(data:Snapshot){
 function farmInfo(data:Snapshot){const s=data.settings,u:any=data.user,day=today(),fieldDay=String(u.farm_claims_day||'').slice(0,10),fieldCount=fieldDay===day?Number(u.farm_claims_today||0):0,ledgerCount=(Array.isArray(data.transactions)?data.transactions:[]).filter((x:any)=>{const d=String(x.created_at||'').slice(0,10);if(d!==day||Number(x.amount||0)<=0)return false;const kind=String(x.kind||'').toLowerCase(),desc=String(x.description||'').trim().toLowerCase();return ['farm_claim','farm_reward','farming_reward'].includes(kind)||kind.startsWith('farm_')&&kind.includes('reward')||['farming reward','farm reward','wiener farming reward'].includes(desc)}).length,count=Math.min(5,Math.max(0,fieldCount,ledgerCount)),limit=5,started=u.farm_started_at?new Date(u.farm_started_at).getTime():0,next=started+Number(s.farm_claim_cooldown_seconds||0)*1000;return {count,limit,started,next,ready:!!started&&Date.now()>=next,limitReached:count>=limit}}
 
 export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
+  const {t}=useI18n();
   const s=data.settings,u:any=data.user,[promo,setPromo]=useState(''),[farmBusy,setFarmBusy]=useState(false),[clock,setClock]=useState(Date.now()),f=farmInfo(data),usd=Number(u.balance)/Number(s.token_per_usdt||10000);
   useEffect(()=>{if(!f.started||f.ready)return;const ms=Math.max(250,Math.min(1000,f.next-Date.now()+50));const x=window.setTimeout(()=>setClock(Date.now()),ms);return()=>window.clearTimeout(x)},[f.started,f.ready,f.next,clock]);
   const startFarm=async()=>{if(farmBusy||f.limitReached||f.started)return;try{setFarmBusy(true);await run('farm_start',{},'🌱 Farm started')}finally{setFarmBusy(false)}};
   return <>
-    <section className="hero card glow"><div className="eyebrow">TOTAL BALANCE</div><div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong><b>WIENER</b></div><div className="muted">≈ {money(usd,4)} USDT</div><div className="stats"><div><b>{u.farm_sessions}</b><span>Sessions</span></div><div><b>{u.total_ads}</b><span>Ads</span></div><div><b>{u.referrals_count}</b><span>Referrals</span></div></div><div className="tiny center" style={{marginBottom:8}}>Today's farms · {f.count}/{f.limit}</div>{f.limitReached?<button className="primary" disabled>DAILY FARM LIMIT REACHED</button>:!f.started?<button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}><AnimatedIcon name="bolt" active/>{farmBusy?'STARTING…':'START FARM'}</button>:f.ready?<button className="primary button-with-icon" onClick={()=>run('farm_claim')}><AnimatedIcon name="gift" active/>CLAIM {s.farm_claim_reward} WIENER</button>:<><button className="primary button-with-icon" disabled><AnimatedIcon name="bolt" active/>WIENER IS GROWING</button><Countdown to={f.next}/></>}</section>
-    <div className="quick-grid">
-      <div className="quick" onClick={()=>setTab('daily')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="gift" active/></i>
-        <b>Daily Bonus</b>
-        <span>Claim daily</span>
+    <section className="hero card glow">
+      <div className="eyebrow">{t('home.totalBalance','TOTAL BALANCE')}</div>
+      <div className="hero-balance">
+        <span className="coin">W</span>
+        <strong>{money(u.balance)}</strong>
+        <b className="currency-unit">W</b>
       </div>
-      <div className="quick" onClick={()=>setTab('tasks')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="tasks" active/></i>
-        <b>Tasks</b>
-        <span>Earn rewards</span>
+      <div className="muted">≈ {money(usd,4)} USDT</div>
+      <div className="stats">
+        <div><b>{u.farm_sessions}</b><span>{t('home.sessions','Sessions')}</span></div>
+        <div><b>{u.total_ads}</b><span>{t('home.ads','Ads')}</span></div>
+        <div><b>{u.referrals_count}</b><span>{t('home.referrals','Referrals')}</span></div>
       </div>
-      <div className="quick" onClick={()=>setTab('invite')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="invite" active/></i>
-        <b>Friends</b>
-        <span>Invite & earn</span>
+      <div className="tiny center" style={{marginBottom:8}}>
+        {t('home.todayFarms',"Today's farms")} · {f.count}/{f.limit}
       </div>
-    </div>
+      {f.limitReached ? (
+        <button className="primary" disabled>{t('home.dailyLimit','DAILY FARM LIMIT REACHED')}</button>
+      ) : !f.started ? (
+        <button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}>
+          <AnimatedIcon name="bolt" active/>
+          {farmBusy ? t('home.starting','STARTING…') : t('home.startFarm','START FARM')}
+        </button>
+      ) : f.ready ? (
+        <button className="primary button-with-icon" onClick={()=>run('farm_claim')}>
+          <AnimatedIcon name="gift" active/>
+          {t('common.claim','CLAIM')} +{s.farm_claim_reward} W
+        </button>
+      ) : (
+        <>
+          <button className="primary button-with-icon" disabled>
+            <AnimatedIcon name="bolt" active/>
+            {t('home.growing','FARMING IN PROGRESS')}
+          </button>
+          <Countdown to={f.next}/>
+        </>
+      )}
+    </section>
     <DailyCard data={data} run={run}/>
-    <section className="card promo"><div className="section-head"><div className="square mint"><AnimatedIcon name="ticket" active/></div><div><h3>Promo Code</h3><p>Redeem a code for WIENER</p></div></div><div className="promo-row"><input placeholder="ENTER CODE" value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())}/><button className="primary small" disabled={!promo.trim()} onClick={()=>promo.trim()&&run('promo_claim',{code:promo.trim()},'Promo claimed')}>APPLY</button></div></section>
+    <section className="card promo">
+      <div className="section-head">
+        <div className="square mint"><AnimatedIcon name="ticket" active/></div>
+        <div><h3>{t('promo.title','Promo Code')}</h3><p>{t('promo.subtitle','Redeem a code for rewards')}</p></div>
+      </div>
+      <div className="promo-row">
+        <input placeholder={t('promo.enter','ENTER CODE')} value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())}/>
+        <button className="primary small" disabled={!promo.trim()} onClick={()=>promo.trim()&&run('promo_claim',{code:promo.trim()},'Promo claimed')}>
+          {t('common.apply','APPLY')}
+        </button>
+      </div>
+    </section>
   </>
 }
 function Countdown({to}:{to:number}){const [n,setN]=useState(Math.max(0,to-Date.now()));useEffect(()=>{setN(Math.max(0,to-Date.now()));const x=window.setInterval(()=>setN(Math.max(0,to-Date.now())),1000);return()=>window.clearInterval(x)},[to]);const sec=Math.ceil(n/1000),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return <div className="countdown">{n<=0?'Ready now':`Ready in ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}</div>}
