@@ -26,9 +26,25 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
   const startFarm=async()=>{if(farmBusy||f.limitReached||f.started)return;try{setFarmBusy(true);await run('farm_start',{},'🌱 Farm started')}finally{setFarmBusy(false)}};
   return <>
     <section className="hero card glow"><div className="eyebrow">TOTAL BALANCE</div><div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong><b>WIENER</b></div><div className="muted">≈ {money(usd,4)} USDT</div><div className="stats"><div><b>{u.farm_sessions}</b><span>Sessions</span></div><div><b>{u.total_ads}</b><span>Ads</span></div><div><b>{u.referrals_count}</b><span>Referrals</span></div></div><div className="tiny center" style={{marginBottom:8}}>Today's farms · {f.count}/{f.limit}</div>{f.limitReached?<button className="primary" disabled>DAILY FARM LIMIT REACHED</button>:!f.started?<button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}><AnimatedIcon name="bolt" active/>{farmBusy?'STARTING…':'START FARM'}</button>:f.ready?<button className="primary button-with-icon" onClick={()=>run('farm_claim')}><AnimatedIcon name="gift" active/>CLAIM {s.farm_claim_reward} WIENER</button>:<><button className="primary button-with-icon" disabled><AnimatedIcon name="bolt" active/>WIENER IS GROWING</button><Countdown to={f.next}/></>}</section>
+    <div className="quick-grid">
+      <div className="quick" onClick={()=>setTab('daily')} role="button" tabIndex={0}>
+        <i className="icon-wrap"><AnimatedIcon name="gift" active/></i>
+        <b>Daily Bonus</b>
+        <span>Claim daily</span>
+      </div>
+      <div className="quick" onClick={()=>setTab('tasks')} role="button" tabIndex={0}>
+        <i className="icon-wrap"><AnimatedIcon name="tasks" active/></i>
+        <b>Tasks</b>
+        <span>Earn rewards</span>
+      </div>
+      <div className="quick" onClick={()=>setTab('invite')} role="button" tabIndex={0}>
+        <i className="icon-wrap"><AnimatedIcon name="invite" active/></i>
+        <b>Friends</b>
+        <span>Invite & earn</span>
+      </div>
+    </div>
     <DailyCard data={data} run={run}/>
     <section className="card promo"><div className="section-head"><div className="square mint"><AnimatedIcon name="ticket" active/></div><div><h3>Promo Code</h3><p>Redeem a code for WIENER</p></div></div><div className="promo-row"><input placeholder="ENTER CODE" value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())}/><button className="primary small" disabled={!promo.trim()} onClick={()=>promo.trim()&&run('promo_claim',{code:promo.trim()},'Promo claimed')}>APPLY</button></div></section>
-    <div className="quick-grid"><button className="quick" onClick={()=>setTab('tasks')}><i className="icon-wrap"><AnimatedIcon name="tasks" active/></i><b>Tasks</b><span>View all</span></button><button className="quick" onClick={()=>setTab('invite')}><i className="icon-wrap"><AnimatedIcon name="invite" active/></i><b>Invite</b><span>+{s.referral_active_reward} qualified</span></button><button className="quick" onClick={()=>setTab('ads')}><i className="icon-wrap"><AnimatedIcon name="ads" active/></i><b>Watch Ads</b><span>+{s.ad_reward} WIENER</span></button></div>
   </>
 }
 function Countdown({to}:{to:number}){const [n,setN]=useState(Math.max(0,to-Date.now()));useEffect(()=>{setN(Math.max(0,to-Date.now()));const x=window.setInterval(()=>setN(Math.max(0,to-Date.now())),1000);return()=>window.clearInterval(x)},[to]);const sec=Math.ceil(n/1000),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return <div className="countdown">{n<=0?'Ready now':`Ready in ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}</div>}

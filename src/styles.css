@@ -1,77 +1,12 @@
-@import './styles-core.css';
-@import './styles-admin.css';
-@import './styles-admin-v2.css';
-@import './styles-admin-v2-fix.css';
-@import './styles-admin-hub.css';
-@import './styles-mobile.css';
-@import './styles-icons.css';
-@import './styles-liquid.css';
-@import './styles-polish.css';
-@import './styles-exclusive.css';
-@import './styles-premium.css';
-@import './styles-mandatory.css';
-@import './styles-withdraw-v2.css';
-@import './styles-wallet-polish.css';
-@import './styles-performance.css';
-@import './styles-language.css';
-@import './styles-wiener-signature.css';
+/* Wiener Farm Styles */
 
 /* Tasks tab: hide the top overall task progress card only. */
 body:has(.task-tabs) .progress-card{display:none!important;}
 
-/* Keep the admin shortcut as a small floating circle. Later theme layers must not
-   stretch it into an extra navigation row or consume a sixth nav column. */
-.bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))!important;}
-.bottom-nav>.admin-fab{
-  position:absolute!important;
-  left:auto!important;
-  right:8px!important;
-  top:-48px!important;
-  bottom:auto!important;
-  width:42px!important;
-  min-width:42px!important;
-  max-width:42px!important;
-  height:42px!important;
-  min-height:42px!important;
-  padding:0!important;
-  margin:0!important;
-  display:grid!important;
-  place-items:center!important;
-  flex:none!important;
-  border-radius:50%!important;
-  z-index:3!important;
-}
-@media(max-width:760px){
-  .bottom-nav>.admin-fab{
-    right:6px!important;
-    top:-45px!important;
-    width:38px!important;
-    min-width:38px!important;
-    max-width:38px!important;
-    height:38px!important;
-    min-height:38px!important;
-  }
-}
-
-/* V21 UI stability/polish: keep the balance visual quiet and perfectly centered. */
+/* Hero Balance centering and responsiveness */
 .hero.card>.hero-balance{
   width:100%;
-  display:grid!important;
-  place-items:center!important;
-  margin:18px 0 6px!important;
-  gap:0!important;
-}
-.hero.card>.hero-balance>.coin,
-.hero.card>.hero-balance>b{display:none!important;}
-.hero.card>.hero-balance>strong{
-  display:block;
-  width:100%;
-  text-align:center;
-  font-size:clamp(44px,12vw,64px)!important;
-  line-height:1.04!important;
-  letter-spacing:-.045em;
-  font-variant-numeric:tabular-nums;
-  overflow-wrap:anywhere;
+  margin:14px 0 6px!important;
 }
 
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
