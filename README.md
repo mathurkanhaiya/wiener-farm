@@ -22,3 +22,19 @@ All balance-changing operations are server-side. Public database tables have RLS
 
 ## Required private secret
 Store the Telegram bot token as `TELEGRAM_BOT_TOKEN` for the `wiener-api` Edge Function. It is required for Telegram task membership verification and bot broadcasts. Never commit the bot token, service-role key, AdsGram callback secret or owner bootstrap code to GitHub.
+
+## Local frontend development
+
+Run `npm install`, then `npm run dev`. Vite listens on all interfaces and
+accepts Arena preview hosts. Browser API calls stay same-origin: Vite forwards
+`/functions/v1` and `/api/host` to the configured VPS and other `/api` calls to
+the deployed Vercel app (including the games feed).
+
+**These proxies use live services, not a sandbox.** Use a test account and avoid
+real reward, withdrawal, or admin mutations while developing. Signed Telegram
+features still require a valid Telegram Mini App session; ordinary browsers
+show guest mode.
+
+Validation: `npm run typecheck`, `npm run build`, and
+`node --test tests/*.test.mjs`. The existing tests cover referral verification;
+they do not replace Telegram end-to-end or browser accessibility testing.
