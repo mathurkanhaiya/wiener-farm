@@ -1,0 +1,51 @@
+/* Mobile WebView performance pass: keep the liquid-glass look without expensive full-screen GPU work. */
+html,body,#root{min-height:100%;}
+body{background-attachment:scroll!important;overscroll-behavior-y:none;}
+
+.card{
+  backdrop-filter:blur(12px) saturate(125%)!important;
+  -webkit-backdrop-filter:blur(12px) saturate(125%)!important;
+  contain:paint;
+}
+.quick,.reward-grid>div{
+  backdrop-filter:blur(8px)!important;
+  -webkit-backdrop-filter:blur(8px)!important;
+  contain:paint;
+}
+.bottom-nav{
+  backdrop-filter:blur(16px) saturate(130%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(130%)!important;
+}
+.toast{
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+.tg-lottie,.aicon{contain:layout paint style;}
+.task,.tx,.history-row,.withdraw-history-row{content-visibility:auto;contain-intrinsic-size:72px;}
+
+/* Avoid animating properties that trigger layout/paint on every frame. */
+button,.card,.quick,.task,.bottom-nav>button{transition-property:transform,opacity,background-color,border-color,color!important;transition-duration:180ms!important;}
+
+@media(max-width:760px){
+  /* Keep nav centered in the Telegram viewport. translateZ(0) previously replaced translateX(-50%) and pushed half the nav off-screen. */
+  .bottom-nav{
+    left:50%!important;
+    right:auto!important;
+    width:calc(100% - 16px)!important;
+    max-width:504px!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    transform:translateX(-50%)!important;
+    overflow:visible!important;
+  }
+  .bottom-nav>button{min-width:0!important;width:100%!important;}
+}
+
+@media(max-width:520px){
+  .card{backdrop-filter:blur(9px) saturate(115%)!important;-webkit-backdrop-filter:blur(9px) saturate(115%)!important;}
+  .quick,.reward-grid>div{backdrop-filter:blur(6px)!important;-webkit-backdrop-filter:blur(6px)!important;}
+  .bottom-nav{backdrop-filter:blur(12px) saturate(120%)!important;-webkit-backdrop-filter:blur(12px) saturate(120%)!important;}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}

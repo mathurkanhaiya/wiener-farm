@@ -1,36 +1,32 @@
 import {useEffect} from 'react';
 import {useI18n} from './i18n';
-import {FULL_UI_PACKS} from './FullUiTranslator';
 import {EXTRA_PACKS} from './i18n-extra';
 import {POPUP_PACKS} from './i18n-popups';
+import {FULL_UI_PACKS} from './FullUiTranslator';
 import {V75_PACKS} from './i18n-v75';
 
 const exact:Record<string,string>={
- 'TOTAL BALANCE':'home.totalBalance','Total Balance':'home.totalBalance','Sessions':'home.sessions','Ads':'nav.ads','Referrals':'common.referrals',
- 'DAILY FARM LIMIT REACHED':'home.dailyLimit','Daily farm limit reached':'home.dailyLimit','START FARM':'home.startFarm','Start Farm':'home.startFarm','STARTING…':'home.starting','Starting…':'home.starting','WIENER IS GROWING':'home.growing','FARMING IN PROGRESS':'home.growing','Your next WIENER is growing':'home.growing',
- 'Tasks':'nav.tasks','View all':'home.viewAll','Invite':'nav.invite','Watch Ads':'home.watchAds','Home':'nav.home','Wallet':'nav.wallet','PLAY':'nav.play','Play':'nav.play',
- 'Daily Bonus':'daily.title','DAILY WIENER':'daily.title','CLAIMED TODAY':'daily.claimedToday','Claimed today':'daily.claimedToday','Promo Code':'promo.title','Redeem a code for WIENER':'promo.subtitle','Watch one rewarded ad to claim':'promo.subtitle',
- 'SHOWING AD…':'promo.showing','CLAIM AGAIN':'promo.claimAgain','Promo Claimed':'promo.claimed','GOT IT':'promo.gotIt','Got it':'promo.gotIt',
+ 'TOTAL BALANCE':'home.totalBalance','Sessions':'home.sessions','Ads':'nav.ads','Referrals':'common.referrals',
+ 'DAILY FARM LIMIT REACHED':'home.dailyLimit','START FARM':'home.startFarm','STARTING…':'home.starting','WIENER IS GROWING':'home.growing',
+ 'Tasks':'common.tasks','View all':'home.viewAll','Invite':'nav.invite','Watch Ads':'home.watchAds',
+ 'Daily Bonus':'daily.title','CLAIMED TODAY':'daily.claimedToday','Promo Code':'promo.title','Watch one rewarded ad to claim':'promo.subtitle',
+ 'SHOWING AD…':'promo.showing','CLAIM AGAIN':'promo.claimAgain','Promo Claimed':'promo.claimed','GOT IT':'promo.gotIt',
  'Complete the rewarded ad, then your promo reward will be credited.':'promo.complete',
- 'Your Progress':'tasks.progress','Official':'tasks.official','Exclusive':'tasks.exclusive','Partner':'tasks.partner','Daily':'tasks.daily','DAILY':'tasks.daily','DONE':'common.done','Done':'common.done','JOIN':'common.join','Join':'common.join',
- 'Invite Friends':'invite.title','INVITED':'invite.invited','QUALIFIED':'common.qualified','EARNED':'invite.earned','YOUR INVITE LINK':'invite.link','SHARE INVITE':'invite.share','Invited':'invite.invited','Qualified':'common.qualified','Per qualified':'invite.perQualified','Recent referrals':'invite.recent','Invite link copied':'invite.copied',
+ 'Your Progress':'tasks.progress','Official':'tasks.official','Exclusive':'tasks.exclusive','Partner':'tasks.partner','DAILY':'tasks.daily','DONE':'common.done','JOIN':'common.join',
+ 'Invite Friends':'invite.title','INVITED':'invite.invited','QUALIFIED':'common.qualified','EARNED':'invite.earned','YOUR INVITE LINK':'invite.link','SHARE INVITE':'invite.share','Invited':'invite.invited','Qualified':'common.qualified','Per qualified':'invite.perQualified','Recent referrals':'invite.recent',
  'WIENER PROFILE':'profile.title','Balance':'common.balance','Streak':'profile.streak','Best Streak':'profile.bestStreak','Rank':'common.rank','Total Earned':'common.totalEarned','OPEN WALLET':'profile.openWallet',
- 'AVAILABLE TO WITHDRAW':'wallet.available','AVAILABLE BALANCE':'wallet.available','Available Balance':'wallet.available','MAX WITHDRAWABLE':'wallet.withdrawable','Max withdrawable':'wallet.withdrawable','Select withdrawal method':'wallet.selectMethod','Choose the exact network. WIENER never changes it automatically.':'wallet.selectHint',
- 'Withdraw':'nav.wallet','Amount':'common.amount','AMOUNT':'common.amount','Fee':'common.fee','Network fee':'common.fee','You receive':'wallet.youReceive','You Receive':'wallet.youReceive','WIENER used':'wallet.wienerUsed','ENTER WITHDRAWAL AMOUNT':'wallet.enterAmount','CONTINUE':'common.continue',
- 'YOUR WALLET ADDRESS':'wallet.walletAddress','WALLET ADDRESS':'wallet.walletAddress','Wallet address':'wallet.walletAddress','REQUEST WITHDRAWAL':'wallet.request','REVIEW WITHDRAWAL':'common.review','Review Withdrawal':'wallet.reviewTitle','CONFIRM WITHDRAWAL':'wallet.confirm','CREATING…':'wallet.creating',
- 'Withdrawal History':'wallet.history','TRANSACTION HISTORY':'wallet.history','Tap any row for full details.':'wallet.historyHint','No withdrawals yet.':'wallet.noHistory','No transactions yet.':'wallet.noHistory','Withdrawal Details':'wallet.details','PENDING':'wallet.pending','PAID':'wallet.paid','REJECTED':'wallet.rejected','Pending':'wallet.pending','Paid':'wallet.paid','Rejected':'wallet.rejected',
+ 'AVAILABLE BALANCE':'wallet.available','MAX WITHDRAWABLE':'wallet.withdrawable','Select withdrawal method':'wallet.selectMethod','Choose the exact network. WIENER never changes it automatically.':'wallet.selectHint',
+ 'Amount':'common.amount','Fee':'common.fee','You receive':'wallet.youReceive','You Receive':'wallet.youReceive','WIENER used':'wallet.wienerUsed','ENTER WITHDRAWAL AMOUNT':'wallet.enterAmount','CONTINUE':'common.continue',
+ 'WALLET ADDRESS':'wallet.walletAddress','REVIEW WITHDRAWAL':'common.review','Review Withdrawal':'wallet.reviewTitle','CONFIRM WITHDRAWAL':'wallet.confirm','CREATING…':'wallet.creating',
+ 'Withdrawal History':'wallet.history','Tap any row for full details.':'wallet.historyHint','No withdrawals yet.':'wallet.noHistory','Withdrawal Details':'wallet.details','PENDING':'wallet.pending','PAID':'wallet.paid','REJECTED':'wallet.rejected',
  'You already have a pending withdrawal.':'wallet.pendingExisting','Insufficient WIENER balance.':'wallet.insufficient','OPEN BLOCKCHAIN EXPLORER':'wallet.openExplorer',
- 'WAIT':'common.wait','Wait':'common.wait','WATCH':'common.watch','Watch':'common.watch','CLAIM':'common.claim','Claim':'common.claim','APPLY':'common.apply','Apply':'common.apply','CHECK':'common.check','Check':'common.check','START':'common.start','Start':'common.start','OPEN':'common.open','Open':'common.open','Back':'common.back','Network':'common.network','Status':'common.status','Loading…':'common.loading',
+ 'WAIT':'common.wait','WATCH':'common.watch','CLAIM':'common.claim','APPLY':'common.apply','Back':'common.back','Network':'common.network','Status':'common.status','Loading…':'common.loading',
  'Account Blocked':'system.blocked','CONTACT SUPPORT':'system.contactSupport','Account restricted':'system.restricted','Unable to open':'system.unable','Maintenance':'system.maintenance',
  'Loading your rewards':'system.loadingRewards','Secure Telegram session':'system.secure','OPEN WIENER':'system.openTelegram',
- 'ADS TASK':'ads.taskTitle','SPIN & EARN':'ads.spinTitle','Win WIENER & TON':'ads.spinSubtitle','AVAILABLE SPINS':'ads.spinsAvail','SPIN TON BALANCE':'ads.spinTon','SPIN NOW':'ads.spinNow','NO SPINS LEFT':'ads.noSpins',
- 'spots left':'tasks.spotsLeft','Open task':'tasks.openTask','Waiting for verification':'tasks.waitingVerify','Reward ready':'tasks.rewardReady','Ready to claim':'tasks.readyClaim','Return after 15 sec · reward ready':'tasks.return15Sec',
- 'Loyalty Chest':'daily.chest','CHECKING BIO…':'daily.checkingBio','Checking bio…':'daily.checkingBio',
- 'Choose language':'language.choose','Search language':'language.search','Current language':'language.current','Language':'language.title',
  'One Last Step':'mandatory.lastStep','Join the required communities to unlock WIENER.':'mandatory.copy','CHECKING…':'mandatory.checking','CHECK & CONTINUE':'mandatory.continue','JOINED':'mandatory.joined','Join the missing community, then return and continue.':'mandatory.hint','Community group':'mandatory.group','Official channel':'mandatory.channel','Required':'mandatory.required','Bot cannot verify this chat yet':'mandatory.verifyError',
  'OPENING CLAIM AD':'farm.openingAd','LOADING REWARD…':'farm.loadingReward','Please wait. Don’t tap claim again.':'farm.pleaseWait','PARTIAL FARM REWARD':'farm.partial','FARM REWARD UNLOCKED':'farm.unlocked','CLAIM AD':'farm.claimAd','INTERACTION':'farm.interaction','CLAIMED ✓':'farm.claimed','CLAIM NOT COMPLETED':'farm.notCompleted','TRY AGAIN':'farm.tryAgain','Cancel':'farm.cancel',
  'Temporarily unavailable':'common.unavailable','Available':'wallet.available','Minimum withdrawal':'wallet.minimum','Withdrawal fee':'common.fee','Selected network:':'wallet.selectedNetwork','Requested Amount':'wallet.requestedAmount','Amount Received':'wallet.amountReceived','Requested':'wallet.requested','Processed':'wallet.processed','TX Hash':'wallet.txHash',
- 'No rankings yet.':'leaderboard.none','Your Rank':'leaderboard.yourRank','Total earned':'common.totalEarned','Loading secure payout controls…':'wallet.loadingControls',
+ 'No rankings yet.':'leaderboard.none','Your Rank':'leaderboard.yourRank','Total earned':'common.totalEarned','Daily':'tasks.daily','Loading secure payout controls…':'wallet.loadingControls',
  'FULL REWARD UNLOCKED':'ad.full','PARTIAL REWARD':'ad.partial','Nice! You visited the advertiser and earned the full reward.':'ad.fullText','Keep doing this to earn more every ad.':'ad.tipFull','Visit the advertiser during the ad to unlock the full reward next time.':'ad.tipPartial','AD SHOWN':'ad.shown',
  '💡 TIP':'promo.tip','more WIENER from ads':'promo.moreAds','Visit / Play / Open':'promo.tapVisit',
  'Unable to load ad progress':'error.loadAds','Daily ad limit reached':'error.dailyAdLimit','Ad was not completed':'error.adNotCompleted','Reward could not be credited':'error.rewardFailed',
@@ -43,35 +39,33 @@ type AttrState={source:string;output:string};
 const textStates=new WeakMap<Text,TextState>();
 const attrStates=new WeakMap<Element,Record<string,AttrState>>();
 const skip=(el:Element|null)=>!el||!!el.closest('script,style,code,pre,[data-no-i18n],.withdraw-wallet-code,.withdraw-tx,[class*="admin-"]');
-const technicalOnly=(s:string)=>/^(?:[\s+≈·,:./#()\-–—✓×]*|\d[\d\s.,:%/+\-]*|(?:WIENER|W|USDT|TON|Polygon|BEP20|AdsGram|Binance UID)(?:\s|$)|0x[a-fA-F0-9]{8,}|[EUUk0][Qq][A-Za-z0-9_-]{20,}|@[A-Za-z0-9_]{3,}|https?:\/\/\S+)$/i.test(s.trim());
+const technicalOnly=(s:string)=>/^(?:[\s+≈·,:./#()\-–—✓×]*|\d[\d\s.,:%/+\-]*|(?:WIENER|USDT|TON|Polygon|BEP20|AdsGram|Binance UID)(?:\s|$)|0x[a-fA-F0-9]{8,}|[EUUk0][Qq][A-Za-z0-9_-]{20,}|@[A-Za-z0-9_]{3,}|https?:\/\/\S+)$/i.test(s.trim());
 const fill=(template:string,value:string)=>template.replaceAll('{value}',value);
 
 function dynamicTranslate(original:string,tr:(key:string,fallback?:string)=>string){
  let m:RegExpMatchArray|null;
- if((m=original.match(/^Ready in\s+(.+)$/i)))return fill(tr('dynamic.readyIn','Ready in {value}'),m[1]);
- if((m=original.match(/^Today's farms\s*·\s*(.+)$/i)))return fill(tr('dynamic.todayFarms',"Today's farms · {value}"),m[1]);
- if((m=original.match(/^Minimum is\s+(.+)\.$/i)))return fill(tr('dynamic.minimumIs','Minimum is {value}.'),m[1]);
- if((m=original.match(/^Next withdrawal available in\s+(.+)$/i)))return fill(tr('dynamic.nextWithdrawal','Next withdrawal available in {value}'),m[1]);
- if((m=original.match(/^(\d+)\s+current tasks completed$/i)))return fill(tr('dynamic.tasksCompleted','{value} current tasks completed'),m[1]);
- if((m=original.match(/^Streak\s*·\s*Day\s+(.+)\s+of\s+7$/i)))return fill(tr('dynamic.dayOf','Day {value} of 7'),m[1]);
- if((m=original.match(/^Best streak:\s*(\d+)\s+days\.?/i)))return fill(tr('dynamic.bestStreak','Best streak: {value} days.'),m[1]);
- if((m=original.match(/^(.+)\s+today$/i))&&!/withdraw|farm|claimed/i.test(original))return fill(tr('dynamic.adsToday','{value} today'),m[1]);
- if((m=original.match(/^(.+)\s+each(?:\s*·.*)?$/i)))return fill(tr('dynamic.each','{value} each'),m[1]);
- if((m=original.match(/^Ends\s+(.+)$/i)))return fill(tr('dynamic.ends','Ends {value}'),m[1]);
+ if((m=original.match(/^Ready in\s+(.+)$/i)))return fill(tr('dynamic.readyIn',original),m[1]);
+ if((m=original.match(/^Today's farms\s*·\s*(.+)$/i)))return fill(tr('dynamic.todayFarms',original),m[1]);
+ if((m=original.match(/^Minimum is\s+(.+)\.$/i)))return fill(tr('dynamic.minimumIs',original),m[1]);
+ if((m=original.match(/^Next withdrawal available in\s+(.+)$/i)))return fill(tr('dynamic.nextWithdrawal',original),m[1]);
+ if((m=original.match(/^(\d+)\s+current tasks completed$/i)))return fill(tr('dynamic.tasksCompleted',original),m[1]);
+ if((m=original.match(/^Streak\s*·\s*Day\s+(.+)\s+of\s+7$/i)))return fill(tr('dynamic.dayOf',original),m[1]);
+ if((m=original.match(/^Best streak:\s*(\d+)\s+days\.?/i)))return fill(tr('dynamic.bestStreak',original),m[1]);
+ if((m=original.match(/^(.+)\s+today$/i))&&!/withdraw|farm|claimed/i.test(original))return fill(tr('dynamic.adsToday',original),m[1]);
+ if((m=original.match(/^(.+)\s+each(?:\s*·.*)?$/i)))return fill(tr('dynamic.each',original),m[1]);
+ if((m=original.match(/^Ends\s+(.+)$/i)))return fill(tr('dynamic.ends',original),m[1]);
  if((m=original.match(/^Next ad in\s+(.+)$/i)))return fill(tr('dynamic.nextAd','Next ad in {value}'),m[1]);
  if((m=original.match(/^You could[’']ve earned\s+(.+?)\s+more WIENER\s+by visiting the advertiser\.?$/i)))return fill(tr('dynamic.couldEarn','You could have earned {value} more WIENER by visiting the advertiser.'),m[1]);
- if((m=original.match(/^CLAIM DAY 7 \+ ⭐ · ([\d.,]+)\s*(?:WIENER|W)$/i)))return `${tr('common.claim','Claim')} ${m[1]} W · ⭐`;
- if((m=original.match(/^CLAIM ([\d.,]+)\s*(?:WIENER|W)$/i)))return `${tr('common.claim','Claim')} ${m[1]} W`;
+ if((m=original.match(/^CLAIM DAY 7 \+ ⭐ · ([\d.,]+) WIENER$/i)))return `${tr('common.claim','Claim')} ${m[1]} WIENER · ⭐`;
+ if((m=original.match(/^CLAIM ([\d.,]+) WIENER$/i)))return `${tr('common.claim','Claim')} ${m[1]} WIENER`;
  if((m=original.match(/^Week (\d+) · Day (\d+) claimed$/i)))return `#${m[1]} · ${fill(tr('dynamic.dayOf','Day {value} of 7'),m[2])} · ${tr('daily.claimedToday','Claimed')}`;
  if((m=original.match(/^Week (\d+) · Day (\d+) of 7$/i)))return `#${m[1]} · ${fill(tr('dynamic.dayOf','Day {value} of 7'),m[2])}`;
  if((m=original.match(/^Minimum withdrawal is ([\d.]+) TON$/i)))return `${tr('wallet.minimum','Minimum')} ${m[1]} TON`;
  if((m=original.match(/^WATCH AD · (\d+\/\d+)$/i)))return `${tr('common.watch','Watch')} · ${m[1]}`;
  if((m=original.match(/^AdsGram — (\d+) ads$/i)))return `AdsGram — ${m[1]} ${tr('nav.ads','Ads')}`;
  if((m=original.match(/^Bonus Ads — (\d+) ads$/i)))return `${tr('nav.ads','Ads')} — ${m[1]}`;
- if((m=original.match(/^(.+ (?:WIENER|W) · \d+\/\d+) today$/i)))return fill(tr('dynamic.adsToday','{value} today'),m[1]);
+ if((m=original.match(/^(.+ WIENER · \d+\/\d+) today$/i)))return fill(tr('dynamic.adsToday','{value} today'),m[1]);
  if((m=original.match(/^WATCH AD → \+1 SPIN \((\d+) left\)$/i)))return `${tr('common.watch','Watch')} → +1 SPIN (${m[1]})`;
- if((m=original.match(/^(\d+)\s+spots left$/i)))return `${m[1]} ${tr('tasks.spotsLeft','spots left')}`;
- if((m=original.match(/^🔒 CLAIMED · NEXT IN\s+(.+)$/i)))return `🔒 ${tr('daily.claimedToday','Claimed')} · ${m[1]}`;
  return null;
 }
 
