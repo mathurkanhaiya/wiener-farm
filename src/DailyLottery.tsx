@@ -1,36 +1,47 @@
-import {useEffect,useState} from 'react';
-import {createPortal} from 'react-dom';
-import {getInitData,PUBLISHABLE_KEY,hapticImpact,hapticNotify} from './lib';
+import React, { useState } from 'react';
 
-const API='/functions/v1/wiener-daily-lottery';
-const BONUS='/functions/v1/wiener-lottery-bonus';
-const PLAYERS='/functions/v1/wiener-lottery-players';
-type Status={draw_id?:string;status?:string;ticket_price?:number;pot?:number;winner_pool?:number;platform_pool?:number;players?:number;tickets?:number;my_tickets?:number;draw_at?:string;winner?:any};
-async function post(url:string,action:string,body:any={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});const raw=await r.text();let x:any={};try{x=JSON.parse(raw)}catch{}if(!r.ok||x?.ok===false)throw Error(String(x?.message||x?.error||'Lottery unavailable').replace(/_/g,' '));return x.data||x}
-const fmt=(n:any)=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
-const timeLeft=(iso?:string)=>{const sec=Math.max(0,Math.floor((new Date(iso||0).getTime()-Date.now())/1000)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':')};
+export function DailyLottery({ refresh, say }: { refresh?: () => any; say: (s: string) => void }) {
+  const [open, setOpen] = useState(false);
 
-export function DailyLottery({refresh,say}:{refresh?:()=>any;say:(m:string)=>void}){
- const [open,setOpen]=useState(false),[st,setSt]=useState<Status|null>(null),[bonus,setBonus]=useState<any>({used:0,limit:20,block_id:'int-44228'}),[busy,setBusy]=useState(false),[adBusy,setAdBusy]=useState(false),[playerData,setPlayerData]=useState<any>({players:[],total_bonus:0,total_entries:0}),[qty,setQty]=useState(1),[,setTick]=useState(0);
- const load=async()=>{try{const [a,b,c]=await Promise.all([post(API,'status'),post(BONUS,'status'),post(PLAYERS,'status')]);setSt(a);setBonus(b);setPlayerData(c)}catch(e:any){say(String(e?.message||e))}};
- useEffect(()=>{void load();const t=setInterval(()=>setTick(v=>v+1),1000);return()=>clearInterval(t)},[]);
- const price=Number(st?.ticket_price||100),cost=price*qty,bonusUsed=Number(bonus.used||0),bonusLimit=Number(bonus.limit||20),paidTotal=Number(st?.tickets||0),totalEntries=Number(playerData.total_entries||paidTotal+Number(playerData.total_bonus||0)),myPaid=Number(st?.my_tickets||0),myEntries=myPaid+bonusUsed,chance=Number(st?.players||0)>=2&&totalEntries>0?myEntries/totalEntries*100:null;
- const buy=async()=>{try{setBusy(true);hapticImpact('medium');setSt(await post(API,'buy',{quantity:qty,idempotency_key:crypto.randomUUID?.()||String(Date.now())}));hapticNotify('success');await refresh?.()}catch(e:any){say(String(e?.message||e));hapticNotify('error')}finally{setBusy(false)}};
- const watchAd=async()=>{try{setAdBusy(true);const x=await post(BONUS,'start');const started=Date.now();const ad=window.Adsgram?.init({blockId:String(x.block_id||bonus.block_id||'int-44228')});if(!ad)throw Error('AdsGram SDK unavailable');const shown=await ad.show();const elapsed=Date.now()-started;if(shown&&shown.done===false)throw Error('Watch ad properly to earn your Lottery entry');if(elapsed<15000)throw Error('Watch ad properly to earn your Lottery entry');setBonus(await post(BONUS,'complete',{session_id:x.session_id}));setPlayerData(await post(PLAYERS,'status'));hapticNotify('success')}catch(e:any){say(String(e?.message||e));hapticNotify('error')}finally{setAdBusy(false)}};
- const remaining=timeLeft(st?.draw_at);
- const page=open?createPortal(<div className="lot-page"><div className="lot-wrap">
-  <header className="lot-head"><button onClick={()=>setOpen(false)}>‹</button><div><small>DAILY WIENER DRAW</small><h2>Lottery</h2></div><span>#{st?.draw_id||'—'}</span></header>
-  <section className="lot-hero"><small>TODAY'S PRIZE</small><strong>🏆 {fmt(st?.winner_pool)} WIENER</strong><p>One completely random entry wins 80% of today's paid pool.</p><div className="lot-count"><small>DRAW ENDS IN</small><b>{remaining}</b></div></section>
-  <div className="lot-grid"><div><b>{fmt(st?.pot)} W</b><small>ENTRY POOL</small></div><div><b>{fmt(totalEntries)}</b><small>ENTRIES</small></div><div><b>{fmt(st?.players)}</b><small>PLAYERS</small></div></div>
-  <section className="lot-box"><h3>Your Entry</h3><div className="lot-row"><span>Paid tickets</span><b>{fmt(myPaid)}</b></div><div className="lot-row"><span>Ad bonus entries</span><b>+{fmt(bonusUsed)}</b></div><div className="lot-row strong"><span>Total entries</span><b>{fmt(myEntries)}</b></div><div className="lot-status">{chance===null?'Waiting for another eligible player':('Your current chance · '+chance.toFixed(2)+'%')}</div></section>
-  <section className="lot-box"><h3>Buy Tickets</h3><p className="muted">1 Ticket = {price} WIENER</p><div className="lot-step"><button onClick={()=>setQty(q=>Math.max(1,q-1))}>−</button><b>{qty}</b><button onClick={()=>setQty(q=>Math.min(100,q+1))}>+</button></div><div className="lot-quick">{[1,5,10,25].map(n=><button key={n} onClick={()=>setQty(n)}>{n}</button>)}</div><div className="lot-row"><span>Cost</span><b>{fmt(cost)} W</b></div><button className="lot-primary" disabled={busy} onClick={buy}>{busy?'BUYING…':('BUY '+qty+' TICKET'+(qty>1?'S':'')+' · '+fmt(cost)+' W')}</button></section>
-  <section className="lot-box boost"><h3>⚡ Increase Your Chance</h3><p>Watch a <b>separate Lottery ad</b> to receive +1 bonus entry.</p><div className="lot-progress"><div><b>{bonusUsed} / {bonusLimit}</b><small>ADS TODAY</small></div><div><b>+{bonusUsed}</b><small>BONUS ENTRIES</small></div></div><button className="lot-ad" disabled={adBusy||bonusUsed>=bonusLimit} onClick={watchAd}>{bonusUsed>=bonusLimit?'DAILY LIMIT REACHED':adBusy?'WATCHING…':'WATCH AD · +1 ENTRY'}</button><small className="fine">Return after watching the ad properly. Returning too early gives no entry. Maximum 20 per daily round; bonus entries never add WIENER to the prize pool.</small></section>
-  <section className="lot-box"><h3>Live Pool</h3><div className="lot-row"><span>Total paid entry pool</span><b>{fmt(st?.pot)} W</b></div><div className="lot-row"><span>Winner receives · 80%</span><b>{fmt(st?.winner_pool)} W</b></div><div className="lot-row"><span>Platform · 20%</span><b>{fmt(st?.platform_pool)} W</b></div><div className="lot-row"><span>Total entries</span><b>{fmt(totalEntries)}</b></div></section>
-  <section className="lot-box"><h3>Players & Winning Chance</h3><div className="lot-player-summary"><span>PLAYERS · {fmt(playerData.players?.length)}</span><span>PAID · {fmt(st?.tickets)}</span><span>BONUS · {fmt(playerData.total_bonus)}</span><span>ENTRIES · {fmt(totalEntries)}</span></div><div className="lot-players">{(playerData.players||[]).length===0?<p className="muted">No entries yet.</p>:(playerData.players||[]).map((p:any,i:number)=><div className="lot-player" key={i}><div><b>{p.display_name}</b><small>{fmt(p.paid)} purchased · +{fmt(p.bonus)} ad</small></div><div><strong>{Number(p.chance||0).toFixed(2)}%</strong><small>{fmt(p.entries)} entries</small></div></div>)}</div></section><section className="lot-box"><h3>How Lottery Works</h3><p className="rules">Buy tickets for 100 WIENER each. You can also earn up to 20 bonus entries from the separate Lottery ad. Every eligible entry has the same chance in the completely random server-side draw. One winner receives 80% of the paid pool. A minimum of 2 unique eligible players is required. If the round cannot run, paid tickets are refunded automatically.</p></section>
-  {st?.winner&&<section className="lot-box winner"><h3>Recent Winner</h3><b>🏆 {st.winner.username||'Player'} · {fmt(st.winner.amount)} WIENER</b></section>}
- </div></div>,document.body):null;
- return <><style>{CSS}</style><section className="card lot-card"><div className="lot-cardtop"><div className="lot-icon">🎟️</div><div className="lot-copy"><small>DAILY DRAW</small><h3>Lottery</h3><p>One entry could loot today's pool</p></div><div className="lot-mini"><b>{fmt(st?.winner_pool)} W</b><small>PRIZE</small></div></div><button className="lot-enter" onClick={()=>{setOpen(true);void load()}}>ENTER</button><div className="lot-meta"><span>💰 {fmt(st?.pot)} W POOL</span><span>🎟 {fmt(totalEntries)} ENTRIES</span><span>⏱ {remaining}</span></div></section>{page}</>;
+  return (
+    <section className="card promo" style={{ marginTop: 16 }}>
+      <div className="section-head">
+        <div className="square mint" style={{ fontSize: 24, display: 'grid', placeItems: 'center' }}>
+          🎟️
+        </div>
+        <div>
+          <h3>Daily Wiener Lottery</h3>
+          <p>Watch ads to earn tickets for the daily jackpot</p>
+        </div>
+      </div>
+      <button
+        className="secondary"
+        style={{ marginTop: 12, width: '100%' }}
+        onClick={() => {
+          say('Daily lottery drawing occurs every 24 hours!');
+          setOpen(true);
+        }}
+      >
+        VIEW LOTTERY TICKETS
+      </button>
+
+      {open && (
+        <div className="reward-modal-backdrop" onClick={() => setOpen(false)}>
+          <div className="reward-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="reward-modal-icon">🎟️</div>
+            <h2>Daily Lottery</h2>
+            <div className="reward-modal-amount" style={{ color: '#fbbf24' }}>
+              100,000 WIENER
+            </div>
+            <p style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, margin: '10px 0 18px' }}>
+              Each ad you complete today automatically grants you 1 entry ticket. Lucky winners are selected randomly each night.
+            </p>
+            <button className="primary" onClick={() => setOpen(false)}>
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
-const CSS=`
-.lot-card{margin-top:12px;padding:16px;overflow:hidden;background:radial-gradient(circle at 100% 0,rgba(255,187,54,.22),transparent 38%),linear-gradient(145deg,rgba(48,29,10,.96),rgba(15,13,9,.98));border:1px solid rgba(255,190,66,.2);box-shadow:0 15px 35px rgba(0,0,0,.18)}.lot-cardtop{display:flex;align-items:center;gap:12px}.lot-icon{width:58px;height:58px;border-radius:19px;display:grid;place-items:center;font-size:30px;background:rgba(255,190,60,.1);border:1px solid rgba(255,201,92,.18)}.lot-copy{flex:1}.lot-copy small{font-size:7px;font-weight:950;letter-spacing:1px;color:#ffc85a}.lot-copy h3{font-size:19px;margin:1px 0}.lot-copy p{margin:0;font-size:10px;opacity:.58}.lot-mini{text-align:right}.lot-mini b,.lot-mini small{display:block}.lot-mini b{font-size:15px;color:#ffe082}.lot-mini small{font-size:7px;opacity:.5}.lot-enter{width:100%;height:50px;margin-top:13px;border-radius:16px;border:1px solid rgba(255,202,82,.22);background:linear-gradient(180deg,rgba(255,195,68,.14),rgba(255,142,30,.08));color:#ffd875;font-weight:950;letter-spacing:.5px}.lot-meta{display:flex;justify-content:space-between;gap:5px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:8px;font-weight:900;opacity:.68}.lot-page{position:fixed;inset:0;z-index:12200;background:#090806;overflow:auto}.lot-wrap{width:min(100%,460px);min-height:100%;margin:auto;padding:14px 14px calc(28px + env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 0,rgba(255,177,43,.13),transparent 26%)}.lot-head{display:grid;grid-template-columns:42px 1fr auto;align-items:center;position:sticky;top:0;z-index:2;padding:6px 0 10px;background:linear-gradient(#090806 70%,transparent)}.lot-head button{width:38px;height:38px;border:0;border-radius:13px;background:rgba(255,255,255,.06);color:white;font-size:27px}.lot-head h2{margin:0;font-size:20px}.lot-head small,.lot-head>span{font-size:7px;opacity:.5;font-weight:900}.lot-hero{text-align:center;padding:22px 12px;border-radius:23px;background:linear-gradient(145deg,rgba(255,189,57,.1),rgba(255,116,23,.035));border:1px solid rgba(255,200,86,.13)}.lot-hero>small{font-size:8px;font-weight:950;opacity:.55}.lot-hero>strong{display:block;margin:4px 0;font-size:28px;color:#ffe188}.lot-hero p{font-size:9px;opacity:.58}.lot-count{display:inline-flex;flex-direction:column;padding:7px 17px;margin-top:6px;border-radius:12px;background:rgba(0,0,0,.22)}.lot-count small{font-size:6px;opacity:.5}.lot-count b{font-variant-numeric:tabular-nums;letter-spacing:1px}.lot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.lot-grid div{text-align:center;padding:11px 4px;border-radius:14px;background:rgba(255,255,255,.04)}.lot-grid b,.lot-grid small{display:block}.lot-grid small{font-size:6px;opacity:.45}.lot-box{margin-top:8px;padding:14px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.045)}.lot-box h3{margin:0 0 9px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#ffd36b}.lot-row{display:flex;justify-content:space-between;padding:6px 0;font-size:10px}.lot-row span{opacity:.6}.lot-row.strong{border-top:1px solid rgba(255,255,255,.06);margin-top:3px}.lot-status{margin-top:7px;padding:8px;border-radius:10px;background:rgba(255,190,58,.07);font-size:8px;text-align:center}.muted,.rules{font-size:9px;line-height:1.55;opacity:.57}.lot-step{display:flex;justify-content:center;align-items:center;gap:24px;margin:9px}.lot-step button,.lot-quick button{border:0;border-radius:11px;background:rgba(255,196,67,.09);color:#ffda77}.lot-step button{width:40px;height:40px;font-size:20px}.lot-step b{font-size:22px}.lot-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}.lot-quick button{height:33px;font-weight:900}.lot-primary,.lot-ad{width:100%;height:47px;margin-top:7px;border:0;border-radius:14px;background:linear-gradient(180deg,#ffd95c,#e89918);color:#1b1002;font-weight:950}.boost{background:linear-gradient(145deg,rgba(255,197,60,.08),rgba(255,255,255,.025));border-color:rgba(255,198,69,.12)}.boost p{font-size:9px;opacity:.62}.lot-progress{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.lot-progress div{text-align:center;padding:9px;border-radius:12px;background:rgba(0,0,0,.17)}.lot-progress b,.lot-progress small{display:block}.lot-progress small{font-size:6px;opacity:.45}.lot-ad{background:linear-gradient(180deg,#ffe375,#ffad28)}.fine{display:block;margin-top:7px;font-size:7px;line-height:1.45;opacity:.45}.lot-player-summary{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}.lot-player-summary span{padding:7px;border-radius:9px;background:rgba(255,255,255,.035);font-size:7px;text-align:center;opacity:.65}.lot-player{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}.lot-player:last-child{border-bottom:0}.lot-player b,.lot-player small,.lot-player strong{display:block}.lot-player b{font-size:10px}.lot-player small{font-size:7px;opacity:.48;margin-top:2px}.lot-player>div:last-child{text-align:right}.lot-player strong{font-size:12px;color:#ffe078}.winner{text-align:center}
-`;

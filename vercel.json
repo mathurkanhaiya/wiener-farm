@@ -1,8 +1,0 @@
-{
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/api/host/:path*", "destination": "https://api.viralaitools.xyz/api/host/:path*" },
-    { "source": "/functions/v1/:path*", "destination": "https://api.viralaitools.xyz/functions/v1/:path*" },
-    { "source": "/reward", "destination": "/api/reward" }
-  ]
-}

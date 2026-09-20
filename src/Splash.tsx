@@ -1,14 +1,36 @@
-import {useEffect,useState} from 'react';
-import './splash.css';
+import React from 'react';
 
-export function Splash({text}:{text:string}){
- const [slow,setSlow]=useState(false);
- useEffect(()=>{const timer=window.setTimeout(()=>setSlow(true),12000);return()=>window.clearTimeout(timer)},[]);
- return <div className="wf-launch"><div className="wf-launch-content">
-  <div className="wf-launch-coin" aria-hidden="true">W</div>
-  <h1>WIENER <span>FARM</span></h1>
-  <div className="wf-launch-track" aria-hidden="true"><i/></div>
-  <p role="status" aria-live="polite">{slow?'Still connecting to your farm…':text||'Opening your farm…'}</p>
-  {slow&&<button type="button" onClick={()=>window.location.reload()}>Try again</button>}
- </div><small className="wf-launch-footer">Your farm. Your rewards.</small></div>;
+export function Splash({ text = 'Opening your farm…' }: { text?: string }) {
+  return (
+    <div className="wf-boot">
+      <div className="wf-boot-core">
+        <div className="wf-boot-emblem">
+          <div className="wf-boot-orbit">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="wf-boot-mark">
+            <b>W</b>
+            <span>FARM</span>
+          </div>
+        </div>
+        <div className="wf-boot-wordmark">
+          <strong>WIENER</strong>
+          <b>FARM</b>
+        </div>
+        <div className="wf-boot-tagline">EARN · GROW · WITHDRAW</div>
+        <div className="wf-boot-status">{text}</div>
+        <div className="wf-boot-track">
+          <i />
+        </div>
+        <div className="wf-boot-secure">SECURE TELEGRAM MINI APP</div>
+      </div>
+      <div className="wf-boot-ambient">
+        <i />
+        <i />
+        <i />
+      </div>
+    </div>
+  );
 }

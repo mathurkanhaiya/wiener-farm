@@ -46,7 +46,142 @@ async function getDeviceFingerprint(){const raw=[navigator.userAgent,navigator.l
 async function getDeviceFingerprintV2(){const tg=window.Telegram?.WebApp as any;const raw=['v2',navigator.userAgent,navigator.language,(navigator as any).platform||'',String((navigator as any).hardwareConcurrency||''),String((navigator as any).deviceMemory||''),String((navigator as any).maxTouchPoints||''),Intl.DateTimeFormat().resolvedOptions().timeZone||'',`${screen.width}x${screen.height}`,String(window.devicePixelRatio||1),tg?.platform||''].join('|');return sha256(raw)}
 export async function deviceContext(){const tg=window.Telegram?.WebApp as any;return {device_id:getDeviceId(),installation_id:getInstallationId(),device_fingerprint:await getDeviceFingerprint(),fingerprint_v2:await getDeviceFingerprintV2(),telegram_platform:String(tg?.platform||'').slice(0,32),language:String(navigator.language||'').slice(0,32),timezone:String(Intl.DateTimeFormat().resolvedOptions().timeZone||'').slice(0,64)}}
 async function post(url:string,action:string,body:any={}){const x=await fetchJson(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action,initData:getInitData(),...body})});return normalizeUiNumbers(x.data??x)}
-export async function registerDevice(){const ctx=await deviceContext();const x=await fetchJson(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},cache:'no-store',body:JSON.stringify({initData:getInitData(),...ctx})});return normalizeUiNumbers(x.data??x)}
-export async function api(action:string,body:any={}){const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;const mapped=action==='task_claim'?'claim':action;const safeBody=action==='admin_settings_save'?{...body,settings:sanitizeAdminSettings(body?.settings)}:body;let data:any;try{data=await post(url,mapped,safeBody)}catch(e){if(action!=='bootstrap'||!isTransientBootstrapError(e))throw e;await sleep(550);data=await post(url,mapped,safeBody)}if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}return data}
-export async function promoChannelApi(body:{code:string;channels?:string[]}){return post(PROMO_CHANNEL_API,'publish',body)}export async function taskApi(action:'check'|'claim',body:any={}){return post(TASK_API,action,body)}export async function adApi(action:'start'|'complete'|'status',body:any={}){return post(AD_API,action,body)}export async function adUsageApi(){return post(AD_USAGE_API,'status')}export async function secondaryAdApi(action:'stats'|'start'|'reward',body:any={}){return post(SECONDARY_AD_API,action,body)}export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={}){return post(ADSGRAM_TASK_API,action,body)}export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){return post(MANDATORY_API,action,body)}export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){return post(WITHDRAW_API,action,body)}export async function shareApi(){return post(SHARE_API,'prepare')}export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
+const DEMO_USER: any = {
+  telegram_id: 88204911,
+  username: 'crypto_farmer',
+  first_name: 'Doge Farmer',
+  balance: 24500,
+  farm_sessions: 42,
+  total_ads: 85,
+  referrals_count: 14,
+  daily_streak: 5,
+  best_streak: 12,
+  ads_watched_today: 4,
+  ads_day: new Date().toISOString().slice(0, 10),
+  farm_started_at: new Date(Date.now() - 3600000).toISOString(),
+  farm_claims_today: 2,
+  farm_claims_day: new Date().toISOString().slice(0, 10),
+};
+
+const DEMO_SETTINGS: any = {
+  farm_claim_reward: 50,
+  farm_claim_cooldown_seconds: 7200,
+  token_per_usdt: 10000,
+  referral_active_reward: 100,
+  ad_reward: 10,
+  daily_ad_limit: 15,
+  bot_username: 'WienerDogeFarmBot',
+  maintenance_enabled: false,
+  adsgram_block_id: 'int-44861',
+};
+
+const DEMO_SNAPSHOT: Snapshot = {
+  user: DEMO_USER,
+  settings: DEMO_SETTINGS,
+  tasks: [
+    { id: '1', title: 'Join Official Wiener Farm Channel', reward: 250, category: 'official', url: 'https://t.me/WienerFarm' },
+    { id: '2', title: 'Follow Wiener Farm on X', reward: 150, category: 'official', url: 'https://x.com' },
+    { id: '3', title: 'Invite 3 Friends to Farm', reward: 500, category: 'exclusive', url: '' },
+    { id: '4', title: 'Daily Farming Check-in', reward: 300, category: 'daily', url: '' },
+  ],
+  completed: [{ task_id: '1' }],
+  transactions: [
+    { id: 'tx1', created_at: new Date().toISOString(), amount: 50, kind: 'farm_claim', description: 'Farming reward' },
+    { id: 'tx2', created_at: new Date(Date.now() - 86400000).toISOString(), amount: 100, kind: 'daily_claim', description: 'Daily login bonus' }
+  ],
+  withdrawals: [],
+  withdrawal_methods: [
+    { id: 'ton', name: 'TON Network', symbol: 'TON', network: 'The Open Network', fee: 0.05, min_amount: 1, rate: 0.0001 },
+    { id: 'usdt', name: 'USDT (TON)', symbol: 'USDT', network: 'TON JETTON', fee: 0.1, min_amount: 2, rate: 0.0001 }
+  ],
+  referrals: [
+    { telegram_id: 110291, first_name: 'Alex', username: 'alex_ton', qualified: true, earned: 100 },
+    { telegram_id: 994821, first_name: 'Elena', username: 'elena_crypto', qualified: true, earned: 100 }
+  ],
+  leaderboard: [
+    { rank: 1, username: 'ton_whale', points: 142000, prize: 10000 },
+    { rank: 2, username: 'wiener_king', points: 98500, prize: 7000 },
+    { rank: 3, username: 'sol_doge', points: 81200, prize: 5000 },
+  ],
+  is_admin: true,
+};
+
+export async function registerDevice(){
+  if (!getInitData()) return { blocked: false };
+  const ctx=await deviceContext();
+  const x=await fetchJson(DEVICE_API,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY},cache:'no-store',body:JSON.stringify({initData:getInitData(),...ctx})});
+  return normalizeUiNumbers(x.data??x)
+}
+
+export async function api(action:string,body:any={}){
+  if (!getInitData()) {
+    if (action === 'bootstrap') {
+      return JSON.parse(JSON.stringify(DEMO_SNAPSHOT));
+    }
+    if (action === 'farm_start') {
+      DEMO_USER.farm_started_at = new Date().toISOString();
+      return { ok: true };
+    }
+    if (action === 'farm_claim') {
+      DEMO_USER.balance += 50;
+      DEMO_USER.farm_claims_today += 1;
+      DEMO_USER.farm_started_at = null;
+      return { ok: true, reward: 50, full_reward: 50, base_reward: 30, bonus_reward: 20 };
+    }
+    if (action === 'daily_claim' || action === 'daily_bio_check') {
+      DEMO_USER.balance += 100;
+      DEMO_USER.daily_streak = (DEMO_USER.daily_streak || 0) + 1;
+      return { ok: true, reward: 100 };
+    }
+    if (action === 'promo_claim') {
+      DEMO_USER.balance += 100;
+      return { ok: true, reward: 100 };
+    }
+    if (action === 'task_claim') {
+      DEMO_USER.balance += 150;
+      return { ok: true, reward: 150 };
+    }
+    return { ok: true };
+  }
+  const adminAction=action.startsWith('admin_')&&action!=='admin_bootstrap';
+  const url=action==='task_claim'?TASK_API:adminAction?ADMIN_API:API;
+  const mapped=action==='task_claim'?'claim':action;
+  const safeBody=action==='admin_settings_save'?{...body,settings:sanitizeAdminSettings(body?.settings)}:body;
+  let data:any;
+  try{data=await post(url,mapped,safeBody)}catch(e){if(action!=='bootstrap'||!isTransientBootstrapError(e))throw e;await sleep(550);data=await post(url,mapped,safeBody)}
+  if(action==='bootstrap'){try{const st=await post(AD_USAGE_API,'status');if(data?.user){data.user.ads_watched_today=Number(st?.used||0);data.user.ads_day=new Date().toISOString().slice(0,10)}if(data?.settings&&st?.limit!=null)data.settings.daily_ad_limit=Number(st.limit)}catch{}}
+  return data
+}
+
+export async function promoChannelApi(body:{code:string;channels?:string[]}){return post(PROMO_CHANNEL_API,'publish',body)}
+export async function taskApi(action:'check'|'claim',body:any={}){
+  if (!getInitData()) return { ok: true, status: 'completed', reward: 100 };
+  return post(TASK_API,action,body)
+}
+export async function adApi(action:'start'|'complete'|'status',body:any={}){
+  if (!getInitData()) return { session_id: 'demo_session', reward: 10, status: 'credited' };
+  return post(AD_API,action,body)
+}
+export async function adUsageApi(){
+  if (!getInitData()) return { used: DEMO_USER.ads_watched_today, limit: 15, cooldown_seconds: 0 };
+  return post(AD_USAGE_API,'status')
+}
+export async function secondaryAdApi(action:'stats'|'start'|'reward',body:any={}){
+  if (!getInitData()) return { used: 3, limit: 10, reward: 10, full_reward: 10, block_id: 'int-44228' };
+  return post(SECONDARY_AD_API,action,body)
+}
+export async function adsgramTaskApi(action:'start'|'reward'|'status',body:any={}){
+  if (!getInitData()) return { ok: true };
+  return post(ADSGRAM_TASK_API,action,body)
+}
+export async function mandatoryApi(action:'check'|'admin_get'|'admin_save'|'admin_delete',body:any={}){
+  if (!getInitData()) return { all_joined: true, items: [] };
+  return post(MANDATORY_API,action,body)
+}
+export async function withdrawApi(action:'methods'|'history'|'request'|'admin_boot'|'admin_method_save'|'admin_paid'|'admin_reject',body:any={}){
+  if (!getInitData()) return { methods: DEMO_SNAPSHOT.withdrawal_methods, history: [] };
+  return post(WITHDRAW_API,action,body)
+}
+export async function shareApi(){return post(SHARE_API,'prepare')}
+export async function missionApi(action:'status'|'claim',body:any={}){return post(MISSION_API,action,body)}
 export async function ambassadorApi(action:string,body:any={}){if(action==='admin_publish_drop'){const url=`${AMBASSADOR_PUBLISH_API}?v=one-code-20260901`;const x=await fetchJson(url,{method:'POST',headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'cache-control':'no-cache'},cache:'no-store',body:JSON.stringify({action:'publish',initData:getInitData(),...body})},120000);return normalizeUiNumbers(x.data??x)}return post(AMBASSADOR_API,action,body)}

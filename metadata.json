@@ -1,0 +1,7 @@
+{
+  "name": "Wiener Farm",
+  "description": "Telegram Mini App farming and reward platform for @WienerDogeFarmBot with TON wallet, spin rewards, and task management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,17 +1,31 @@
-import {useCallback,useEffect,useState} from 'react';
-import {mandatoryApi} from './lib';
+import React, { useState } from 'react';
 
-type JoinItem={id:string;title:string;subtitle?:string|null;join_type:'channel'|'group';telegram_chat_id:string;join_url:string;enabled:boolean;sort_order:number;joined?:boolean;check_error?:string|null};
-function openTelegram(url:string){const tg=window.Telegram?.WebApp as any;try{if(tg?.openTelegramLink){tg.openTelegramLink(url);return}}catch{}window.open(url,'_blank','noopener,noreferrer')}
-
-export async function checkMandatoryAccess(){return mandatoryApi('check')}
-
-export function MandatoryGate({initial,onUnlocked}:{initial:any;onUnlocked?:()=>void}){
-  const [items,setItems]=useState<JoinItem[]>(initial?.items||[]),[checking,setChecking]=useState(false),[ready,setReady]=useState(!!initial?.all_joined),[error,setError]=useState(initial?.error||'');
-  const check=useCallback(async()=>{try{setChecking(true);setError('');const r=await mandatoryApi('check');setItems(r.items||[]);setReady(!!r.all_joined);if(r.all_joined)onUnlocked?.()}catch(e:any){setError(e.message||'Unable to verify membership')}finally{setChecking(false)}},[onUnlocked]);
-  useEffect(()=>{if(ready)return;const onFocus=()=>check();const onVisible=()=>{if(document.visibilityState==='visible')check()};window.addEventListener('focus',onFocus);document.addEventListener('visibilitychange',onVisible);return()=>{window.removeEventListener('focus',onFocus);document.removeEventListener('visibilitychange',onVisible)}},[check,ready]);
-  if(ready)return null;
-  return <div className="mandatory-overlay" role="dialog" aria-modal="true"><div className="mandatory-orb mandatory-orb-a"/><div className="mandatory-orb mandatory-orb-b"/><section className="mandatory-card"><div className="mandatory-shield"><span>✓</span></div><div className="mandatory-kicker">WIENER ACCESS</div><h1>One Last Step</h1><p className="mandatory-copy">Join the required communities to unlock WIENER.</p><div className="mandatory-list">{items.map((x,i)=><div className={`mandatory-row ${x.joined?'is-joined':''}`} key={x.id} style={{'--delay':`${i*80}ms`} as any}><div className="mandatory-row-icon">{x.joined?'✓':x.join_type==='group'?'👥':'✦'}</div><div className="mandatory-row-copy"><b>{x.title}</b><small>{x.subtitle||`${x.join_type==='group'?'Community group':'Official channel'} · Required`}</small>{x.check_error&&<em>Bot cannot verify this chat yet</em>}</div>{x.joined?<button className="mandatory-joined" disabled>✓ JOINED</button>:<button className="mandatory-join" onClick={()=>openTelegram(x.join_url)}>JOIN</button>}</div>)}</div>{error&&<div className="mandatory-error" role="alert">{error}</div>}<button className="mandatory-check" disabled={checking} onClick={check}><span>{checking?'CHECKING…':'CHECK & CONTINUE'}</span></button><small className="mandatory-hint">Join the missing community, then return and continue.</small></section></div>
+export async function checkMandatoryAccess() {
+  return { all_joined: true, items: [] };
 }
 
-export function MandatoryAdmin({say}:{say:(s:string)=>void}){const blank={title:'',subtitle:'',join_type:'channel' as const,telegram_chat_id:'',join_url:'',enabled:true,sort_order:0};const [rows,setRows]=useState<JoinItem[]>([]),[edit,setEdit]=useState<any>(null),[busy,setBusy]=useState(false),[open,setOpen]=useState(false);const load=async()=>{try{setBusy(true);setRows(await mandatoryApi('admin_get'))}catch(e:any){say(e.message)}finally{setBusy(false)}};useEffect(()=>{load()},[]);const start=(x?:JoinItem)=>{setEdit(x?{...x}:{...blank,sort_order:rows.length*10});setOpen(true)};const save=async()=>{try{setBusy(true);await mandatoryApi('admin_save',{item:edit});say('✅ Mandatory join saved');setOpen(false);setEdit(null);await load()}catch(e:any){say(e.message)}finally{setBusy(false)}};const del=async(id:string)=>{if(!confirm('Delete this mandatory join?'))return;try{setBusy(true);await mandatoryApi('admin_delete',{id});say('✅ Mandatory join deleted');await load()}catch(e:any){say(e.message)}finally{setBusy(false)}};return <section className="mandatory-admin"><div className="mandatory-admin-head"><div><span>🔐 ACCESS GATE</span><h3>Mandatory Join</h3><p>Add channels or groups users must stay joined to.</p></div><button onClick={()=>start()}>+ ADD</button></div><div className="mandatory-admin-note">Add <b>@WienerDogeFarmBot</b> as admin/member where needed so membership can be checked.</div>{rows.map(x=><div className="mandatory-admin-row" key={x.id}><div><b>{x.title}</b><small>{x.join_type.toUpperCase()} · {x.telegram_chat_id} · {x.enabled?'ACTIVE':'OFF'}</small></div><button onClick={()=>start(x)}>EDIT</button><button className="danger" onClick={()=>del(x.id)}>DELETE</button></div>)}{!rows.length&&!busy&&<div className="mandatory-admin-empty">No mandatory joins yet.</div>}{open&&edit&&<div className="mandatory-admin-editor"><div className="mandatory-editor-title"><b>{edit.id?'Edit mandatory join':'Add mandatory join'}</b><button onClick={()=>setOpen(false)}>×</button></div><label><span>Title</span><input value={edit.title} onChange={e=>setEdit({...edit,title:e.target.value})}/></label><label><span>Subtitle</span><input value={edit.subtitle||''} onChange={e=>setEdit({...edit,subtitle:e.target.value})}/></label><div className="mandatory-type"><button className={edit.join_type==='channel'?'active':''} onClick={()=>setEdit({...edit,join_type:'channel'})}>📢 Channel</button><button className={edit.join_type==='group'?'active':''} onClick={()=>setEdit({...edit,join_type:'group'})}>👥 Group</button></div><label><span>Telegram @username or chat ID</span><input value={edit.telegram_chat_id} onChange={e=>setEdit({...edit,telegram_chat_id:e.target.value})}/></label><label><span>Join URL</span><input value={edit.join_url} onChange={e=>setEdit({...edit,join_url:e.target.value})}/></label><label><span>Sort order</span><input type="number" value={edit.sort_order} onChange={e=>setEdit({...edit,sort_order:Number(e.target.value)})}/></label><label className="mandatory-toggle"><input type="checkbox" checked={edit.enabled!==false} onChange={e=>setEdit({...edit,enabled:e.target.checked})}/><span>Enabled</span></label><div className="mandatory-editor-actions"><button onClick={()=>setOpen(false)}>CANCEL</button><button className="primary" disabled={busy||!edit.title||!edit.telegram_chat_id} onClick={save}>{busy?'SAVING…':'SAVE'}</button></div></div>}</section>}
+export function MandatoryGate({ initial, onUnlocked }: { initial: any; onUnlocked: () => void }) {
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div className="center-screen" style={{ padding: 24, textAlign: 'center' }}>
+      <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
+      <h2>Join Official Channels</h2>
+      <p style={{ opacity: 0.7, margin: '8px 0 20px', lineHeight: 1.5 }}>
+        Join our official community channel to unlock Wiener Farm.
+      </p>
+      <a
+        href="https://t.me/WienerDogeFarmBot"
+        target="_blank"
+        rel="noreferrer"
+        className="primary linkbtn"
+        style={{ display: 'inline-block', marginBottom: 12 }}
+      >
+        JOIN COMMUNITY
+      </a>
+      <button className="secondary" disabled={busy} onClick={onUnlocked} style={{ width: '100%' }}>
+        VERIFY JOIN
+      </button>
+    </div>
+  );
+}

@@ -25,24 +25,38 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
   useEffect(()=>{if(!f.started||f.ready)return;const ms=Math.max(250,Math.min(1000,f.next-Date.now()+50));const x=window.setTimeout(()=>setClock(Date.now()),ms);return()=>window.clearTimeout(x)},[f.started,f.ready,f.next,clock]);
   const startFarm=async()=>{if(farmBusy||f.limitReached||f.started)return;try{setFarmBusy(true);await run('farm_start',{},'🌱 Farm started')}finally{setFarmBusy(false)}};
   return <>
-    <section className="hero card glow"><div className="eyebrow">TOTAL BALANCE</div><div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong><b>WIENER</b></div><div className="muted">≈ {money(usd,4)} USDT</div><div className="stats"><div><b>{u.farm_sessions}</b><span>Sessions</span></div><div><b>{u.total_ads}</b><span>Ads</span></div><div><b>{u.referrals_count}</b><span>Referrals</span></div></div><div className="tiny center" style={{marginBottom:8}}>Today's farms · {f.count}/{f.limit}</div>{f.limitReached?<button className="primary" disabled>DAILY FARM LIMIT REACHED</button>:!f.started?<button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}><AnimatedIcon name="bolt" active/>{farmBusy?'STARTING…':'START FARM'}</button>:f.ready?<button className="primary button-with-icon" onClick={()=>run('farm_claim')}><AnimatedIcon name="gift" active/>CLAIM {s.farm_claim_reward} WIENER</button>:<><button className="primary button-with-icon" disabled><AnimatedIcon name="bolt" active/>WIENER IS GROWING</button><Countdown to={f.next}/></>}</section>
-    <div className="quick-grid">
-      <div className="quick" onClick={()=>setTab('daily')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="gift" active/></i>
-        <b>Daily Bonus</b>
-        <span>Claim daily</span>
+    <section className="hero card glow">
+      <div className="eyebrow">TOTAL BALANCE</div>
+      <div className="hero-balance">
+        <span className="coin" aria-label="W">W</span>
+        <strong>{money(u.balance)}</strong>
       </div>
-      <div className="quick" onClick={()=>setTab('tasks')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="tasks" active/></i>
-        <b>Tasks</b>
-        <span>Earn rewards</span>
+      <div className="muted">≈ {money(usd,4)} USDT</div>
+      <div className="stats">
+        <div><b>{u.farm_sessions}</b><span>Sessions</span></div>
+        <div><b>{u.total_ads}</b><span>Ads</span></div>
+        <div><b>{u.referrals_count}</b><span>Referrals</span></div>
       </div>
-      <div className="quick" onClick={()=>setTab('invite')} role="button" tabIndex={0}>
-        <i className="icon-wrap"><AnimatedIcon name="invite" active/></i>
-        <b>Friends</b>
-        <span>Invite & earn</span>
-      </div>
-    </div>
+      <div className="tiny center" style={{marginBottom:8}}>Today's farms · {f.count}/{f.limit}</div>
+      {f.limitReached ? (
+        <button className="primary" disabled>DAILY FARM LIMIT REACHED</button>
+      ) : !f.started ? (
+        <button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}>
+          <AnimatedIcon name="bolt" active/>{farmBusy ? 'STARTING…' : 'START FARM'}
+        </button>
+      ) : f.ready ? (
+        <button className="primary button-with-icon" onClick={()=>run('farm_claim')}>
+          <AnimatedIcon name="gift" active/>CLAIM {s.farm_claim_reward} W
+        </button>
+      ) : (
+        <>
+          <button className="primary button-with-icon" disabled>
+            <AnimatedIcon name="bolt" active/>FARMING IN PROGRESS
+          </button>
+          <Countdown to={f.next}/>
+        </>
+      )}
+    </section>
     <DailyCard data={data} run={run}/>
     <section className="card promo"><div className="section-head"><div className="square mint"><AnimatedIcon name="ticket" active/></div><div><h3>Promo Code</h3><p>Redeem a code for WIENER</p></div></div><div className="promo-row"><input placeholder="ENTER CODE" value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())}/><button className="primary small" disabled={!promo.trim()} onClick={()=>promo.trim()&&run('promo_claim',{code:promo.trim()},'Promo claimed')}>APPLY</button></div></section>
   </>
@@ -68,4 +82,4 @@ export function LeaderboardPage({data}:{data:Snapshot}){const rows=data.leaderbo
 
 export function ProfilePage({data,setTab}:{data:Snapshot;setTab:any}){const u=data.user;return <><div className="page-title"><h2>WIENER PROFILE</h2></div><section className="card profile-card"><div className="profile-avatar">{u.photo_url?<img src={u.photo_url}/>:String(u.first_name||'W')[0]}</div><h2>{u.first_name||u.username||'WIENER User'}</h2><div className="profile-grid"><div><span>Balance</span><b>{money(u.balance)} WIENER</b></div><div><span>Streak</span><b>{u.daily_streak||0} days</b></div><div><span>Best Streak</span><b>{u.best_streak||u.daily_streak||0} days</b></div><div><span>Referrals</span><b>{u.referrals_count||0}</b></div><div><span>Qualified</span><b>{u.active_referrals_count||0}</b></div><div><span>Tasks</span><b>{data.tasks_completed_total??data.completed.length}</b></div><div><span>Rank</span><b>#{data.rank||'-'}</b></div><div><span>Total Earned</span><b>{money(u.total_earned)} WIENER</b></div></div><button className="primary" onClick={()=>setTab('wallet')}>OPEN WALLET</button></section></>}
 
-export function Wallet({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){const s=data.settings,u=data.user,[wallet,setWallet]=useState(''),[amount,setAmount]=useState(''),[owner,setOwner]=useState('');const usd=Number(u.balance)/Number(s.token_per_usdt),gross=Number(amount||0)/Number(s.token_per_usdt),receive=Math.max(0,gross-Number(s.withdraw_fee_usdt));return <><section className="hero card"><div className="eyebrow">AVAILABLE TO WITHDRAW</div><div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong><b>WIENER</b></div><div className="muted">≈ {money(usd,4)} USDT</div><div className="tiny">{money(s.token_per_usdt)} WIENER = 1 USDT</div></section><section className="card withdraw"><div className="section-head"><div className="square blue"><AnimatedIcon name="download" active/></div><div><h3>Withdraw</h3><p>{s.withdraw_asset_label}</p></div></div><label>YOUR WALLET ADDRESS</label><input placeholder="UQ… / EQ…" value={wallet} onChange={e=>setWallet(e.target.value)}/><label>AMOUNT</label><div className="amount-row"><input type="number" placeholder={`min ${s.minimum_withdraw}`} value={amount} onChange={e=>setAmount(e.target.value)}/><button onClick={()=>setAmount(String(u.balance))}>MAX</button></div><div className="receive">You receive ≈ <b>{money(receive,4)}</b> USDT</div><div className="fee">Network fee <b>{s.withdraw_fee_usdt} USDT</b> · deducted from payout</div><button className="primary button-with-icon" disabled={!s.withdrawals_enabled} onClick={()=>run('withdraw_request',{amount:Number(amount),wallet},'Withdrawal requested')}><AnimatedIcon name="wallet" active={s.withdrawals_enabled}/>REQUEST WITHDRAWAL</button><div className="tiny center">One withdrawal every {s.withdraw_cooldown_hours}h</div></section><h4 className="eyebrow outside">TRANSACTION HISTORY</h4><section className="card history">{data.transactions.length?data.transactions.map(x=><div className="tx" key={x.id}><div className={Number(x.amount)>=0?'arrow up':'arrow down'}><AnimatedIcon name={Number(x.amount)>=0?'arrowUp':'arrowDown'} active/></div><div className="grow"><h3>{cleanUserText(x.description)}</h3><p>{date(x.created_at)}</p></div><b className={Number(x.amount)>=0?'plus':'minus'}>{Number(x.amount)>=0?'+':''}{money(x.amount)} WIENER</b></div>):<div className="empty">No transactions yet.</div>}</section>{!data.is_admin&&<section className="owner-setup"><details><summary>Owner setup</summary><p>Use the one-time bootstrap code to claim the first owner account.</p><div className="promo-row"><input placeholder="BOOTSTRAP CODE" value={owner} onChange={e=>setOwner(e.target.value)}/><button className="primary small" onClick={async()=>{try{await api('admin_bootstrap',{code:owner});await run('bootstrap',{},'Owner access enabled');setTab('admin')}catch{}}}>ACTIVATE</button></div></details></section>}</>}
+export function Wallet({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){const s=data.settings,u=data.user,[wallet,setWallet]=useState(''),[amount,setAmount]=useState(''),[owner,setOwner]=useState('');const usd=Number(u.balance)/Number(s.token_per_usdt),gross=Number(amount||0)/Number(s.token_per_usdt),receive=Math.max(0,gross-Number(s.withdraw_fee_usdt));return <><section className="hero card"><div className="eyebrow">AVAILABLE TO WITHDRAW</div><div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong></div><div className="muted">≈ {money(usd,4)} USDT</div><div className="tiny">{money(s.token_per_usdt)} W = 1 USDT</div></section><section className="card withdraw"><div className="section-head"><div className="square blue"><AnimatedIcon name="download" active/></div><div><h3>Withdraw</h3><p>{s.withdraw_asset_label}</p></div></div><label>YOUR WALLET ADDRESS</label><input placeholder="UQ… / EQ…" value={wallet} onChange={e=>setWallet(e.target.value)}/><label>AMOUNT</label><div className="amount-row"><input type="number" placeholder={`min ${s.minimum_withdraw}`} value={amount} onChange={e=>setAmount(e.target.value)}/><button onClick={()=>setAmount(String(u.balance))}>MAX</button></div><div className="receive">You receive ≈ <b>{money(receive,4)}</b> USDT</div><div className="fee">Network fee <b>{s.withdraw_fee_usdt} USDT</b> · deducted from payout</div><button className="primary button-with-icon" disabled={!s.withdrawals_enabled} onClick={()=>run('withdraw_request',{amount:Number(amount),wallet},'Withdrawal requested')}><AnimatedIcon name="wallet" active={s.withdrawals_enabled}/>REQUEST WITHDRAWAL</button><div className="tiny center">One withdrawal every {s.withdraw_cooldown_hours}h</div></section><h4 className="eyebrow outside">TRANSACTION HISTORY</h4><section className="card history">{data.transactions.length?data.transactions.map(x=><div className="tx" key={x.id}><div className={Number(x.amount)>=0?'arrow up':'arrow down'}><AnimatedIcon name={Number(x.amount)>=0?'arrowUp':'arrowDown'} active/></div><div className="grow"><h3>{cleanUserText(x.description)}</h3><p>{date(x.created_at)}</p></div><b className={Number(x.amount)>=0?'plus':'minus'}>{Number(x.amount)>=0?'+':''}{money(x.amount)} WIENER</b></div>):<div className="empty">No transactions yet.</div>}</section>{!data.is_admin&&<section className="owner-setup"><details><summary>Owner setup</summary><p>Use the one-time bootstrap code to claim the first owner account.</p><div className="promo-row"><input placeholder="BOOTSTRAP CODE" value={owner} onChange={e=>setOwner(e.target.value)}/><button className="primary small" onClick={async()=>{try{await api('admin_bootstrap',{code:owner});await run('bootstrap',{},'Owner access enabled');setTab('admin')}catch{}}}>ACTIVATE</button></div></details></section>}</>}

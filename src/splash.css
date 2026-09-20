@@ -1,9 +1,0 @@
-.wf-launch{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 42%,#c27c1212,transparent 55%),#071811;color:#fff5e8;font-family:system-ui,-apple-system,sans-serif;text-align:center}
-.wf-launch-content{width:100%;max-width:280px}
-.wf-launch-coin{display:grid;place-items:center;width:76px;height:76px;margin:0 auto 24px;border-radius:25px;background:linear-gradient(145deg,#ffd777,#ff991e);border:1px solid #ffe1a0;color:#382105;font-size:43px;font-weight:900;box-shadow:0 12px 40px #ff9d0014,inset 0 1px 0 #ffffff60}
-.wf-launch h1{margin:0;font-size:24px;font-weight:850;letter-spacing:-.5px}.wf-launch h1 span{color:#ffc768}
-.wf-launch-track{height:3px;width:112px;margin:26px auto 17px;overflow:hidden;background:#ffffff12;border-radius:9px}.wf-launch-track i{display:block;width:45%;height:100%;border-radius:inherit;background:#ffc768;animation:wf-launch-slide 1.4s ease-in-out infinite}
-.wf-launch p{margin:0;color:#acb8ad;font-size:12px;line-height:1.6}.wf-launch-footer{position:absolute;bottom:max(32px,env(safe-area-inset-bottom));color:#66796b;font-size:11px;letter-spacing:.2px}
-.wf-launch button{margin-top:20px;padding:11px 20px;min-height:44px;background:#ffc76812;border:1px solid #ffc76840;border-radius:12px;color:#ffc768;font:inherit;font-size:12px}.wf-launch button::before,.wf-launch button::after{display:none!important}
-@keyframes wf-launch-slide{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
-@media(prefers-reduced-motion:reduce){.wf-launch-track i{animation:none;width:100%;opacity:.65}}
