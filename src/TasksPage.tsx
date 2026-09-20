@@ -33,11 +33,11 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
   const {t}=useI18n();
   const targetId=new URLSearchParams(window.location.search).get('task'),target=data.tasks.find(t=>t.id===targetId),initialCat=(target?.category==='partner'?'partner':'official');
   const [cat,setCat]=useState(initialCat),[botStates,setBotStates]=useState<Record<string,BotState>>({}),[normalStates,setNormalStates]=useState<Record<string,NormalState>>({}),[busy,setBusy]=useState('');
-  const done=new Set(data.completed.map(x=>x.task_id)),visibleTasks=data.tasks.filter(t=>t.category!=='exclusive'),items=visibleTasks.filter(t=>(t.category||'official')===cat).sort((a,b)=>Number(done.has(a.id))-Number(done.has(b.id))),count=data.completed.filter(x=>visibleTasks.some(t=>t.id===x.task_id)).length;
+  const done=new Set(data.completed.map(x=>x.task_id)),visibleTasks=data.tasks.filter(tk=>tk.category!=='exclusive'),items=visibleTasks.filter(tk=>(tk.category||'official')===cat).sort((a,b)=>Number(done.has(a.id))-Number(done.has(b.id))),count=data.completed.filter(x=>visibleTasks.some(tk=>tk.id===x.task_id)).length;
   useEffect(()=>{if(target){setCat(target.category==='partner'?'partner':'official');setTimeout(()=>document.getElementById(`task-${target.id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),120)}},[targetId]);
-  useEffect(()=>{const bots=visibleTasks.filter(t=>t.verification==='bot_forward'&&!done.has(t.id));Promise.all(bots.map(async t=>{try{const s=await botTask('status',t.id);return [t.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [t.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
-  const normalTask=async(t:any)=>{if(busy)return;const opened=normalStates[t.id]==='opened',external=t.verification==='external_visit',mini=t.task_type==='mini_app';try{if(!opened){setBusy(t.id);if(external)await taskApi(t.id,'begin_external');if(t.url){if(mini)window.Telegram?.WebApp?.openTelegramLink?.(t.url);else window.Telegram?.WebApp?.openLink?.(t.url)}setNormalStates(v=>({...v,[t.id]:'opened'}));say(mini?'Mini App opened. Stay at least 15 seconds, then return and tap CLAIM.':external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':t.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(t.id);await taskApi(t.id,'claim');say(`+${t.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){const m=String(e.message||'Task verification failed');say(/^wait_\d+_seconds$/.test(m)?`Please wait ${m.match(/\d+/)?.[0]||'a few'} more seconds.`:m)}finally{setBusy('')}};
-  const botAction=async(t:any)=>{if(busy)return;const state=botStates[t.id]||'not_started';try{setBusy(t.id);if(state==='not_started'){const x=await botTask('begin',t.id);setBotStates(v=>({...v,[t.id]:'pending'}));say(`Forward one message from @${x.bot_username} to WIENER bot, then tap CHECK`);const url=String(x.url||t.url||'');if(url)window.Telegram?.WebApp?.openTelegramLink?.(url);return}if(state==='pending'){const x=await botTask('status',t.id);if(x.verified){setBotStates(v=>({...v,[t.id]:'verified'}));say('✅ Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward one message from the required bot to WIENER, then check again.');return}await taskApi(t.id,'claim');say(`+${t.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
+  useEffect(()=>{const bots=visibleTasks.filter(tk=>tk.verification==='bot_forward'&&!done.has(tk.id));Promise.all(bots.map(async tk=>{try{const s=await botTask('status',tk.id);return [tk.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [tk.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
+  const normalTask=async(task:any)=>{if(busy)return;const opened=normalStates[task.id]==='opened',external=task.verification==='external_visit',mini=task.task_type==='mini_app';try{if(!opened){setBusy(task.id);if(external)await taskApi(task.id,'begin_external');if(task.url){if(mini)window.Telegram?.WebApp?.openTelegramLink?.(task.url);else window.Telegram?.WebApp?.openLink?.(task.url)}setNormalStates(v=>({...v,[task.id]:'opened'}));say(mini?'Mini App opened. Stay at least 15 seconds, then return and tap CLAIM.':external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':task.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(task.id);await taskApi(task.id,'claim');say(`+${task.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){const m=String(e.message||'Task verification failed');say(/^wait_\d+_seconds$/.test(m)?`Please wait ${m.match(/\d+/)?.[0]||'a few'} more seconds.`:m)}finally{setBusy('')}};
+  const botAction=async(task:any)=>{if(busy)return;const state=botStates[task.id]||'not_started';try{setBusy(task.id);if(state==='not_started'){const x=await botTask('begin',task.id);setBotStates(v=>({...v,[task.id]:'pending'}));say(`Forward one message from @${x.bot_username} to WIENER bot, then tap CHECK`);const url=String(x.url||task.url||'');if(url)window.Telegram?.WebApp?.openTelegramLink?.(url);return}if(state==='pending'){const x=await botTask('status',task.id);if(x.verified){setBotStates(v=>({...v,[task.id]:'verified'}));say('✅ Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward one message from the required bot to WIENER, then check again.');return}await taskApi(task.id,'claim');say(`+${task.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
   return <>
     <style>{`
       .task-tabs{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;padding:6px;margin:14px 0 16px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(0,24,14,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
@@ -94,29 +94,29 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
       </button>
     </div>
     <section className="card task-list">
-      {items.length ? items.map(t=>{
-        const isBot=t.verification==='bot_forward',isExternal=t.verification==='external_visit',isMini=t.task_type==='mini_app',state=botStates[t.id]||'not_started',normalOpened=normalStates[t.id]==='opened',completed=done.has(t.id);
-        const label=completed?t('common.done','DONE'):busy===t.id?t('common.wait','WAIT'):isBot?(state==='verified'?t('common.claim','CLAIM'):state==='pending'?'CHECK':'START'):(normalOpened?t('common.claim','CLAIM'):isMini?'OPEN':isExternal?'OPEN':t('common.join','JOIN'));
-        const doneCount=Number(t.completed_count||0),limit=Number(t.max_completions||0),remaining=limit?Math.max(0,limit-doneCount):0;
+      {items.length ? items.map(task=>{
+        const isBot=task.verification==='bot_forward',isExternal=task.verification==='external_visit',isMini=task.task_type==='mini_app',state=botStates[task.id]||'not_started',normalOpened=normalStates[task.id]==='opened',completed=done.has(task.id);
+        const label=completed?t('common.done','DONE'):busy===task.id?t('common.wait','WAIT'):isBot?(state==='verified'?t('common.claim','CLAIM'):state==='pending'?'CHECK':'START'):(normalOpened?t('common.claim','CLAIM'):isMini?'OPEN':isExternal?'OPEN':t('common.join','JOIN'));
+        const doneCount=Number(task.completed_count||0),limit=Number(task.max_completions||0),remaining=limit?Math.max(0,limit-doneCount):0;
         const limitText=limit?(remaining>0&&remaining<=10?`${remaining} spots left`:`${doneCount} / ${limit}`):'Open task';
-        const typeLabel=isMini?'MINI APP':isBot?'BOT':t.verification==='telegram_member'?'TELEGRAM':isExternal?'LINK':'TASK';
+        const typeLabel=isMini?'MINI APP':isBot?'BOT':task.verification==='telegram_member'?'TELEGRAM':isExternal?'LINK':'TASK';
         const status=isBot&&state==='pending'?'Waiting for verification':isBot&&state==='verified'?'Reward ready':normalOpened?(isExternal?'Return after 15 sec · reward ready':'Ready to claim'):'';
-        return <div className={`premium-task-row ${targetId===t.id?'target-task':''}`} id={`task-${t.id}`} key={t.id}>
-          <TaskAvatar task={t} active={completed||state==='verified'}/>
+        return <div className={`premium-task-row ${targetId===task.id?'target-task':''}`} id={`task-${task.id}`} key={task.id}>
+          <TaskAvatar task={task} active={completed||state==='verified'}/>
           <div className="task-info">
             <div className="task-title-line">
-              <h3>{t.title}</h3>
+              <h3>{task.title}</h3>
               <span className="task-type-pill">{typeLabel}</span>
             </div>
-            {t.description && <p className="task-desc">{t.description}</p>}
+            {task.description && <p className="task-desc">{task.description}</p>}
             <div className="task-meta">
-              <span className="task-reward">+{t.reward} W</span>
+              <span className="task-reward">+{task.reward} W</span>
               <span className="task-dot-sep">•</span>
               <span className="task-limit">{limitText}</span>
             </div>
             {status&&<small className={`task-status-mini ${state==='verified'||normalOpened?'ready':''}`}>{status}</small>}
           </div>
-          <button className="primary small task-action" disabled={completed||busy===t.id} onClick={()=>isBot?botAction(t):normalTask(t)}>
+          <button className="primary small task-action" disabled={completed||busy===task.id} onClick={()=>isBot?botAction(task):normalTask(task)}>
             {label}
           </button>
         </div>
