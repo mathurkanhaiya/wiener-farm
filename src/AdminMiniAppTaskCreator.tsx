@@ -27,7 +27,7 @@ const isPrivateStored=(x:any)=>x?.task_type==='telegram'&&x?.verification==='non
 export function AdminMiniAppTaskCreator({say}:{say:(s:string)=>void}){
   const [open,setOpen]=useState(false),[busy,setBusy]=useState(false),[rows,setRows]=useState<any[]>([]);
   const [form,setForm]=useState<any>(fresh());
-  const load=async()=>{try{const d=await api('admin_get');setRows((d.tasks||[]).filter((x:any)=>x.task_type==='mini_app'||isPrivateStored(x)))}catch{}};
+  const load=async()=>{try{const d:any=await api('admin_get');const tasks=Array.isArray(d?.tasks)?d.tasks:[];setRows(tasks.filter((x:any)=>x.task_type==='mini_app'||isPrivateStored(x)))}catch{}};
   useEffect(()=>{load()},[]);
   const isPrivate=form.task_type==='private_channel';
   const parsed=parseMini(String(form.url||'').trim());

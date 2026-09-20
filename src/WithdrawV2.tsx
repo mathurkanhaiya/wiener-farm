@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {date,money,type Snapshot,withdrawApi} from './lib';
 import {AnimatedIcon} from './icons';
+import './styles-withdraw-v2.css';
 
 type Method={method_key:string;label:string;network:'TON'|'Polygon';enabled:boolean;minimum_usdt:number;fee_usdt:number;sort_order:number};
 type Step='method'|'amount'|'wallet'|'review';
@@ -49,13 +50,44 @@ export function WalletV2({data}:{data:Snapshot;setTab:any}){
 }
 
 export function AdminWithdrawUpgrade({say}:{say:any}){
-  const [d,setD]=useState<any>(null),[busy,setBusy]=useState(false);
-  const load=async()=>{try{setBusy(true);setD(await withdrawApi('admin_boot'))}catch(e:any){say(humanError(e))}finally{setBusy(false)}};
+  const [d,setD]=useState<any>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  const load=async()=>{
+    try{
+      setBusy(true);
+      setError('');
+      const res:any=await withdrawApi('admin_boot');
+      if(!res||typeof res!=='object'||res.error){
+        throw new Error(res?.message||res?.error||'Failed to load payout controls');
+      }
+      setD(res);
+    }catch(e:any){
+      const msg=humanError(e);
+      setError(msg);
+      say(msg);
+    }finally{
+      setBusy(false);
+    }
+  };
   useEffect(()=>{load()},[]);
-  if(!d)return <section className="admin-withdraw-v2 glass-panel"><h3>💸 Withdrawal System</h3><p>Loading secure payout controls…</p></section>;
-  const patch=(key:string,k:string,v:any)=>setD({...d,methods:d.methods.map((m:any)=>m.method_key===key?{...m,[k]:v}:m)});
+  if(!d){
+    if(error){
+      return <section className="admin-withdraw-v2 glass-panel" style={{textAlign:'center',padding:24}}>
+        <div style={{fontSize:28,marginBottom:8}}>⚠️</div>
+        <h3>💸 Payout Control Offline</h3>
+        <p style={{margin:'8px 0 16px',fontSize:12,opacity:0.7}}>{error}</p>
+        <button className="primary" onClick={load} disabled={busy} style={{width:'auto',margin:'0 auto',padding:'8px 18px'}}>
+          {busy?'Retrying…':'RETRY CONNECTION'}
+        </button>
+      </section>;
+    }
+    return <section className="admin-withdraw-v2 glass-panel"><h3>💸 Withdrawal System</h3><p>Loading secure payout controls…</p></section>;
+  }
+  const methods=Array.isArray(d?.methods)?d.methods:[];
+  const withdrawals=Array.isArray(d?.withdrawals)?d.withdrawals:[];
+  const patch=(key:string,k:string,v:any)=>setD({...d,methods:methods.map((m:any)=>m.method_key===key?{...m,[k]:v}:m)});
   const save=async(m:any)=>{try{setBusy(true);await withdrawApi('admin_method_save',{method:{method_key:m.method_key,enabled:m.enabled,minimum_usdt:Number(m.minimum_usdt),fee_usdt:Number(m.fee_usdt)}});say('✅ Withdrawal method saved');await load()}catch(e:any){say(humanError(e))}finally{setBusy(false)}};
   const paid=async(w:any)=>{const tx=prompt(`Enter ${w.network} transaction hash`,'')?.trim();if(!tx)return;if(!confirm(`Confirm PAID?\n\nAmount: ${money(w.gross_usdt,4)} USDT\nNetwork: ${w.network}\nTX: ${tx}`))return;try{setBusy(true);await withdrawApi('admin_paid',{id:w.id,tx_hash:tx});say('✅ Paid, user notified and @WienerPay post processed');await load()}catch(e:any){say(humanError(e))}finally{setBusy(false)}};
   const reject=async(w:any)=>{const note=prompt('Rejection reason (optional)','Rejected by admin')||'Rejected by admin';if(!confirm(`Reject this ${w.network} withdrawal?`))return;try{setBusy(true);await withdrawApi('admin_reject',{id:w.id,note});say('🔴 Withdrawal rejected and user notified');await load()}catch(e:any){say(humanError(e))}finally{setBusy(false)}};
-  return <section className="admin-withdraw-v2 glass-panel"><div className="admin-upgrade-head"><div><span>SECURE PAYOUT CONTROL</span><h3>Withdrawal Methods</h3><p>Changes apply instantly without redeployment.</p></div><button onClick={load}>↻</button></div><div className="method-admin-grid">{d.methods.filter((m:any)=>m.network==='TON'||m.method_key==='gram_ton').map((m:any)=><div className="method-admin-card" key={m.method_key}><div className="method-admin-title"><div style={{display:'flex',alignItems:'center',gap:10}}><img src={m.network==='TON'?TON_ICON:USDT_ICON} alt={m.network==='TON'?'TON':'USDT'} style={{width:32,height:32,objectFit:'contain',display:'block'}}/><div><b>{m.label}</b><small>{m.network} network</small></div></div><label className="method-switch"><input type="checkbox" checked={!!m.enabled} onChange={e=>patch(m.method_key,'enabled',e.target.checked)}/><span>{m.enabled?'Enabled':'Disabled'}</span></label></div><label>Minimum withdrawal<input type="number" step="0.0001" value={m.minimum_usdt} onChange={e=>patch(m.method_key,'minimum_usdt',e.target.value)}/></label><label>Withdrawal fee<input type="number" step="0.0001" value={m.fee_usdt} onChange={e=>patch(m.method_key,'fee_usdt',e.target.value)}/></label><button className="primary" disabled={busy} onClick={()=>save(m)}>SAVE {m.network.toUpperCase()}</button></div>)}</div><div className="admin-upgrade-head compact"><div><h3>Withdrawal Requests</h3><p>Pending → Paid or Rejected only.</p></div></div><div className="withdraw-admin-list">{d.withdrawals.length?d.withdrawals.map((w:any)=>{const st=statusView(String(w.status));return <div className={`withdraw-admin-row status-${w.status}`} key={w.id}><div className="withdraw-admin-main"><div><b>{w.username||`User ${w.telegram_id}`}</b><small>UID {w.telegram_id}</small></div><strong>{money(w.gross_usdt,4)} USDT</strong></div><div className="withdraw-admin-meta"><span>ID {String(w.id).slice(0,8)}…</span><span>🌐 {w.network}</span><span>Fee {money(w.fee_usdt,4)}</span><span>Final {money(w.receive_usdt,4)}</span><span>{date(w.created_at)}</span></div><code className="withdraw-wallet-code">{w.wallet_address}</code><div className="withdraw-admin-status"><b>{st.icon} {st.label}</b>{w.processing_admin&&<span>Admin {w.processing_admin}</span>}{w.processed_at&&<span>{date(w.processed_at)}</span>}</div>{w.tx_hash&&<div className="withdraw-tx">TX: {w.tx_hash}</div>}{w.status==='pending'&&<div className="row-actions"><button className="good" disabled={busy} onClick={()=>paid(w)}>✅ MARK PAID</button><button className="danger" disabled={busy} onClick={()=>reject(w)}>❌ REJECT</button></div>}</div>}):<div className="admin-empty">No withdrawal requests.</div>}</div></section>
+  const visibleMethods=methods.length?methods:[];
+  return <section className="admin-withdraw-v2 glass-panel"><div className="admin-upgrade-head"><div><span>SECURE PAYOUT CONTROL</span><h3>Withdrawal Methods</h3><p>Changes apply instantly without redeployment.</p></div><button onClick={load} disabled={busy}>{busy?'…':'↻'}</button></div><div className="method-admin-grid">{visibleMethods.map((m:any)=><div className="method-admin-card" key={m.method_key}><div className="method-admin-title"><div style={{display:'flex',alignItems:'center',gap:10}}><img src={m.network==='TON'?TON_ICON:USDT_ICON} alt={m.network==='TON'?'TON':'USDT'} style={{width:32,height:32,objectFit:'contain',display:'block'}}/><div><b>{m.label}</b><small>{m.network} network</small></div></div><label className="method-switch"><input type="checkbox" checked={!!m.enabled} onChange={e=>patch(m.method_key,'enabled',e.target.checked)}/><span>{m.enabled?'Enabled':'Disabled'}</span></label></div><label>Minimum withdrawal<input type="number" step="0.0001" value={m.minimum_usdt} onChange={e=>patch(m.method_key,'minimum_usdt',e.target.value)}/></label><label>Withdrawal fee<input type="number" step="0.0001" value={m.fee_usdt} onChange={e=>patch(m.method_key,'fee_usdt',e.target.value)}/></label><button className="primary" disabled={busy} onClick={()=>save(m)}>SAVE {String(m.network||'METHOD').toUpperCase()}</button></div>)}</div><div className="admin-upgrade-head compact"><div><h3>Withdrawal Requests</h3><p>Pending → Paid or Rejected only.</p></div></div><div className="withdraw-admin-list">{withdrawals.length?withdrawals.map((w:any)=>{const st=statusView(String(w.status));return <div className={`withdraw-admin-row status-${w.status}`} key={w.id}><div className="withdraw-admin-main"><div><b>{w.username||`User ${w.telegram_id}`}</b><small>UID {w.telegram_id}</small></div><strong>{money(w.gross_usdt,4)} USDT</strong></div><div className="withdraw-admin-meta"><span>ID {String(w.id).slice(0,8)}…</span><span>🌐 {w.network}</span><span>Fee {money(w.fee_usdt,4)}</span><span>Final {money(w.receive_usdt,4)}</span><span>{date(w.created_at)}</span></div><code className="withdraw-wallet-code">{w.wallet_address}</code><div className="withdraw-admin-status"><b>{st.icon} {st.label}</b>{w.processing_admin&&<span>Admin {w.processing_admin}</span>}{w.processed_at&&<span>{date(w.processed_at)}</span>}</div>{w.tx_hash&&<div className="withdraw-tx">TX: {w.tx_hash}</div>}{w.status==='pending'&&<div className="row-actions"><button className="good" disabled={busy} onClick={()=>paid(w)}>✅ MARK PAID</button><button className="danger" disabled={busy} onClick={()=>reject(w)}>❌ REJECT</button></div>}</div>}):<div className="admin-empty">No withdrawal requests.</div>}</div></section>;
 }
