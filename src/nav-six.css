@@ -6,7 +6,7 @@
   transform:translateX(-50%)!important;
   width:calc(100% - 16px)!important;max-width:480px!important;
   height:62px!important;box-sizing:border-box!important;
-  display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
   align-items:stretch!important;gap:2px!important;padding:5px 6px!important;
   overflow:visible!important;border-radius:28px!important;
   background:linear-gradient(125deg,#111016 0%,#17151d 48%,#242129 100%)!important;
