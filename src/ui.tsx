@@ -65,7 +65,7 @@ export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boole
   const left:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads',t('nav.ads','Ads'),'ads']];
   const right:[Tab,string,IconName][]=[['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['wallet',t('nav.wallet','Wallet'),'wallet']];
   const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><AnimatedIcon name={icon} active={tab===k}/><span>{l}</span></button>;
-  return <nav className="bottom-nav game-nav"><div className="game-nav-left">{left.map(item)}</div><button className={`play-nav ${tab==='games'?'active':''}`} onClick={()=>setTab('games')} aria-label="Play games"><span className="play-orb"><b>▶</b></span><strong>{t('nav.play','PLAY')}</strong><i/></button><div className="game-nav-right">{right.map(item)}</div>{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
+  return <nav className="bottom-nav"><div className="game-nav-left">{left.map(item)}</div><div className="game-nav-right">{right.map(item)}</div>{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
 }
 
 
