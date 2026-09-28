@@ -61,11 +61,26 @@ export function Brand({data}:{data:Snapshot}){
   return <header className="brand wf-header"><div className="wf-brand-lockup"><div className="wf-brand-logo"><WienerLogo size={42}/></div><div className="brand-copy"><b>WIENER FARM</b><span>{t('brand.tagline','Earn · Grow · Withdraw')}</span></div></div><div className="wf-header-actions"><div className="balance-pill"><span className="mini-coin">W</span>{money(data.user.balance)}</div><LanguagePicker/></div></header>;
 }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
-  const{t}=useI18n();
+  const{t}=useI18n();const[hidden,setHidden]=useState(false);
+  useEffect(()=>{
+    let last=window.scrollY;let ticking=false;
+    const onScroll=()=>{
+      if(ticking)return;ticking=true;
+      window.requestAnimationFrame(()=>{
+        const y=window.scrollY;
+        if(y<=24)setHidden(false);
+        else if(y>last+4)setHidden(true);
+        else if(y<last-4)setHidden(false);
+        last=y;ticking=false;
+      });
+    };
+    window.addEventListener('scroll',onScroll,{passive:true});
+    return()=>window.removeEventListener('scroll',onScroll);
+  },[]);
   const left:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads',t('nav.ads','Ads'),'ads']];
   const right:[Tab,string,IconName][]=[['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['wallet',t('nav.wallet','Wallet'),'wallet']];
   const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><AnimatedIcon name={icon} active={tab===k}/><span>{l}</span></button>;
-  return <nav className="bottom-nav game-nav"><div className="game-nav-left">{left.map(item)}</div><div className="game-nav-right">{right.map(item)}</div>{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
+  return <nav className={hidden?'bottom-nav game-nav nav-hidden':'bottom-nav game-nav'}><div className="game-nav-left">{left.map(item)}</div><div className="game-nav-right">{right.map(item)}</div>{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
 }
 
 
