@@ -8,7 +8,7 @@ const WIENER_LOGO='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';function WienerL
 export {Splash} from './Splash';
 export function OpenTelegram(){const{t}=useI18n();return <div className="center-screen"><WienerLogo size={108}/><h1>WIENER</h1><p>This Mini App uses signed Telegram authentication. Open it from <b>@WienerDogeFarmBot</b>.</p><a className="primary linkbtn" href="https://t.me/WienerDogeFarmBot">{t('system.openTelegram')}</a></div>}
 export function StateScreen({icon,title,text}:{icon:string;title:string;text:string}){return <div className="center-screen"><div className="state-icon">{icon}</div><h2>{title}</h2><p>{text}</p></div>}
-function LanguagePicker(){
+export function LanguagePicker(){
   const {language,lang,setLang,t}=useI18n(),[open,setOpen]=useState(false),[q,setQ]=useState('');
   const filtered=useMemo(()=>{const s=q.trim().toLowerCase();return s?LANGUAGES.filter(x=>`${x.name} ${x.native} ${x.code}`.toLowerCase().includes(s)):LANGUAGES},[q]);
   const dialogRef=useRef<HTMLElement>(null),triggerRef=useRef<HTMLButtonElement>(null);
@@ -57,9 +57,7 @@ function LanguagePicker(){
     </div>, document.body)}
   </>;
 }
-export function Brand({data}:{data:Snapshot}){
-  return <header className="brand wf-header wf-header-minimal"><div className="wf-brand-lockup"><div className="brand-copy"><b>WIENER FARM</b></div></div><LanguagePicker/></header>;
-}
+export function Brand({data}:{data:Snapshot}){ return null; }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
   const{t}=useI18n();const[hidden,setHidden]=useState(false);
   useEffect(()=>{
