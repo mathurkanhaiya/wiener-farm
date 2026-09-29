@@ -147,10 +147,86 @@ function DailyCard({data,run}:{data:Snapshot;run:any}){const [bioGate,setBioGate
 export function DailyPage({data,run}:{data:Snapshot;run:any}){const u:any=data.user;return <><div className="page-title"><h2>DAILY WIENER</h2></div><DailyCard data={data} run={run}/><div className="info-box">🔥 Best streak: {u.best_streak||u.daily_streak||0} days · Stay active to increase your weekly loyalty bonus up to 1.15×.</div></>}
 export function ClaimPage({data,run}:{data:Snapshot;run:any}){const s=data.settings,[busy,setBusy]=useState(false),[clock,setClock]=useState(Date.now()),f=farmInfo(data);useEffect(()=>{if(!f.started||f.ready)return;const ms=Math.max(250,Math.min(1000,f.next-Date.now()+50));const x=window.setTimeout(()=>setClock(Date.now()),ms);return()=>window.clearTimeout(x)},[f.started,f.ready,f.next,clock]);const start=async()=>{if(busy||f.limitReached||f.started)return;try{setBusy(true);await run('farm_start',{},'🌱 Farm started')}finally{setBusy(false)}};return <><div className="page-title"><h2>WIENER FARM</h2></div><section className="hero card glow"><div className="square claim-icon"><AnimatedIcon name="bolt" active={!f.limitReached}/></div><h2>{f.limitReached?'Daily farm limit reached':!f.started?'Farm is idle':f.ready?'Your WIENER is ready':'Your next WIENER is growing'}</h2><p className="muted">Today's farms · {f.count}/5</p>{f.limitReached?<button className="primary" disabled>COME BACK TOMORROW</button>:!f.started?<button className="primary button-with-icon" disabled={busy} onClick={start}><AnimatedIcon name="bolt" active/>{busy?'STARTING…':'START FARM'}</button>:f.ready?<button className="primary button-with-icon" onClick={()=>run('farm_claim')}><AnimatedIcon name="gift" active/>CLAIM {s.farm_claim_reward} WIENER</button>:<Countdown to={f.next}/>}</section></>}
 
-export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){const [busy,setBusy]=useState(false),[session,setSession]=useState('');const s=data.settings,u=data.user,used=u.ads_day===today()?Number(u.ads_watched_today):0;
-  const watch=async()=>{if(!s.adsgram_block_id){say('Ads are temporarily unavailable');return}try{setBusy(true);const x=await api('ad_start');setSession(x.session_id);const c=window.Adsgram?.init({blockId:String(s.adsgram_block_id)});if(!c)throw Error('AdsGram SDK unavailable');await c.show();say('Ad completed — verifying reward…');let credited=false;for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,1500));const st=await api('ad_status',{session_id:x.session_id});if(st?.status==='credited'){credited=true;say(`+${st.reward||s.ad_reward} WIENER`);await refresh();break}}if(!credited)say('Reward is still verifying. Check again shortly.')}catch(e:any){say(e.message)}finally{setBusy(false)}};
-  return <><div className="page-title"><h2>ADS TASK <span>{used}/{s.daily_ad_limit}</span></h2></div><section className="card ad-card"><div className="square play"><AnimatedIcon name="ads" active={!busy&&used<s.daily_ad_limit}/></div><div className="grow"><h3>AdsGram — {s.daily_ad_limit} ads</h3><p>+{s.ad_reward} WIENER each · {used}/{s.daily_ad_limit} today</p></div><button className="primary small" disabled={busy||used>=s.daily_ad_limit} onClick={watch}>{used>=s.daily_ad_limit?'DONE':busy?'WAIT':'WATCH'}</button></section><div className="info-box">ⓘ Rewards are credited only after server verification confirms the completed ad.</div>{session&&<div className="tiny center">Verification session: {session.slice(0,8)}…</div>}</>}
-
+export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
+  const [busy,setBusy]=useState(false),[session,setSession]=useState('');
+  const s=data.settings,u:any=data.user;
+  const used=u.ads_day===today()?Number(u.ads_watched_today||0):0;
+  const done=new Set((data.completed||[]).map((x:any)=>x.task_id));
+  const tasks=(data.tasks||[]).filter((t:any)=>!done.has(t.id));
+  const official=tasks.filter((t:any)=>String(t.category||'official').toLowerCase()==='official');
+  const other=tasks.filter((t:any)=>String(t.category||'official').toLowerCase()!=='official');
+  const watch=async()=>{
+    if(!s.adsgram_block_id){say('Ads are temporarily unavailable');return}
+    try{
+      setBusy(true);
+      const x=await api('ad_start');
+      setSession(x.session_id);
+      const c=window.Adsgram?.init({blockId:String(s.adsgram_block_id)});
+      if(!c)throw Error('AdsGram SDK unavailable');
+      await c.show();
+      say('Ad completed — verifying reward…');
+      let credited=false;
+      for(let i=0;i<12;i++){
+        await new Promise(r=>setTimeout(r,1500));
+        const st=await api('ad_status',{session_id:x.session_id});
+        if(st?.status==='credited'){
+          credited=true;
+          say(\`+\${st.reward||s.ad_reward} WIENER\`);
+          await refresh();
+          break;
+        }
+      }
+      if(!credited)say('Reward is still verifying. Check again shortly.');
+    }catch(e:any){say(e.message)}finally{setBusy(false)}
+  };
+  const taskIcon=(t:any)=>{
+    const h=\`\${t.title||''} \${t.description||''}\`.toLowerCase();
+    return h.includes('group')?'👥':h.includes('bio')?'🪪':h.includes('pay')?'💸':h.includes('channel')?'📢':h.includes('x')||h.includes('twitter')?'𝕏':'✓';
+  };
+  const taskRow=(t:any)=><div className="wf-earn-task" key={t.id}>
+    <div className="wf-earn-task-icon">{taskIcon(t)}</div>
+    <div className="wf-earn-task-copy">
+      <b>{t.title}</b>
+      <small>{t.description||'Complete this task to earn WIENER'}</small>
+    </div>
+    <strong><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>+{money(t.reward)}</strong>
+    <button className="wf-earn-task-open" onClick={()=>{if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setTimeout(()=>refresh(),800)}} aria-label={\`Open \${t.title}\`}>›</button>
+  </div>;
+  return <div className="wf-earn-page">
+    <header className="wf-earn-head">
+      <div><span>COMPLETE &amp; COLLECT</span><h2>Earn</h2></div>
+      <div className="wf-earn-counter"><b>{used}</b><small>/{s.daily_ad_limit} ads</small></div>
+    </header>
+    <section className="wf-earn-section">
+      <div className="wf-earn-section-head"><span><i/>WATCH &amp; EARN</span><small>{Math.max(0,s.daily_ad_limit-used)} available</small></div>
+      <div className="wf-earn-ad-grid">
+        {[1,2,3].map((n,i)=>{
+          const limit=[7,10,5][i];
+          const watched=Math.min(used,limit);
+          const reward=Number(s.ad_reward||10)*(i===0?2:1);
+          return <button className="wf-earn-ad" key={n} onClick={watch} disabled={busy||used>=s.daily_ad_limit}>
+            <div className="wf-earn-ad-top"><span>AD #{n}</span><b>{watched}/{limit}</b></div>
+            <img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
+            <div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div>
+            <span className="wf-earn-watch">{used>=s.daily_ad_limit?'DONE':busy?'WAIT':'WATCH'}</span>
+          </button>
+        })}
+      </div>
+    </section>
+    <section className="wf-earn-section">
+      <div className="wf-earn-section-head"><span><i/>SOCIAL TASKS</span><small>{official.length} available</small></div>
+      <div className="wf-earn-task-list">
+        {official.length?official.map(taskRow):<div className="wf-earn-empty">No official tasks available right now.</div>}
+      </div>
+    </section>
+    {other.length>0&&<section className="wf-earn-section">
+      <div className="wf-earn-section-head"><span><i/>MORE TASKS</span><small>{other.length} available</small></div>
+      <div className="wf-earn-task-list">{other.map(taskRow)}</div>
+    </section>}
+    <div className="wf-earn-note">Rewards are added after the task or ad is verified.</div>
+    {session&&<div className="wf-earn-session">Verification: {session.slice(0,8)}…</div>}
+  </div>
+}
 export function Tasks({data,run}:{data:Snapshot;run:any}){
   const targetId=new URLSearchParams(window.location.search).get('task'),target=data.tasks.find(t=>t.id===targetId),[cat,setCat]=useState(target?.category||'official'),done=new Set(data.completed.map(x=>x.task_id)),items=data.tasks.filter(t=>t.category===cat),count=data.completed.length;
   useEffect(()=>{if(target){setCat(target.category);setTimeout(()=>document.getElementById(`task-${target.id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),120)}},[targetId]);
