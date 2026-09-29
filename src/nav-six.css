@@ -1542,3 +1542,10 @@ body #root .app-shell > .bottom-nav.game-nav > button.active{background:rgba(35,
 body #root .app-shell > .bottom-nav.game-nav > button.active:after{display:none!important}
 body #root .app-shell > .content{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
 @media(max-width:390px){body #root .app-shell > .bottom-nav.game-nav{height:60px!important;min-height:60px!important;width:calc(100% - 20px)!important;border-radius:21px!important}body #root .app-shell > .bottom-nav.game-nav > button{height:52px!important;min-height:52px!important}body #root .app-shell > .bottom-nav.game-nav > button .aicon,body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon,body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{width:21px!important;height:21px!important}}
+
+/* NAV POSITION ONLY — keep existing sizes */
+body #root .app-shell > .bottom-nav.game-nav > button{gap:0!important;justify-content:center!important}
+body #root .app-shell > .bottom-nav.game-nav > button .aicon,
+body #root .app-shell > .bottom-nav.game-nav > button .me-nav-icon{position:relative!important;top:-2px!important}
+body #root .app-shell > .bottom-nav.game-nav > button > span:last-child{position:relative!important;top:2px!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{position:relative!important;top:0!important}
