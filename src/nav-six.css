@@ -1478,3 +1478,7 @@ body .app-shell .wf-earn-ambassador-section .amb-open{
  body .app-shell .wf-earn-spin-section .spin-earn-card{padding:12px!important}
  body .app-shell .wf-earn-promo-section .promo-v2{padding:12px!important}
 }
+
+/* ME TAB ICON */
+body #root .app-shell > .bottom-nav.game-nav button.wallet .me-nav-icon{width:30px!important;height:30px!important;display:grid!important;place-items:center!important}
+body #root .app-shell > .bottom-nav.game-nav button.wallet .me-nav-icon img{width:30px!important;height:30px!important;display:block!important;object-fit:contain!important;border-radius:0!important}
