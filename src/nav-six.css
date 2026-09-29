@@ -295,3 +295,368 @@ body #root .app-shell > .content{
     gap:6px!important;
   }
 }
+
+
+/* ==========================================================================
+   WIENER FARM — LEAF EARN HOME REDESIGN
+   Reference: dark emerald glass earning dashboard
+   ========================================================================== */
+:root{
+  --wf-leaf:#38d98b;
+  --wf-leaf-bright:#63efaa;
+  --wf-leaf-dark:#087e4d;
+  --wf-leaf-glow:rgba(42,218,126,.22);
+  --wf-leaf-glass:rgba(9,53,35,.68);
+  --wf-leaf-border:rgba(91,240,165,.18);
+}
+
+body .app-shell{
+  background:
+    radial-gradient(520px 420px at 50% 15%,rgba(0,155,82,.16),transparent 68%),
+    radial-gradient(380px 520px at 0% 65%,rgba(22,125,83,.13),transparent 72%),
+    linear-gradient(180deg,#061b13 0%,#071810 45%,#050d0b 100%)!important;
+}
+
+body .app-shell > .brand.wf-header{
+  background:rgba(6,25,19,.74)!important;
+  border-color:rgba(93,231,163,.14)!important;
+  box-shadow:0 12px 34px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+
+body .app-shell .wf-home-welcome{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 2px 18px!important;
+  min-height:54px!important;
+}
+
+body .app-shell .wf-welcome-copy{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+}
+
+body .app-shell .wf-welcome-copy span{
+  font-size:10px!important;
+  line-height:1!important;
+  letter-spacing:.28em!important;
+  font-weight:900!important;
+  color:rgba(220,255,239,.58)!important;
+}
+
+body .app-shell .wf-welcome-copy strong{
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-style:italic!important;
+  font-size:22px!important;
+  line-height:1.05!important;
+  font-weight:500!important;
+  color:#f3fff8!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+body .app-shell .wf-theme-toggle{
+  width:58px!important;
+  height:38px!important;
+  flex:0 0 58px!important;
+  border-radius:22px!important;
+  border:1px solid rgba(129,255,188,.16)!important;
+  background:rgba(11,52,36,.78)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 8px 22px rgba(0,0,0,.2)!important;
+  color:#eafff2!important;
+  display:grid!important;
+  place-items:center!important;
+  font-size:22px!important;
+}
+body .app-shell .wf-theme-toggle span{
+  width:31px!important;height:31px!important;
+  display:grid!important;place-items:center!important;
+  border-radius:50%!important;
+  background:linear-gradient(145deg,#61efad,#19b86f)!important;
+  color:#effff7!important;
+  box-shadow:0 4px 13px rgba(33,215,127,.35)!important;
+}
+
+body .app-shell .wf-balance-card{
+  position:relative!important;
+  min-height:246px!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding:28px 25px 23px!important;
+  margin:0 0 16px!important;
+  border:1px solid rgba(95,237,168,.20)!important;
+  border-radius:0!important;
+  clip-path:polygon(0 0,96% 0,100% 10%,100% 84%,94% 100%,0 100%)!important;
+  background:
+    radial-gradient(circle at 83% 47%,rgba(71,232,132,.13),transparent 34%),
+    linear-gradient(135deg,rgba(11,66,43,.76),rgba(6,42,29,.62))!important;
+  box-shadow:0 20px 48px rgba(0,0,0,.28),inset 0 1px 0 rgba(150,255,201,.07)!important;
+}
+
+body .app-shell .wf-balance-card:before,
+body .app-shell .wf-balance-card:after{
+  content:""!important;
+  position:absolute!important;
+  border:1px solid rgba(101,240,170,.07)!important;
+  pointer-events:none!important;
+}
+body .app-shell .wf-balance-card:before{
+  width:240px;height:240px;right:-95px;top:-115px;transform:rotate(18deg)!important;
+}
+body .app-shell .wf-balance-card:after{
+  width:180px;height:180px;left:-115px;bottom:-120px;transform:rotate(18deg)!important;
+}
+
+body .app-shell .wf-balance-copy{
+  position:relative!important;
+  z-index:2!important;
+  min-width:0!important;
+}
+body .app-shell .wf-balance-label{
+  color:rgba(230,255,242,.52)!important;
+  font-size:12px!important;
+  letter-spacing:.23em!important;
+  font-weight:900!important;
+  margin-bottom:10px!important;
+}
+body .app-shell .wf-balance-number{
+  font-size:64px!important;
+  line-height:.9!important;
+  letter-spacing:-.065em!important;
+  font-weight:900!important;
+  color:#69e9a5!important;
+  text-shadow:0 0 22px rgba(69,232,154,.10)!important;
+}
+body .app-shell .wf-balance-meta{
+  margin-top:29px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  color:rgba(224,255,239,.58)!important;
+  font-size:12px!important;
+  letter-spacing:.18em!important;
+  font-weight:800!important;
+}
+body .app-shell .wf-leaf-dot{color:#35d989!important;font-size:10px!important}
+body .app-shell .wf-usd-pill{
+  letter-spacing:0!important;
+  color:#49e49a!important;
+  border:1px solid rgba(57,222,143,.24)!important;
+  background:rgba(18,105,66,.22)!important;
+  border-radius:999px!important;
+  padding:8px 12px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+body .app-shell .wf-balance-art{
+  position:absolute!important;
+  z-index:2!important;
+  width:170px!important;
+  height:170px!important;
+  object-fit:contain!important;
+  right:14px!important;
+  top:39px!important;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.28))!important;
+  pointer-events:none!important;
+  animation:wfLeafFloat 4.8s ease-in-out infinite!important;
+}
+@keyframes wfLeafFloat{
+  0%,100%{transform:translate3d(0,0,0) rotate(-2deg)}
+  50%{transform:translate3d(0,-7px,0) rotate(2deg)}
+}
+
+body .app-shell .wf-home-actions{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:14px!important;
+  margin:0 0 20px!important;
+}
+body .app-shell .wf-action-btn{
+  min-height:66px!important;
+  border:1px solid rgba(104,239,172,.17)!important;
+  clip-path:polygon(0 0,94% 0,100% 20%,100% 78%,94% 100%,0 100%)!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:11px!important;
+  font-size:16px!important;
+  font-weight:950!important;
+  letter-spacing:.16em!important;
+  color:#f3fff8!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+body .app-shell .wf-action-earn{background:linear-gradient(135deg,#087f4a,#18aa63)!important}
+body .app-shell .wf-action-withdraw{background:linear-gradient(135deg,#48dfaa,#18a86c)!important;color:#052718!important}
+body .app-shell .wf-action-btn .aicon{width:25px!important;height:25px!important}
+body .app-shell .wf-action-btn:active{transform:scale(.975)!important}
+
+body .app-shell .wf-feature-card{
+  width:100%!important;
+  min-height:88px!important;
+  margin:0 0 14px!important;
+  padding:15px 18px!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:56px minmax(0,1fr) 20px!important;
+  align-items:center!important;
+  gap:13px!important;
+  text-align:left!important;
+  color:#f1fff8!important;
+  background:linear-gradient(135deg,rgba(12,69,46,.74),rgba(8,43,31,.66))!important;
+  border:1px solid rgba(99,237,171,.13)!important;
+  clip-path:polygon(0 0,96% 0,100% 12%,100% 83%,94% 100%,0 100%)!important;
+  box-shadow:0 12px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.045)!important;
+}
+body .app-shell .wf-feature-icon{
+  width:48px!important;height:48px!important;
+  display:grid!important;place-items:center!important;
+  font-size:32px!important;
+  color:#59e8a2!important;
+  text-shadow:0 0 16px rgba(69,232,154,.22)!important;
+}
+body .app-shell .wf-feature-copy{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important}
+body .app-shell .wf-feature-copy b{font-size:17px!important;font-weight:900!important;line-height:1.1!important}
+body .app-shell .wf-feature-copy small{font-size:13px!important;line-height:1.45!important;color:rgba(226,255,239,.58)!important}
+body .app-shell .wf-feature-arrow{font-size:31px!important;color:rgba(225,255,240,.48)!important}
+body .app-shell .wf-feature-card:active{transform:scale(.985)!important}
+
+body .app-shell .wf-home-section{margin:24px 0 0!important}
+body .app-shell .wf-section-title{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  margin:0 0 14px!important;padding:0 2px!important;
+}
+body .app-shell .wf-section-title>span{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  font-size:13px!important;font-weight:900!important;letter-spacing:.20em!important;
+  color:#effff7!important;
+}
+body .app-shell .wf-section-title i{
+  width:9px!important;height:9px!important;border-radius:50%!important;
+  background:#36d98b!important;box-shadow:0 0 12px rgba(54,217,139,.45)!important;
+}
+body .app-shell .wf-section-title small{
+  font-size:12px!important;color:rgba(225,255,240,.55)!important;font-weight:700!important;
+}
+body .app-shell .wf-section-title button{
+  border:0!important;background:none!important;color:#55df9b!important;
+  font:inherit!important;font-size:13px!important;font-weight:800!important;
+}
+
+body .app-shell .wf-ad-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+body .app-shell .wf-ad-card{
+  min-height:274px!important;
+  padding:16px 14px 17px!important;
+  box-sizing:border-box!important;
+  display:flex!important;flex-direction:column!important;
+  align-items:stretch!important;
+  text-align:left!important;
+  color:#f1fff8!important;
+  border:1px solid rgba(100,236,169,.14)!important;
+  background:linear-gradient(155deg,rgba(25,76,52,.64),rgba(7,39,28,.74))!important;
+  clip-path:polygon(0 7%,9% 0,100% 0,100% 91%,91% 100%,0 100%)!important;
+  box-shadow:0 15px 34px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+body .app-shell .wf-ad-card:nth-child(3){
+  grid-column:1 / -1!important;
+  width:50%!important;
+  justify-self:center!important;
+}
+body .app-shell .wf-ad-top{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  color:rgba(224,255,239,.48)!important;font-size:11px!important;font-weight:900!important;letter-spacing:.14em!important;
+}
+body .app-shell .wf-ad-top b{color:#55df9b!important;font-size:13px!important;letter-spacing:0!important}
+body .app-shell .wf-ad-icon{
+  height:98px!important;display:grid!important;place-items:center!important;margin-top:8px!important;
+  color:#5be9a5!important;
+}
+body .app-shell .wf-ad-icon .aicon{width:70px!important;height:70px!important;filter:drop-shadow(0 8px 12px rgba(0,0,0,.25))!important}
+body .app-shell .wf-ad-reward{
+  text-align:center!important;color:#51dc98!important;font-size:23px!important;font-weight:950!important;
+  margin:0 0 18px!important;
+}
+body .app-shell .wf-watch-btn{
+  display:grid!important;place-items:center!important;min-height:50px!important;
+  margin-top:auto!important;color:#f2fff8!important;font-size:14px!important;font-weight:950!important;letter-spacing:.16em!important;
+  background:linear-gradient(135deg,#399d51,#2f7f42)!important;
+  clip-path:polygon(9% 0,100% 0,100% 78%,91% 100%,0 100%,0 24%)!important;
+  border:1px solid rgba(116,245,169,.16)!important;
+}
+body .app-shell .wf-ad-card:active{transform:scale(.98)!important}
+
+body .app-shell .wf-task-list{display:flex!important;flex-direction:column!important;gap:12px!important}
+body .app-shell .wf-task-row{
+  width:100%!important;min-height:82px!important;padding:12px 14px!important;box-sizing:border-box!important;
+  display:grid!important;grid-template-columns:52px minmax(0,1fr) auto 16px!important;align-items:center!important;gap:10px!important;
+  text-align:left!important;color:#effff7!important;
+  background:linear-gradient(135deg,rgba(25,73,51,.67),rgba(7,40,29,.72))!important;
+  border:1px solid rgba(104,237,171,.13)!important;
+  clip-path:polygon(0 0,97% 0,100% 16%,100% 84%,96% 100%,0 100%,0 17%)!important;
+}
+body .app-shell .wf-task-icon{
+  width:46px!important;height:46px!important;display:grid!important;place-items:center!important;
+  background:rgba(85,221,153,.08)!important;border:1px solid rgba(85,221,153,.11)!important;
+  color:#5de5a2!important;
+}
+body .app-shell .wf-task-copy{display:flex!important;flex-direction:column!important;gap:5px!important;min-width:0!important}
+body .app-shell .wf-task-copy b{font-size:15px!important;font-weight:900!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body .app-shell .wf-task-copy small{font-size:12px!important;color:rgba(225,255,240,.54)!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+body .app-shell .wf-task-row>strong{font-size:14px!important;color:#54df99!important;white-space:nowrap!important}
+body .app-shell .wf-task-arrow{font-size:28px!important;color:rgba(224,255,240,.44)!important}
+body .app-shell .wf-task-row:active{transform:scale(.985)!important}
+
+body .app-shell .wf-daily-mini{
+  margin:20px 0 8px!important;padding:14px 16px!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
+  border:1px solid rgba(104,237,171,.12)!important;
+  background:rgba(10,49,34,.58)!important;
+  border-radius:18px!important;
+}
+body .app-shell .wf-daily-mini>div{display:flex!important;align-items:center!important;gap:11px!important}
+body .app-shell .wf-daily-icon{font-size:25px!important}
+body .app-shell .wf-daily-mini b{display:block!important;font-size:14px!important}
+body .app-shell .wf-daily-mini small{display:block!important;margin-top:3px!important;font-size:11px!important;color:rgba(224,255,240,.48)!important}
+body .app-shell .wf-daily-mini button{border:0!important;background:none!important;color:#55df9b!important;font-weight:900!important;font-size:12px!important}
+
+body #root .app-shell > .bottom-nav.game-nav{
+  background:rgba(5,20,14,.94)!important;
+  border-color:rgba(89,225,153,.15)!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.55),inset 0 1px 0 rgba(118,244,176,.05)!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active{
+  background:rgba(41,205,119,.16)!important;
+  color:#5ce9a4!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active:after{
+  background:#45df96!important;
+  box-shadow:0 0 10px rgba(69,223,150,.5)!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button{
+  color:rgba(207,237,220,.56)!important;
+}
+
+@media(max-width:520px){
+  body .app-shell .wf-balance-card{min-height:220px!important;padding:24px 20px 20px!important}
+  body .app-shell .wf-balance-number{font-size:58px!important}
+  body .app-shell .wf-balance-art{width:148px!important;height:148px!important;right:-2px!important;top:40px!important}
+}
+@media(max-width:390px){
+  body .app-shell .wf-balance-card{min-height:205px!important}
+  body .app-shell .wf-balance-number{font-size:53px!important}
+  body .app-shell .wf-balance-meta{margin-top:23px!important;font-size:10px!important}
+  body .app-shell .wf-usd-pill{padding:7px 9px!important;font-size:10px!important}
+  body .app-shell .wf-balance-art{width:132px!important;height:132px!important;right:-5px!important;top:43px!important}
+  body .app-shell .wf-ad-card{min-height:250px!important}
+}
