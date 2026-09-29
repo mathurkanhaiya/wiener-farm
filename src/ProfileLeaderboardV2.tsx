@@ -84,3 +84,22 @@ export function ProfilePageV2({data,setTab}:{data:Snapshot;setTab:any}){const u:
 .me-support b{font-size:15px!important}
 .me-support span{font-size:9px!important;margin-top:3px!important}
 @media(max-width:390px){.me-balance{height:180px!important;min-height:180px!important;padding:19px 21px!important}.me-dog{width:94px!important;height:94px!important;right:9px!important;top:29px!important}.me-number{font-size:52px!important}.me-user{min-height:103px!important;padding:15px 19px!important}.me-photo{width:62px!important;height:62px!important;flex-basis:62px!important}.me-user h2{font-size:19px!important}.me-user p{font-size:11px!important}.me-theme{width:68px!important;height:36px!important}.me-theme span{width:28px!important;height:28px!important;font-size:16px!important}.me-id{padding:12px 19px!important}.me-id b{font-size:18px!important}.me-copy{width:88px!important;height:44px!important}.me-activity{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important;min-height:78px!important}.me-actions{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important}.me-action{min-height:88px!important}.me-support{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important;min-height:76px!important}}
+
+/* ME — compact rectangular cards, same glass style */
+.me-balance{height:164px!important;min-height:164px!important;padding:18px 23px!important;border-radius:4px!important;clip-path:none!important}
+.me-kicker{font-size:9px!important;letter-spacing:2px!important}
+.me-number{font-size:50px!important;margin-top:5px!important}
+.me-meta{margin-top:11px!important}
+.me-dog{width:88px!important;height:88px!important;right:13px!important;top:28px!important}
+.me-profile{border-radius:4px!important;clip-path:none!important}
+.me-user{min-height:92px!important;padding:13px 18px!important}
+.me-photo{width:58px!important;height:58px!important;flex-basis:58px!important;border-radius:3px!important;clip-path:none!important}
+.me-user h2{font-size:19px!important}.me-user p{font-size:11px!important;margin-top:3px!important}
+.me-theme{width:68px!important;height:35px!important}.me-theme span{width:27px!important;height:27px!important;font-size:15px!important}
+.me-id{padding:11px 18px!important}.me-id b{font-size:18px!important}.me-copy{width:88px!important;height:42px!important;border-radius:10px!important}
+.me-activity{width:calc(100% - 36px)!important;margin:10px 18px 0!important;min-height:70px!important;padding:10px 13px!important;border-radius:3px!important;clip-path:none!important}
+.me-activity-icon{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:3px!important;clip-path:none!important}
+.me-activity b{font-size:14px!important}.me-activity span{font-size:9px!important}
+.me-actions{width:calc(100% - 36px)!important;margin:10px 18px 0!important;gap:8px!important}.me-action{min-height:76px!important;border-radius:3px!important;clip-path:none!important;gap:6px!important;font-size:9px!important}.me-action-icon{font-size:21px!important}
+.me-support{width:calc(100% - 36px)!important;min-height:68px!important;margin:10px 18px 16px!important;padding:10px 13px!important;border-radius:3px!important;clip-path:none!important}.me-support-icon{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:3px!important;clip-path:none!important;font-size:20px!important}.me-support b{font-size:14px!important}.me-support span{font-size:8px!important}
+@media(max-width:390px){.me-balance{height:154px!important;min-height:154px!important;padding:17px 19px!important}.me-number{font-size:47px!important}.me-dog{width:82px!important;height:82px!important;right:8px!important;top:26px!important}.me-user{min-height:86px!important;padding:11px 16px!important}.me-photo{width:54px!important;height:54px!important;flex-basis:54px!important}.me-id{padding:10px 16px!important}.me-copy{width:82px!important;height:39px!important}.me-activity{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important;min-height:66px!important}.me-actions{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important}.me-action{min-height:72px!important}.me-support{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important;min-height:64px!important}}
