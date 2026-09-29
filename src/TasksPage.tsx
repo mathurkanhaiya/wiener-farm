@@ -68,13 +68,6 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
       @media(max-width:390px){.wf-task-v2{padding-bottom:108px}.wf-top-btn{min-height:59px!important}.wf-hero{padding:15px!important}.wf-hero h2{font-size:25px!important}.wf-row{gap:8px!important;min-height:68px!important}.wf-avatar{flex-basis:40px!important;width:40px!important;height:40px!important}.wf-action{min-width:59px!important;padding:0 8px!important;font-size:8px!important}.wf-title h3{font-size:12px!important}.wf-list{padding-left:10px!important;padding-right:10px!important}}
     `}</style>
 
-    <div className="wf-top-grid">
-      <button className={`wf-top-btn create ${mode==='create'?'active':''}`} onClick={()=>setMode('create')}><strong>＋ CREATE TASK</strong><span>Create your own promotion</span></button>
-      <button className={`wf-top-btn ${mode==='pending'?'active':''}`} onClick={()=>setMode('pending')}><strong>🟡 PENDING</strong><span>{pendingCount} waiting tasks</span></button>
-      <button className={`wf-top-btn ${mode==='live'?'active':''}`} onClick={()=>setMode('live')}><strong>🟢 LIVE TASKS</strong><span>{liveCount} available now</span></button>
-      <button className={`wf-top-btn ${mode==='manage'?'active':''}`} onClick={()=>setMode('manage')}><strong>⚙️ MANAGE</strong><span>Manage your tasks</span></button>
-    </div>
-
     {mode==='create' ? <section className="wf-panel">
       <div className="wf-head"><div className="wf-icon">＋</div><div><h3>Create your own task</h3><p>Promote a Telegram channel, link or Mini App.</p></div></div>
       <label className="wf-label">TASK TITLE</label><input className="wf-input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="Join our Telegram channel"/>
