@@ -992,3 +992,276 @@ body .app-shell .wf-ad-reward img{
     width:64px!important;height:64px!important;
   }
 }
+
+
+/* ==========================================================================
+   EARN PAGE — structured, compact, phone-first
+   ========================================================================== */
+body .app-shell .wf-earn-page{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  padding:4px 0 18px!important;
+  overflow:hidden!important;
+}
+body .app-shell .wf-earn-head{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:4px 2px 18px!important;
+}
+body .app-shell .wf-earn-head>div:first-child>span{
+  display:block!important;
+  color:rgba(224,255,240,.52)!important;
+  font-size:11px!important;
+  font-weight:900!important;
+  letter-spacing:.19em!important;
+  margin-bottom:5px!important;
+}
+body .app-shell .wf-earn-head h2{
+  margin:0!important;
+  font-size:32px!important;
+  line-height:1!important;
+  letter-spacing:-.035em!important;
+  color:#f2fff8!important;
+}
+body .app-shell .wf-earn-counter{
+  min-width:76px!important;
+  padding:8px 11px!important;
+  border:1px solid rgba(84,224,151,.15)!important;
+  border-radius:14px!important;
+  background:rgba(8,47,31,.6)!important;
+  text-align:right!important;
+  box-sizing:border-box!important;
+}
+body .app-shell .wf-earn-counter b{
+  font-size:18px!important;
+  line-height:1!important;
+  color:#55e59b!important;
+}
+body .app-shell .wf-earn-counter small{
+  display:block!important;
+  margin-top:3px!important;
+  font-size:9px!important;
+  color:rgba(226,255,241,.48)!important;
+  font-weight:800!important;
+}
+body .app-shell .wf-earn-section{
+  margin:0 0 22px!important;
+}
+body .app-shell .wf-earn-section-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin:0 2px 10px!important;
+}
+body .app-shell .wf-earn-section-head>span{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.16em!important;
+  color:#effff7!important;
+}
+body .app-shell .wf-earn-section-head>span i{
+  width:8px!important;
+  height:8px!important;
+  border-radius:50%!important;
+  background:#36d889!important;
+  box-shadow:0 0 12px rgba(54,216,137,.4)!important;
+  flex:0 0 8px!important;
+}
+body .app-shell .wf-earn-section-head>small{
+  color:rgba(224,255,240,.43)!important;
+  font-size:11px!important;
+  white-space:nowrap!important;
+}
+body .app-shell .wf-earn-ad-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%!important;
+}
+body .app-shell .wf-earn-ad{
+  min-width:0!important;
+  min-height:218px!important;
+  padding:12px 10px 11px!important;
+  box-sizing:border-box!important;
+  border:1px solid rgba(101,235,171,.14)!important;
+  background:linear-gradient(145deg,rgba(20,78,51,.7),rgba(5,39,27,.78))!important;
+  color:#effff7!important;
+  clip-path:polygon(0 0,94% 0,100% 8%,100% 92%,94% 100%,0 100%,0 8%)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:stretch!important;
+  text-align:left!important;
+  box-shadow:inset 0 1px 0 rgba(180,255,214,.025)!important;
+}
+body .app-shell .wf-earn-ad:disabled{opacity:.62!important}
+body .app-shell .wf-earn-ad-top{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.08em!important;
+  color:rgba(224,255,240,.54)!important;
+}
+body .app-shell .wf-earn-ad-top b{color:#32db87!important;font-size:12px!important}
+body .app-shell .wf-earn-eye{
+  width:64px!important;
+  height:64px!important;
+  object-fit:contain!important;
+  display:block!important;
+  align-self:center!important;
+  margin:20px auto 8px!important;
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.28))!important;
+}
+body .app-shell .wf-earn-reward{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  min-height:31px!important;
+  margin-bottom:11px!important;
+}
+body .app-shell .wf-earn-reward img{
+  width:25px!important;height:25px!important;object-fit:contain!important;
+}
+body .app-shell .wf-earn-reward b{
+  font-size:22px!important;
+  color:#30db87!important;
+  line-height:1!important;
+}
+body .app-shell .wf-earn-reward small{
+  font-size:9px!important;
+  color:rgba(224,255,240,.5)!important;
+  font-weight:900!important;
+  align-self:flex-end!important;
+  margin-bottom:2px!important;
+}
+body .app-shell .wf-earn-watch{
+  width:100%!important;
+  min-height:43px!important;
+  display:grid!important;
+  place-items:center!important;
+  box-sizing:border-box!important;
+  margin-top:auto!important;
+  background:#079c4f!important;
+  border:1px solid rgba(100,255,177,.16)!important;
+  color:white!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:.18em!important;
+  clip-path:polygon(6% 0,100% 0,100% 82%,94% 100%,0 100%,0 18%)!important;
+}
+body .app-shell .wf-earn-task-list{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+}
+body .app-shell .wf-earn-task{
+  min-width:0!important;
+  min-height:70px!important;
+  padding:9px 10px!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:44px minmax(0,1fr) auto 18px!important;
+  align-items:center!important;
+  gap:9px!important;
+  background:linear-gradient(135deg,rgba(20,73,49,.72),rgba(7,39,28,.8))!important;
+  border:1px solid rgba(103,232,169,.13)!important;
+  clip-path:polygon(0 0,97% 0,100% 16%,100% 84%,96% 100%,0 100%,0 16%)!important;
+}
+body .app-shell .wf-earn-task-icon{
+  width:40px!important;height:40px!important;
+  display:grid!important;place-items:center!important;
+  border-radius:10px!important;
+  background:rgba(64,202,133,.1)!important;
+  border:1px solid rgba(94,232,166,.12)!important;
+  font-size:21px!important;
+}
+body .app-shell .wf-earn-task-copy{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+}
+body .app-shell .wf-earn-task-copy b{
+  font-size:14px!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+  color:#f1fff8!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body .app-shell .wf-earn-task-copy small{
+  font-size:10px!important;
+  line-height:1.25!important;
+  color:rgba(224,255,240,.5)!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body .app-shell .wf-earn-task>strong{
+  display:flex!important;
+  align-items:center!important;
+  gap:3px!important;
+  color:#35dc8a!important;
+  font-size:13px!important;
+  white-space:nowrap!important;
+}
+body .app-shell .wf-earn-task>strong img{
+  width:18px!important;height:18px!important;object-fit:contain!important;
+}
+body .app-shell .wf-earn-task-open{
+  border:0!important;
+  background:none!important;
+  color:rgba(225,255,240,.48)!important;
+  font-size:25px!important;
+  line-height:1!important;
+  padding:0!important;
+}
+body .app-shell .wf-earn-empty,
+body .app-shell .wf-earn-note{
+  border:1px solid rgba(103,232,169,.1)!important;
+  background:rgba(9,46,31,.5)!important;
+  border-radius:14px!important;
+  padding:15px!important;
+  text-align:center!important;
+  color:rgba(224,255,240,.48)!important;
+  font-size:11px!important;
+}
+body .app-shell .wf-earn-note{
+  margin:0 2px 8px!important;
+  border-style:dashed!important;
+}
+body .app-shell .wf-earn-session{
+  text-align:center!important;
+  font-size:9px!important;
+  color:rgba(224,255,240,.28)!important;
+  padding-bottom:4px!important;
+}
+@media(max-width:390px){
+  body .app-shell .wf-earn-head{margin-bottom:15px!important}
+  body .app-shell .wf-earn-head h2{font-size:29px!important}
+  body .app-shell .wf-earn-ad{min-height:202px!important;padding:10px 8px 9px!important}
+  body .app-shell .wf-earn-eye{width:56px!important;height:56px!important;margin-top:17px!important}
+  body .app-shell .wf-earn-reward b{font-size:19px!important}
+  body .app-shell .wf-earn-watch{min-height:40px!important;font-size:11px!important}
+  body .app-shell .wf-earn-task{grid-template-columns:39px minmax(0,1fr) auto 15px!important;gap:7px!important;padding:8px!important}
+  body .app-shell .wf-earn-task-icon{width:36px!important;height:36px!important;font-size:18px!important}
+  body .app-shell .wf-earn-task-copy b{font-size:12px!important}
+  body .app-shell .wf-earn-task-copy small{font-size:9px!important}
+  body .app-shell .wf-earn-task>strong{font-size:11px!important}
+}
+@media(max-width:340px){
+  body .app-shell .wf-earn-ad-grid{gap:7px!important}
+  body .app-shell .wf-earn-ad{min-height:190px!important}
+  body .app-shell .wf-earn-task{grid-template-columns:36px minmax(0,1fr) auto 12px!important}
+  body .app-shell .wf-earn-task>strong{font-size:10px!important}
+}
