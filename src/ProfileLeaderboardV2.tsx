@@ -47,79 +47,26 @@ const css=`.pl-wrap{display:grid;gap:14px}.pl-card{padding:16px;border-radius:24
 `;
 
 
-export function LeaderboardPageV2({data}:{data:Snapshot}){const {board,loading}=useLeaderboard(),[mode,setMode]=useState<RankMode>('inviters');const rows=(board?.[mode]||[]).slice(0,10),pod=rows.slice(0,3),rest=rows.slice(3),me=board?.me?.[mode];const val=(v:any)=>mode==='inviters'?`${Number(v||0).toLocaleString()} referrals`:`${money(Number(v||0))} WIENER`;return <><style>{css}</style><div className="page-title"><h2>WIENER LEADERBOARD</h2></div><div className="pl-wrap"><section className="pl-card"><div className="pl-tabs"><button className={mode==='inviters'?'active':''} onClick={()=>setMode('inviters')}>Top Referrals</button><button className={mode==='earners'?'active':''} onClick={()=>setMode('earners')}>Total Earned</button></div>{loading?<div className="pl-loading">Loading live rankings…</div>:rows.length?<><div className="pl-podium">{[pod[1],pod[0],pod[2]].map((u,i)=>u?<div key={String(u.telegram_id)} className={`pl-pod ${u.rank===1?'first':''}`}><div>{u.rank===1?'👑':' '}</div><Avatar u={u} big={u.rank===1}/><span className="pl-medal">#{u.rank}</span><div className="pl-name">{name(u)}</div><div className="pl-val">{val(u.value)}</div></div>:<div key={i}/>)}</div><div className="pl-list">{rest.map(u=><div className="pl-row" key={String(u.telegram_id)}><b>#{u.rank}</b><Avatar u={u}/><div className="pl-copy"><b>{name(u)}</b><small>{u.username?`@${u.username}`:`UID ${u.telegram_id}`}</small></div><strong>{mode==='inviters'?Number(u.value||0).toLocaleString():money(Number(u.value||0))}</strong></div>)}</div>{me&&<div className="pl-me"><div><small>Your rank</small><b>{me.rank?`#${me.rank}`:'Unranked'}</b></div><strong>{val(me.value)}</strong></div>}</>:<div className="pl-loading">No rankings yet.</div>}</section></div></>}
+export function LeaderboardPageV2({data}:{data:Snapshot}){const {board,loading}=useLeaderboard(),[mode,setMode]=useState<RankMode>('inviters');const rows=(board?.[mode]||[]).slice(0,10),pod=rows.slice(0,3),rest=rows.slice(3),me=board?.me?.[mode];const val=(v:any)=>mode==='inviters'?`${Number(v||0).toLocaleString()} referrals`:`${money(Number(v||0))} WIENER
+/* ME FINAL COMPACT — inside css template, build-safe */
+.profile-v2{gap:8px!important}
+.me-balance{height:145px!important;min-height:145px!important;padding:15px 20px!important}
+.me-kicker{font-size:8px!important;letter-spacing:1.8px!important}
+.me-number{font-size:44px!important;line-height:.9!important;margin-top:4px!important}
+.me-meta{margin-top:9px!important;font-size:8px!important;gap:6px!important}
+.me-usd{padding:5px 9px!important}
+.me-dog{width:78px!important;height:78px!important;right:10px!important;top:27px!important}
+.me-user{min-height:72px!important;padding:9px 16px!important;gap:10px!important}
+.me-photo{width:50px!important;height:50px!important;flex-basis:50px!important}
+.me-user h2{font-size:17px!important;line-height:1.05!important}.me-user p{font-size:10px!important;margin-top:3px!important}
+.me-theme{width:62px!important;height:32px!important}.me-theme span{width:24px!important;height:24px!important;font-size:14px!important}
+.me-id{padding:8px 16px!important}.me-id b{font-size:16px!important}.me-copy{width:80px!important;height:36px!important;border-radius:10px!important;font-size:11px!important}
+.me-activity{width:calc(100% - 32px)!important;margin:8px 16px 0!important;min-height:56px!important;padding:8px 11px!important}
+.me-activity-icon{width:36px!important;height:36px!important;flex-basis:36px!important;font-size:17px!important}.me-activity b{font-size:13px!important}.me-activity span{font-size:8px!important}
+.me-actions{width:calc(100% - 32px)!important;margin:8px 16px 0!important;gap:7px!important}.me-action{min-height:62px!important;gap:4px!important;font-size:8px!important;letter-spacing:1px!important}.me-action-icon{font-size:19px!important}
+.me-support{width:calc(100% - 32px)!important;min-height:56px!important;margin:8px 16px 10px!important;padding:8px 11px!important;gap:9px!important}.me-support-icon{width:36px!important;height:36px!important;flex-basis:36px!important;font-size:18px!important}.me-support b{font-size:13px!important}.me-support span{font-size:7px!important}
+@media(max-width:390px){.me-balance{height:138px!important;min-height:138px!important;padding:14px 18px!important}.me-number{font-size:41px!important}.me-dog{width:72px!important;height:72px!important;right:7px!important;top:25px!important}.me-user{min-height:68px!important;padding:8px 14px!important}.me-photo{width:46px!important;height:46px!important;flex-basis:46px!important}.me-id{padding:7px 14px!important}.me-copy{width:76px!important;height:34px!important}.me-activity{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important;min-height:53px!important}.me-actions{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important}.me-action{min-height:59px!important}.me-support{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important;min-height:53px!important}}
+`;return <><style>{css}</style><div className="page-title"><h2>WIENER LEADERBOARD</h2></div><div className="pl-wrap"><section className="pl-card"><div className="pl-tabs"><button className={mode==='inviters'?'active':''} onClick={()=>setMode('inviters')}>Top Referrals</button><button className={mode==='earners'?'active':''} onClick={()=>setMode('earners')}>Total Earned</button></div>{loading?<div className="pl-loading">Loading live rankings…</div>:rows.length?<><div className="pl-podium">{[pod[1],pod[0],pod[2]].map((u,i)=>u?<div key={String(u.telegram_id)} className={`pl-pod ${u.rank===1?'first':''}`}><div>{u.rank===1?'👑':' '}</div><Avatar u={u} big={u.rank===1}/><span className="pl-medal">#{u.rank}</span><div className="pl-name">{name(u)}</div><div className="pl-val">{val(u.value)}</div></div>:<div key={i}/>)}</div><div className="pl-list">{rest.map(u=><div className="pl-row" key={String(u.telegram_id)}><b>#{u.rank}</b><Avatar u={u}/><div className="pl-copy"><b>{name(u)}</b><small>{u.username?`@${u.username}`:`UID ${u.telegram_id}`}</small></div><strong>{mode==='inviters'?Number(u.value||0).toLocaleString():money(Number(u.value||0))}</strong></div>)}</div>{me&&<div className="pl-me"><div><small>Your rank</small><b>{me.rank?`#${me.rank}`:'Unranked'}</b></div><strong>{val(me.value)}</strong></div>}</>:<div className="pl-loading">No rankings yet.</div>}</section></div></>}
 
 export function ProfilePageV2({data,setTab}:{data:Snapshot;setTab:any}){const u:any=data.user;const display=[u.first_name,u.last_name].filter(Boolean).join(" ").trim()||u.username||"WIENER User";const activityCount=Array.isArray(data.transactions)?data.transactions.length:0;const rate=Number(data.settings?.token_per_usdt||0);const usd=rate>0?Number(u.balance||0)/rate:0;const copyId=async()=>{try{await navigator.clipboard.writeText(String(u.telegram_id||""))}catch{}};return <><style>{css}</style><div className="pl-wrap"><section className="pl-card profile-v2"><div className="me-balance"><img className="me-dog" src="https://pixlinkhost.vercel.app/i/DTBrE-73Ag" alt="" aria-hidden="true"/><div className="me-kicker">TOTAL BALANCE</div><div className="me-number">{money(Math.floor(Number(u.balance||0)))}</div><div className="me-meta"><span>◆ WIENER</span><span className="me-usd">${usd.toFixed(4)}</span></div></div><div className="me-profile"><div className="me-user"><div className="me-photo">{u.photo_url?<img src={u.photo_url} alt=""/>:(display[0]||"W").toUpperCase()}</div><div><h2>{display}</h2><p>{u.username?"@"+u.username:"@wiener_user"}</p></div><div className="me-theme" aria-hidden="true"><span>☾</span></div></div><div className="me-id"><div><small>TELEGRAM ID</small><b>{u.telegram_id}</b></div><button className="me-copy" onClick={copyId}>▣ &nbsp; COPY</button></div><button className="me-activity" onClick={()=>setTab("leaderboard")}><span className="me-activity-left"><span className="me-activity-icon">♟</span><span><b>My activity</b><span>{activityCount} recent entries</span></span></span><span className="me-arrow">›</span></button><div className="me-actions"><button className="me-action" onClick={()=>setTab("ads")}><span className="me-action-icon">ϟ</span><span>EARN</span></button><button className="me-action" onClick={()=>setTab("wallet")}><span className="me-action-icon">⇩</span><span>WITHDRAW</span></button><button className="me-action refer" onClick={()=>setTab("invite")}><span className="me-action-icon">⌯</span><span>REFER</span></button></div><button className="me-support" onClick={()=>window.Telegram?.WebApp?.openTelegramLink?.("https://t.me/WienerSupport")}><span className="me-support-icon">☎</span><span><b>Contact support</b><span>Need help? Open WIENER Support</span></span><span className="me-arrow">›</span></button></div></section></div></>}
 
-/* FINAL ME SCALE — neutral/mobile proportions, nav untouched */
-.profile-v2{gap:12px!important}
-.me-balance{height:190px!important;min-height:190px!important;padding:21px 25px!important}
-.me-kicker{font-size:9px!important;letter-spacing:2.3px!important}
-.me-number{font-size:56px!important;margin-top:7px!important}
-.me-meta{margin-top:15px!important;font-size:9px!important;letter-spacing:1.5px!important}
-.me-usd{padding:6px 10px!important}
-.me-dog{width:104px!important;height:104px!important;right:15px!important;top:31px!important}
-.me-profile{overflow:hidden!important}
-.me-user{min-height:112px!important;padding:17px 22px!important;gap:13px!important}
-.me-photo{width:68px!important;height:68px!important;flex-basis:68px!important;font-size:25px!important}
-.me-user h2{font-size:21px!important}
-.me-user p{font-size:12px!important;margin-top:5px!important}
-.me-theme{width:76px!important;height:40px!important;padding:4px!important}
-.me-theme span{width:32px!important;height:32px!important;font-size:18px!important}
-.me-id{padding:13px 22px!important;gap:10px!important}
-.me-id small{font-size:8px!important;letter-spacing:2.2px!important}
-.me-id b{font-size:20px!important;margin-top:4px!important}
-.me-copy{width:96px!important;height:48px!important;border-radius:14px!important;font-size:13px!important}
-.me-activity{width:calc(100% - 44px)!important;margin:12px 22px 0!important;min-height:84px!important;padding:12px 14px!important}
-.me-activity-left{gap:11px!important}
-.me-activity-icon{width:46px!important;height:46px!important;flex-basis:46px!important;font-size:19px!important}
-.me-activity b{font-size:15px!important}
-.me-activity span{font-size:10px!important;margin-top:3px!important}
-.me-arrow{font-size:25px!important}
-.me-actions{width:calc(100% - 44px)!important;margin:12px 22px 0!important;gap:9px!important}
-.me-action{min-height:94px!important;gap:8px!important;font-size:9px!important;letter-spacing:1.3px!important}
-.me-action-icon{font-size:24px!important}
-.me-support{width:calc(100% - 44px)!important;min-height:82px!important;margin:12px 22px 20px!important;padding:12px 16px!important;gap:11px!important}
-.me-support-icon{width:45px!important;height:45px!important;flex-basis:45px!important;font-size:22px!important}
-.me-support b{font-size:15px!important}
-.me-support span{font-size:9px!important;margin-top:3px!important}
-@media(max-width:390px){.me-balance{height:180px!important;min-height:180px!important;padding:19px 21px!important}.me-dog{width:94px!important;height:94px!important;right:9px!important;top:29px!important}.me-number{font-size:52px!important}.me-user{min-height:103px!important;padding:15px 19px!important}.me-photo{width:62px!important;height:62px!important;flex-basis:62px!important}.me-user h2{font-size:19px!important}.me-user p{font-size:11px!important}.me-theme{width:68px!important;height:36px!important}.me-theme span{width:28px!important;height:28px!important;font-size:16px!important}.me-id{padding:12px 19px!important}.me-id b{font-size:18px!important}.me-copy{width:88px!important;height:44px!important}.me-activity{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important;min-height:78px!important}.me-actions{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important}.me-action{min-height:88px!important}.me-support{width:calc(100% - 38px)!important;margin-left:19px!important;margin-right:19px!important;min-height:76px!important}}
-
-/* ME — compact rectangular cards, same glass style */
-.me-balance{height:164px!important;min-height:164px!important;padding:18px 23px!important;border-radius:4px!important;clip-path:none!important}
-.me-kicker{font-size:9px!important;letter-spacing:2px!important}
-.me-number{font-size:50px!important;margin-top:5px!important}
-.me-meta{margin-top:11px!important}
-.me-dog{width:88px!important;height:88px!important;right:13px!important;top:28px!important}
-.me-profile{border-radius:4px!important;clip-path:none!important}
-.me-user{min-height:92px!important;padding:13px 18px!important}
-.me-photo{width:58px!important;height:58px!important;flex-basis:58px!important;border-radius:3px!important;clip-path:none!important}
-.me-user h2{font-size:19px!important}.me-user p{font-size:11px!important;margin-top:3px!important}
-.me-theme{width:68px!important;height:35px!important}.me-theme span{width:27px!important;height:27px!important;font-size:15px!important}
-.me-id{padding:11px 18px!important}.me-id b{font-size:18px!important}.me-copy{width:88px!important;height:42px!important;border-radius:10px!important}
-.me-activity{width:calc(100% - 36px)!important;margin:10px 18px 0!important;min-height:70px!important;padding:10px 13px!important;border-radius:3px!important;clip-path:none!important}
-.me-activity-icon{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:3px!important;clip-path:none!important}
-.me-activity b{font-size:14px!important}.me-activity span{font-size:9px!important}
-.me-actions{width:calc(100% - 36px)!important;margin:10px 18px 0!important;gap:8px!important}.me-action{min-height:76px!important;border-radius:3px!important;clip-path:none!important;gap:6px!important;font-size:9px!important}.me-action-icon{font-size:21px!important}
-.me-support{width:calc(100% - 36px)!important;min-height:68px!important;margin:10px 18px 16px!important;padding:10px 13px!important;border-radius:3px!important;clip-path:none!important}.me-support-icon{width:40px!important;height:40px!important;flex-basis:40px!important;border-radius:3px!important;clip-path:none!important;font-size:20px!important}.me-support b{font-size:14px!important}.me-support span{font-size:8px!important}
-@media(max-width:390px){.me-balance{height:154px!important;min-height:154px!important;padding:17px 19px!important}.me-number{font-size:47px!important}.me-dog{width:82px!important;height:82px!important;right:8px!important;top:26px!important}.me-user{min-height:86px!important;padding:11px 16px!important}.me-photo{width:54px!important;height:54px!important;flex-basis:54px!important}.me-id{padding:10px 16px!important}.me-copy{width:82px!important;height:39px!important}.me-activity{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important;min-height:66px!important}.me-actions{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important}.me-action{min-height:72px!important}.me-support{width:calc(100% - 32px)!important;margin-left:16px!important;margin-right:16px!important;min-height:64px!important}}
-
-/* ME FINAL — compact Leaf-scale layout. Do not modify bottom navigation. */
-.profile-v2{gap:8px!important}
-.me-balance{height:145px!important;min-height:145px!important;padding:15px 20px!important;border-radius:0!important;clip-path:polygon(4% 0,100% 0,100% 80%,94% 100%,0 100%,0 9%)!important}
-.me-kicker{font-size:8px!important;letter-spacing:1.8px!important}
-.me-number{font-size:44px!important;line-height:.9!important;margin-top:4px!important;letter-spacing:-1px!important}
-.me-meta{margin-top:9px!important;font-size:8px!important;letter-spacing:1.2px!important;gap:6px!important}
-.me-usd{padding:5px 9px!important}
-.me-dog{width:78px!important;height:78px!important;right:10px!important;top:27px!important}
-.me-profile{border-radius:0!important;clip-path:polygon(4% 0,100% 0,100% 91%,95% 100%,0 100%,0 7%)!important}
-.me-user{min-height:72px!important;padding:9px 16px!important;gap:10px!important}
-.me-photo{width:50px!important;height:50px!important;flex-basis:50px!important;border-radius:2px!important;clip-path:none!important;font-size:21px!important}
-.me-user h2{font-size:17px!important;line-height:1.05!important}.me-user p{font-size:10px!important;margin-top:3px!important}
-.me-theme{width:62px!important;height:32px!important;padding:3px!important}.me-theme span{width:24px!important;height:24px!important;font-size:14px!important}
-.me-id{padding:8px 16px!important;gap:8px!important}.me-id small{font-size:7px!important;letter-spacing:1.8px!important}.me-id b{font-size:16px!important;margin-top:3px!important}.me-copy{width:80px!important;height:36px!important;border-radius:10px!important;font-size:11px!important}
-.me-activity{width:calc(100% - 32px)!important;margin:8px 16px 0!important;min-height:56px!important;padding:8px 11px!important;border-radius:2px!important;clip-path:none!important}
-.me-activity-left{gap:9px!important}.me-activity-icon{width:36px!important;height:36px!important;flex-basis:36px!important;border-radius:2px!important;clip-path:none!important;font-size:17px!important}.me-activity b{font-size:13px!important}.me-activity span{font-size:8px!important;margin-top:2px!important}.me-arrow{font-size:22px!important}
-.me-actions{width:calc(100% - 32px)!important;margin:8px 16px 0!important;gap:7px!important}.me-action{min-height:62px!important;border-radius:2px!important;clip-path:polygon(5% 0,94% 0,100% 12%,100% 88%,94% 100%,0 100%,0 12%)!important;gap:4px!important;font-size:8px!important;letter-spacing:1px!important}.me-action-icon{font-size:19px!important}
-.me-support{width:calc(100% - 32px)!important;min-height:56px!important;margin:8px 16px 10px!important;padding:8px 11px!important;gap:9px!important;border-radius:2px!important;clip-path:none!important}.me-support-icon{width:36px!important;height:36px!important;flex-basis:36px!important;border-radius:2px!important;clip-path:none!important;font-size:18px!important}.me-support b{font-size:13px!important}.me-support span{font-size:7px!important;margin-top:2px!important}
-@media(max-width:390px){.me-balance{height:138px!important;min-height:138px!important;padding:14px 18px!important}.me-number{font-size:41px!important}.me-dog{width:72px!important;height:72px!important;right:7px!important;top:25px!important}.me-user{min-height:68px!important;padding:8px 14px!important}.me-photo{width:46px!important;height:46px!important;flex-basis:46px!important}.me-user h2{font-size:16px!important}.me-user p{font-size:9px!important}.me-theme{width:58px!important;height:30px!important}.me-theme span{width:22px!important;height:22px!important}.me-id{padding:7px 14px!important}.me-id b{font-size:15px!important}.me-copy{width:76px!important;height:34px!important}.me-activity{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important;min-height:53px!important}.me-actions{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important}.me-action{min-height:59px!important}.me-support{width:calc(100% - 28px)!important;margin-left:14px!important;margin-right:14px!important;min-height:53px!important}}
