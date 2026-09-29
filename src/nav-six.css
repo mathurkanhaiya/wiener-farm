@@ -1421,3 +1421,60 @@ body .app-shell .wf-earn-note{
   body .app-shell .wf-earn-watch-section .wf-earn-ad{min-height:190px!important}
   body .app-shell .wf-earn-module{padding:9px!important;border-radius:17px!important}
 }
+
+
+/* FINAL EARN MODULE POLISH */
+body .app-shell .wf-earn-page{padding-bottom:110px!important}
+body .app-shell .wf-earn-spin-section .wf-earn-module,
+body .app-shell .wf-earn-promo-section .wf-earn-module,
+body .app-shell .wf-earn-ambassador-section .wf-earn-module{
+  padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;
+}
+body .app-shell .wf-earn-spin-section .spin-earn-card{
+  margin:0!important;width:100%!important;box-sizing:border-box!important;padding:15px!important;
+  border:1px solid rgba(91,231,158,.16)!important;border-radius:17px!important;
+  background:radial-gradient(circle at 88% 12%,rgba(56,226,139,.12),transparent 32%),linear-gradient(145deg,rgba(20,79,51,.72),rgba(6,39,28,.86))!important;
+  box-shadow:inset 0 1px 0 rgba(210,255,230,.035),0 10px 26px rgba(0,0,0,.12)!important;
+}
+body .app-shell .wf-earn-spin-section .spin-card-icon{filter:drop-shadow(0 7px 14px rgba(43,220,130,.2))!important}
+body .app-shell .wf-earn-spin-section .spin-card-copy h3{color:#effff7!important}
+body .app-shell .wf-earn-spin-section .spin-card-copy p{color:rgba(228,255,241,.6)!important}
+body .app-shell .wf-earn-spin-section .spin-icons b{color:#74e8ad!important}
+body .app-shell .wf-earn-spin-section .spin-card-action{
+  min-width:72px!important;border-radius:12px!important;background:#0ca653!important;color:#fff!important;
+  border:1px solid rgba(104,255,179,.18)!important;box-shadow:none!important;
+}
+body .app-shell .wf-earn-spin-section .spin-card-meta{border-top-color:rgba(103,232,169,.08)!important;color:rgba(225,255,240,.52)!important}
+body .app-shell .wf-earn-spin-section .spin-live{color:#55df9a!important}
+body .app-shell .wf-earn-promo-section .promo-v2{
+  margin:0!important;padding:14px!important;border:1px solid rgba(91,231,158,.15)!important;border-radius:17px!important;
+  background:linear-gradient(145deg,rgba(20,79,51,.72),rgba(6,39,28,.86))!important;
+  box-shadow:inset 0 1px 0 rgba(210,255,230,.03),0 10px 26px rgba(0,0,0,.1)!important;
+}
+body .app-shell .wf-earn-promo-section .promo-v2 .section-head{margin:0 0 12px!important}
+body .app-shell .wf-earn-promo-section .promo-v2 .section-head .square{
+  width:44px!important;height:44px!important;border-radius:13px!important;
+  background:rgba(42,214,131,.1)!important;border:1px solid rgba(91,231,158,.14)!important;
+}
+body .app-shell .wf-earn-promo-section .promo-v2 h3{color:#effff7!important}
+body .app-shell .wf-earn-promo-section .promo-v2 p{color:rgba(228,255,241,.58)!important}
+body .app-shell .wf-earn-promo-section .promo-v2 input{
+  background:rgba(3,30,21,.8)!important;border:1px solid rgba(91,231,158,.1)!important;color:#effff7!important;
+}
+body .app-shell .wf-earn-promo-section .promo-v2 button.primary{
+  background:#0ca653!important;color:#fff!important;border:1px solid rgba(104,255,179,.16)!important;box-shadow:none!important;
+}
+body .app-shell .wf-earn-ambassador-section .ambassador-home-card{
+  margin:0!important;min-height:82px!important;padding:12px!important;
+  border:1px solid rgba(91,231,158,.15)!important;border-radius:17px!important;
+  background:linear-gradient(145deg,rgba(20,79,51,.72),rgba(6,39,28,.86))!important;
+  box-shadow:inset 0 1px 0 rgba(210,255,230,.03),0 10px 26px rgba(0,0,0,.1)!important;
+}
+body .app-shell .wf-earn-ambassador-section .amb-open{
+  background:#0ca653!important;color:#fff!important;border:1px solid rgba(104,255,179,.16)!important;
+}
+@media(max-width:390px){
+ body .app-shell .wf-earn-page{padding-bottom:108px!important}
+ body .app-shell .wf-earn-spin-section .spin-earn-card{padding:12px!important}
+ body .app-shell .wf-earn-promo-section .promo-v2{padding:12px!important}
+}
