@@ -954,3 +954,41 @@ body .app-shell .wf-balance-art{
     width:96px!important;height:96px!important;right:2px!important;top:52px!important;
   }
 }
+
+
+/* HOME ASSET FINISH */
+body .app-shell .wf-feature-card .wf-feature-image{
+  width:50px!important;
+  height:50px!important;
+  object-fit:contain!important;
+  display:block!important;
+  flex:0 0 50px!important;
+  filter:drop-shadow(0 7px 12px rgba(0,0,0,.24))!important;
+}
+body .app-shell .wf-ad-icon img{
+  width:76px!important;
+  height:76px!important;
+  object-fit:contain!important;
+  display:block!important;
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.28))!important;
+}
+body .app-shell .wf-ad-reward{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+}
+body .app-shell .wf-ad-reward img{
+  width:27px!important;
+  height:27px!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+@media(max-width:390px){
+  body .app-shell .wf-feature-card .wf-feature-image{
+    width:43px!important;height:43px!important;flex-basis:43px!important;
+  }
+  body .app-shell .wf-ad-icon img{
+    width:64px!important;height:64px!important;
+  }
+}
