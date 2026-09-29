@@ -58,8 +58,7 @@ function LanguagePicker(){
   </>;
 }
 export function Brand({data}:{data:Snapshot}){
-  const {t}=useI18n();
-  return <header className="brand wf-header"><div className="wf-brand-lockup"><div className="wf-brand-logo"><WienerLogo size={42}/></div><div className="brand-copy"><b>WIENER FARM</b><span>{t('brand.tagline','Earn · Grow · Withdraw')}</span></div></div><div className="wf-header-actions"><div className="balance-pill"><span className="mini-coin">W</span>{money(data.user.balance)}</div><LanguagePicker/></div></header>;
+  return <header className="brand wf-header wf-header-minimal"><div className="wf-brand-lockup"><div className="brand-copy"><b>WIENER FARM</b></div></div><LanguagePicker/></header>;
 }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
   const{t}=useI18n();const[hidden,setHidden]=useState(false);
