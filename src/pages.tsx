@@ -22,12 +22,12 @@ function nextDaily(data:Snapshot){
 function farmInfo(data:Snapshot){const s=data.settings,u:any=data.user,day=today(),fieldDay=String(u.farm_claims_day||'').slice(0,10),fieldCount=fieldDay===day?Number(u.farm_claims_today||0):0,ledgerCount=(Array.isArray(data.transactions)?data.transactions:[]).filter((x:any)=>{const d=String(x.created_at||'').slice(0,10);if(d!==day||Number(x.amount||0)<=0)return false;const kind=String(x.kind||'').toLowerCase(),desc=String(x.description||'').trim().toLowerCase();return ['farm_claim','farm_reward','farming_reward'].includes(kind)||kind.startsWith('farm_')&&kind.includes('reward')||['farming reward','farm reward','wiener farming reward'].includes(desc)}).length,count=Math.min(5,Math.max(0,fieldCount,ledgerCount)),limit=5,started=u.farm_started_at?new Date(u.farm_started_at).getTime():0,next=started+Number(s.farm_claim_cooldown_seconds||0)*1000;return {count,limit,started,next,ready:!!started&&Date.now()>=next,limitReached:count>=limit}}
 
 export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
-  const {t}=useI18n();
-  const s=data.settings,u:any=data.user,[promo,setPromo]=useState(''),[farmBusy,setFarmBusy]=useState(false),[clock,setClock]=useState(Date.now()),f=farmInfo(data),usd=Number(u.balance)/Number(s.token_per_usdt||10000);
+  const u:any=data.user;
+  const settings=data.settings;
+  const usd=Number(u.balance)/Number(settings.token_per_usdt||10000);
   const featured=(data.tasks||[]).filter((x:any)=>!data.completed.some((c:any)=>c.task_id===x.id)).slice(0,3);
-  useEffect(()=>{if(!f.started||f.ready)return;const ms=Math.max(250,Math.min(1000,f.next-Date.now()+50));const x=window.setTimeout(()=>setClock(Date.now()),ms);return()=>window.clearTimeout(x)},[f.started,f.ready,f.next,clock]);
-  const startFarm=async()=>{if(farmBusy||f.limitReached||f.started)return;try{setFarmBusy(true);await run('farm_start',{},'🌱 Farm started')}finally{setFarmBusy(false)}};
   const openTasks=()=>setTab('tasks');
+
   return <>
     <section className="wf-home-welcome">
       <div className="wf-welcome-copy">
@@ -43,7 +43,10 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
       <div className="wf-balance-copy">
         <div className="wf-balance-label">TOTAL BALANCE</div>
         <div className="wf-balance-number">{money(u.balance)}</div>
-        <div className="wf-balance-meta"><span className="wf-leaf-dot">◆</span> WIENER <span className="wf-usd-pill">≈ {money(usd,4)} USDT</span></div>
+        <div className="wf-balance-meta">
+          <span className="wf-leaf-dot">◆</span> WIENER
+          <span className="wf-usd-pill">≈ {money(usd,4)} USDT</span>
+        </div>
       </div>
       <img className="wf-balance-art" src="https://pixlinkhost.vercel.app/i/DTBrE-73Ag" alt="" aria-hidden="true" loading="eager" decoding="async"/>
     </section>
@@ -57,26 +60,39 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
       </button>
     </div>
 
-    <button className="wf-feature-card" onClick={()=>openTasks()}>
+    <button className="wf-feature-card" onClick={openTasks}>
       <span className="wf-feature-icon">✦</span>
-      <span className="wf-feature-copy"><b>Earn more WIENER</b><small>Complete tasks and unlock extra rewards</small></span>
+      <span className="wf-feature-copy">
+        <b>Earn WIENER</b>
+        <small>Complete tasks and collect extra rewards</small>
+      </span>
       <span className="wf-feature-arrow">›</span>
     </button>
 
     <button className="wf-feature-card" onClick={()=>setTab('ads')}>
       <span className="wf-feature-icon">⚡</span>
-      <span className="wf-feature-copy"><b>Quick Earn</b><small>Watch rewarded ads and collect WIENER</small></span>
+      <span className="wf-feature-copy">
+        <b>Quick Tasks</b>
+        <small>Watch ads and earn WIENER instantly</small>
+      </span>
       <span className="wf-feature-arrow">›</span>
     </button>
 
     <section className="wf-home-section">
-      <div className="wf-section-title"><span><i/>WATCH &amp; EARN</span><small>{Math.max(0,Number(s.daily_ad_limit||0)-Number(u.ads_day===today()?u.ads_watched_today:0))} available</small></div>
+      <div className="wf-section-title">
+        <span><i/>WATCH &amp; EARN</span>
+        <small>Available today</small>
+      </div>
       <div className="wf-ad-grid">
         {[1,2,3].map((n,i)=>{
-          const limit=i===0?7:i===1?10:5;
-          const reward=Number(s.ad_reward||10);
+          const limit=[7,10,5][i];
+          const watched=Number(u.ads_watched_today||0);
+          const reward=Number(settings.ad_reward||10);
           return <button className="wf-ad-card" key={n} onClick={()=>setTab('ads')}>
-            <div className="wf-ad-top"><span>AD #{n}</span><b>{i===0?Math.min(limit,Number(u.ads_watched_today||0))+'/7':i===1?Math.min(limit,Number(u.ads_watched_today||0))+'/10':'0/5'}</b></div>
+            <div className="wf-ad-top">
+              <span>AD #{n}</span>
+              <b>{Math.min(watched,limit)}/{limit}</b>
+            </div>
             <div className="wf-ad-icon"><AnimatedIcon name="ads" active/></div>
             <div className="wf-ad-reward">◆ {i===0?reward*2:reward} W</div>
             <span className="wf-watch-btn">WATCH</span>
@@ -86,37 +102,32 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
     </section>
 
     <section className="wf-home-section">
-      <div className="wf-section-title"><span><i/>FEATURED TASKS</span><button onClick={openTasks}>See all ›</button></div>
-      <div className="wf-task-list">
-        {featured.length?featured.map((task:any)=><button className="wf-task-row" key={task.id} onClick={openTasks}>
-          <span className="wf-task-icon"><AnimatedIcon name="tasks" active/></span>
-          <span className="wf-task-copy"><b>{task.title}</b><small>{task.description||task.category||'Complete this task and earn WIENER'}</small></span>
-          <strong>◆ {money(task.reward)}</strong><span className="wf-task-arrow">›</span>
-        </button>):<button className="wf-task-row" onClick={openTasks}>
-          <span className="wf-task-icon"><AnimatedIcon name="check" active/></span>
-          <span className="wf-task-copy"><b>All tasks completed</b><small>Check back soon for new rewards</small></span>
-          <span className="wf-task-arrow">›</span>
-        </button>}
+      <div className="wf-section-title">
+        <span><i/>FEATURED TASKS</span>
+        <button onClick={openTasks}>See all ›</button>
       </div>
-    </section>
-
-    <section className="wf-daily-mini">
-      <div><span className="wf-daily-icon">🎁</span><span><b>Daily Bonus</b><small>Keep your streak alive and earn more</small></span></div>
-      <button onClick={()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}>VIEW ›</button>
-    </section>
-
-    <section className="card wf-home-farm-card" style={{display:'none'}}>
-      <div className="eyebrow">{t('home.totalBalance','TOTAL BALANCE')}</div>
-      <div className="hero-balance"><span className="coin">W</span><strong>{money(u.balance)}</strong><b className="currency-unit">W</b></div>
-      <div className="muted">≈ {money(usd,4)} USDT</div>
-      <div className="stats"><div><b>{u.farm_sessions}</b><span>{t('home.sessions','Sessions')}</span></div><div><b>{u.total_ads}</b><span>{t('home.ads','Ads')}</span></div><div><b>{u.referrals_count}</b><span>{t('home.referrals','Referrals')}</span></div></div>
-      <div className="tiny center" style={{marginBottom:8}}>{t('home.todayFarms',"Today's farms")} · {f.count}/{f.limit}</div>
-      {f.limitReached?<button className="primary" disabled>{t('home.dailyLimit','DAILY FARM LIMIT REACHED')}</button>:!f.started?<button className="primary button-with-icon" disabled={farmBusy} onClick={startFarm}><AnimatedIcon name="bolt" active/>{farmBusy?t('home.starting','STARTING…'):t('home.startFarm','START FARM')}</button>:f.ready?<button className="primary button-with-icon" onClick={()=>run('farm_claim')}><AnimatedIcon name="gift" active/>{t('common.claim','CLAIM')} +{s.farm_claim_reward} W</button>:<><button className="primary button-with-icon" disabled><AnimatedIcon name="bolt" active/>{t('home.growing','FARMING IN PROGRESS')}</button><Countdown to={f.next}/></>}
-    </section>
-    <DailyCard data={data} run={run}/>
-    <section className="card promo" style={{display:'none'}}>
-      <div className="section-head"><div className="square mint"><AnimatedIcon name="ticket" active/></div><div><h3>{t('promo.title','Promo Code')}</h3><p>{t('promo.subtitle','Redeem a code for rewards')}</p></div></div>
-      <div className="promo-row"><input placeholder={t('promo.enter','ENTER CODE')} value={promo} onChange={e=>setPromo(e.target.value.toUpperCase())}/><button className="primary small" disabled={!promo.trim()} onClick={()=>promo.trim()&&run('promo_claim',{code:promo.trim()},'Promo claimed')}>{t('common.apply','APPLY')}</button></div>
+      <div className="wf-task-list">
+        {featured.length ? featured.map((task:any)=>
+          <button className="wf-task-row" key={task.id} onClick={openTasks}>
+            <span className="wf-task-icon"><AnimatedIcon name="tasks" active/></span>
+            <span className="wf-task-copy">
+              <b>{task.title}</b>
+              <small>{task.description||task.category||'Complete this task and earn WIENER'}</small>
+            </span>
+            <strong>◆ {money(task.reward)}</strong>
+            <span className="wf-task-arrow">›</span>
+          </button>
+        ) : (
+          <button className="wf-task-row" onClick={openTasks}>
+            <span className="wf-task-icon"><AnimatedIcon name="check" active/></span>
+            <span className="wf-task-copy">
+              <b>All tasks completed</b>
+              <small>Check back soon for new rewards</small>
+            </span>
+            <span className="wf-task-arrow">›</span>
+          </button>
+        )}
+      </div>
     </section>
   </>
 }
