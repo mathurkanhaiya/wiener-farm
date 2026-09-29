@@ -6,8 +6,9 @@
   transition:transform .22s ease,opacity .18s ease!important;
   width:calc(100% - 16px)!important;max-width:480px!important;
   height:62px!important;box-sizing:border-box!important;
-  display:grid!important;grid-template-columns:repeat(5,1fr)!important;
-  align-items:center!important;gap:2px!important;padding:5px 6px!important;
+  display:flex!important;flex-direction:row!important;
+  align-items:center!important;justify-content:space-around!important;
+  padding:5px 6px!important;
   border-radius:28px!important;
   background:linear-gradient(125deg,#111016 0%,#17151d 48%,#242129 100%)!important;
   border:1px solid #66502d!important;
@@ -18,6 +19,7 @@
 
 .app-shell > .bottom-nav.game-nav > button{
   appearance:none!important;
+  flex: 1!important;
   display:flex!important;flex-direction:column!important;
   align-items:center!important;justify-content:center!important;gap:2px!important;
   height:100%!important;
