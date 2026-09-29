@@ -1,9 +1,6 @@
-const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 import {useEffect,useState} from 'react';
 import {adApi,adUsageApi,secondaryAdApi,type Snapshot} from './lib';
-import {AnimatedIcon} from './icons';
 import {SpinEarn} from './SpinEarn';
-import {DailyLottery} from './DailyLottery';
 import {PromoBox} from './PromoClaim';
 import {AmbassadorHomeCard} from './Ambassador';
 // Direct WATCH flow: no intermediate claim popup; ad opens after loading.
