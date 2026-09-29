@@ -171,7 +171,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
         const st=await api('ad_status',{session_id:x.session_id});
         if(st?.status==='credited'){
           credited=true;
-          say(\`+\${st.reward||s.ad_reward} WIENER\`);
+          say(`+${st.reward||s.ad_reward} WIENER`);
           await refresh();
           break;
         }
@@ -180,7 +180,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
     }catch(e:any){say(e.message)}finally{setBusy(false)}
   };
   const taskIcon=(t:any)=>{
-    const h=\`\${t.title||''} \${t.description||''}\`.toLowerCase();
+    const h=`${t.title||''} ${t.description||''}`.toLowerCase();
     return h.includes('group')?'👥':h.includes('bio')?'🪪':h.includes('pay')?'💸':h.includes('channel')?'📢':h.includes('x')||h.includes('twitter')?'𝕏':'✓';
   };
   const taskRow=(t:any)=><div className="wf-earn-task" key={t.id}>
@@ -190,7 +190,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       <small>{t.description||'Complete this task to earn WIENER'}</small>
     </div>
     <strong><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>+{money(t.reward)}</strong>
-    <button className="wf-earn-task-open" onClick={()=>{if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setTimeout(()=>refresh(),800)}} aria-label={\`Open \${t.title}\`}>›</button>
+    <button className="wf-earn-task-open" onClick={()=>{if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setTimeout(()=>refresh(),800)}} aria-label={`Open ${t.title}`}>›</button>
   </div>;
   return <div className="wf-earn-page">
     <header className="wf-earn-head">
