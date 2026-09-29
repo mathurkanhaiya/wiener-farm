@@ -52,7 +52,41 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
 .iv-pay{border-radius:24px}.iv-pay-row{display:grid;grid-template-columns:45px minmax(0,1fr) auto;gap:11px;align-items:center;min-height:82px;padding:13px 15px;border-bottom:1px solid rgba(255,255,255,.06)}.iv-pay-row:last-child{border-bottom:0}.iv-step{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:rgba(12,166,91,.22);color:#15d985;font-size:15px;font-weight:900}.iv-step.alt{background:rgba(122,105,186,.25);color:#ad91ff}.iv-step.gold{background:rgba(193,153,37,.24);color:#f4c943}.iv-pay-main b{display:block;font-size:15px}.iv-pay-main span{display:block;margin-top:3px;font-size:10px;line-height:1.3;color:rgba(255,255,255,.46)}.iv-pay-reward{font-size:15px;font-weight:900;color:#10d881}
 .iv-friends{display:grid;gap:8px}.iv-friend{padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:15px;background:rgba(255,255,255,.025)}.iv-friendtop{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:9px;align-items:center}.iv-avatar{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:rgba(65,226,130,.12);color:#82ecaa;font-weight:900}.iv-name b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.iv-name span{display:block;margin-top:3px;font-size:8px;opacity:.4}.iv-status{padding:5px 7px;border-radius:999px;font-size:7px;font-weight:950}.iv-status.good{color:#7aeca7}.iv-status.live{color:#ffe06b}.iv-status.warn{color:#ffc66b}.iv-status.bad{color:#ff9292}.iv-progress{height:4px;margin-top:9px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.iv-progress i{display:block;height:100%;background:#17dd89}.iv-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:8px;opacity:.4}
 @media(max-width:390px){.iv-balance{min-height:205px;padding:23px 20px}.iv-dog{width:126px;height:126px;right:0;top:34px}.iv-number{font-size:52px}.iv-reward-main strong{font-size:51px}.iv-pay-row{grid-template-columns:42px minmax(0,1fr) auto;padding:12px}.iv-pay-main span{font-size:9px}}
-.iv{gap:14px!important;padding:8px 0 125px!important}.iv-balance{min-height:258px!important;padding:25px 30px!important;border-radius:0!important;clip-path:polygon(6% 0,100% 0,100% 78%,92% 100%,0 100%,0 10%)!important;background:radial-gradient(circle at 78% 42%,rgba(49,230,130,.16),transparent 34%),linear-gradient(145deg,rgba(8,76,46,.96),rgba(3,43,28,.98))!important}.iv-kicker{font-size:11px!important}.iv-number{font-size:72px!important;letter-spacing:-2px!important}.iv-dog{width:145px!important;height:145px!important;right:23px!important;top:36px!important}.iv-reward{min-height:292px!important;padding:28px 31px 24px!important;border-radius:0!important;clip-path:polygon(6% 0,100% 0,100% 86%,93% 100%,0 100%,0 10%)!important;background:linear-gradient(145deg,rgba(8,115,64,.96),rgba(4,64,38,.98))!important}.iv-reward h3{font-size:14px!important}.iv-reward-main{margin:25px 0 27px!important}.iv-reward-main strong{font-size:66px!important}.iv-pills span{font-size:10px!important;padding:9px 12px!important}.iv-stats{gap:10px!important}.iv-stat{min-height:130px!important;padding:22px 8px 16px!important;border-radius:0!important;clip-path:polygon(8% 0,100% 0,100% 86%,88% 100%,0 100%,0 12%)!important}.iv-stat b{font-size:31px!important}.iv-stat span{font-size:9px!important}.iv-box{padding:22px 28px!important;border-radius:0!important;clip-path:polygon(6% 0,100% 0,100% 88%,94% 100%,0 100%,0 9%)!important}.iv-link{grid-template-columns:52px minmax(0,1fr)!important}.iv-linktext{height:55px!important;font-size:14px!important}.iv-copy{width:52px!important;height:55px!important}.iv-share{height:56px!important;margin-top:11px!important;border-radius:0!important;clip-path:polygon(5% 0,95% 0,100% 18%,100% 82%,95% 100%,5% 100%,0 82%,0 18%)!important}.iv-myinv{height:57px!important;margin-top:11px!important;border-radius:0!important;clip-path:polygon(5% 0,95% 0,100% 20%,95% 100%,5% 100%,0 80%,0 20%)!important}.iv-title{padding:6px 5px 1px!important;font-size:12px!important}.iv-pay{border-radius:0!important;clip-path:polygon(5% 0,100% 0,100% 92%,95% 100%,0 100%,0 8%)!important}.iv-pay-row{min-height:94px!important;padding:13px 18px!important}.iv-step{width:48px!important;height:48px!important}@media(max-width:390px){.iv-balance{min-height:245px!important;padding:24px 28px!important}.iv-dog{width:126px!important;height:126px!important;right:12px!important;top:39px!important}.iv-number{font-size:64px!important}.iv-reward{min-height:276px!important;padding:25px 28px 22px!important}.iv-reward-main strong{font-size:60px!important}.iv-stat{min-height:120px!important}.iv-box{padding:20px 24px!important}.iv-pay-row{padding:12px!important}}`}</style><div className="iv">
+/* NEUTRAL MOBILE SCALE */
+.iv{gap:12px!important;padding:8px 0 112px!important}
+.iv-balance{min-height:220px!important;padding:24px 24px!important;border-radius:24px!important;clip-path:none!important}
+.iv-kicker{font-size:10px!important}
+.iv-number{font-size:58px!important;letter-spacing:-1px!important}
+.iv-dog{width:126px!important;height:126px!important;right:8px!important;top:34px!important}
+.iv-reward{min-height:0!important;padding:23px 22px!important;border-radius:24px!important;clip-path:none!important}
+.iv-reward h3{font-size:13px!important}
+.iv-reward-main{margin:15px 0 18px!important}
+.iv-reward-main strong{font-size:56px!important}
+.iv-pills span{font-size:8px!important;padding:8px 10px!important}
+.iv-stats{gap:8px!important}
+.iv-stat{min-height:0!important;padding:17px 7px!important;border-radius:18px!important;clip-path:none!important}
+.iv-stat b{font-size:25px!important}
+.iv-stat span{font-size:8px!important}
+.iv-box{padding:20px!important;border-radius:24px!important;clip-path:none!important}
+.iv-link{grid-template-columns:minmax(0,1fr) 52px!important}
+.iv-linktext{height:54px!important;font-size:12px!important}
+.iv-copy{width:52px!important;height:54px!important}
+.iv-share{height:54px!important;margin-top:9px!important;border-radius:14px!important;clip-path:none!important}
+.iv-myinv{height:54px!important;margin-top:9px!important;border-radius:14px!important;clip-path:none!important}
+.iv-title{padding:0 5px!important;font-size:11px!important}
+.iv-pay{border-radius:24px!important;clip-path:none!important}
+.iv-pay-row{min-height:82px!important;padding:13px 15px!important}
+.iv-step{width:43px!important;height:43px!important}
+@media(max-width:390px){
+.iv-balance{min-height:205px!important;padding:23px 20px!important}
+.iv-dog{width:112px!important;height:112px!important;right:2px!important;top:35px!important}
+.iv-number{font-size:52px!important}
+.iv-reward{padding:22px 20px!important}
+.iv-reward-main strong{font-size:51px!important}
+.iv-stat{padding:15px 6px!important}
+.iv-box{padding:18px!important}
+.iv-pay-row{padding:12px!important}
+}`}</style><div className="iv">
 <section className="iv-card iv-balance"><img className="iv-dog" src="https://pixlinkhost.vercel.app/i/DTBrE-73Ag" alt="" aria-hidden="true"/><div className="iv-kicker">TOTAL BALANCE</div><div className="iv-number">{money(Math.floor(Number(u.balance||0)))}</div><div className="iv-unit"><span>◆ WIENER</span><span className="iv-usd">{tokenPerUsdt>0?("$"+(Math.floor(Number(u.balance||0))/tokenPerUsdt).toFixed(4)):"—"}</span></div></section>
 <section className="iv-card iv-reward"><h3>PER FRIEND YOU INVITE</h3><div className="iv-reward-main"><img className="iv-dog-small" src="https://pixlinkhost.vercel.app/i/DTBrE-73Ag" alt="" aria-hidden="true"/><strong>{activeReward?money(activeReward):"—"}</strong><b>W</b><div className="iv-worth"><small>WORTH</small><b>{tokenPerUsdt&&activeReward?("$"+(activeReward/tokenPerUsdt).toFixed(4)):"—"}</b></div></div><div className="iv-pills"><span>{joinReward?money(joinReward)+" on join":"Join reward from settings"}</span><span>{activeReward?("+"+money(activeReward)+" when active"):"Active reward from settings"}</span><span>{commissionPercent?commissionPercent+"% forever":"Commission from settings"}</span></div></section>
 <div className="iv-stats"><div className="iv-stat"><b>{stats.invited}</b><span>FRIENDS</span></div><div className="iv-stat"><b>{stats.qualified}</b><span>ACTIVE</span></div><div className="iv-stat"><b>{money(stats.earned)}</b><span>EARNED</span></div></div>
