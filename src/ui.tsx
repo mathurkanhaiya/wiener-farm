@@ -77,12 +77,16 @@ export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boole
     window.addEventListener('scroll',onScroll,{passive:true});
     return()=>window.removeEventListener('scroll',onScroll);
   },[]);
-  const left:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads',t('nav.ads','Ads'),'ads']];
-  const right:[Tab,string,IconName][]=[['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['wallet',t('nav.wallet','Wallet'),'wallet']];
+  const items:[Tab,string,IconName][]=[
+    ['home',t('nav.home','Home'),'home'],
+    ['ads',t('nav.ads','Ads'),'ads'],
+    ['tasks',t('nav.tasks','Tasks'),'tasks'],
+    ['invite',t('nav.invite','Invite'),'invite'],
+    ['wallet',t('nav.wallet','Wallet'),'wallet']
+  ];
   const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><AnimatedIcon name={icon} active={tab===k}/><span>{l}</span></button>;
   return <nav className={hidden?'bottom-nav game-nav nav-hidden':'bottom-nav game-nav'}>
-    <div className="game-nav-left">{left.map(item)}</div>
-    <div className="game-nav-right">{right.map(item)}</div>
+    {items.map(item)}
     {admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}
   </nav>;
 }

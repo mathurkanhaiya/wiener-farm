@@ -102,14 +102,7 @@
 .app-shell > .bottom-nav.game-nav.nav-hidden > .admin-fab{opacity:0!important;pointer-events:none!important}
 .app-shell > .bottom-nav.game-nav.nav-hidden{transform:translate(-50%,calc(100% + 18px))!important;opacity:.15!important;pointer-events:none!important}
 
-.app-shell > .game-nav .game-nav-left,
-.app-shell > .game-nav .game-nav-right{
-  display:contents!important;
-  min-width:0!important;height:100%!important;padding:0!important;gap:2px!important;
-}
-
-.app-shell > .game-nav .game-nav-left > button,
-.app-shell > .game-nav .game-nav-right > button{
+.app-shell > .bottom-nav.game-nav > button{
   appearance:none!important;-webkit-appearance:none!important;
   position:relative!important;display:flex!important;flex-direction:column!important;
   align-items:center!important;justify-content:center!important;gap:4px!important;
@@ -120,26 +113,21 @@
   color:#aaa2b3!important;font:inherit!important;font-weight:800!important;
   cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
-.app-shell > .game-nav .game-nav-left > button > span:not(.aicon),
-.app-shell > .game-nav .game-nav-right > button > span:not(.aicon){
+.app-shell > .bottom-nav.game-nav > button > span:not(.aicon){
   display:block!important;max-width:100%;margin:0!important;
   font-size:clamp(9px,2.5vw,11px)!important;line-height:1.2!important;
   letter-spacing:.02em!important;text-transform:uppercase;white-space:nowrap!important;
 }
-.app-shell > .game-nav .game-nav-left > button .aicon,
-.app-shell > .game-nav .game-nav-right > button .aicon{
+.app-shell > .bottom-nav.game-nav > button .aicon{
   display:block!important;flex:none!important;
   width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;
   margin:0!important;color:inherit!important;
 }
-.app-shell > .game-nav .game-nav-left > button.active,
-.app-shell > .game-nav .game-nav-right > button.active{
+.app-shell > .bottom-nav.game-nav > button.active{
   color:#ffd17b!important;background:transparent!important;border:0!important;box-shadow:none!important;
 }
-.app-shell > .game-nav .game-nav-left > button::after,
-.app-shell > .game-nav .game-nav-right > button::after{
+.app-shell > .bottom-nav.game-nav > button::after{
   content:"";position:absolute;bottom:1px;left:32%;right:32%;height:3px;border-radius:5px;
   background:linear-gradient(90deg,#ff720d,#ffcb43);opacity:0;
 }
-.app-shell > .game-nav .game-nav-left > button.active::after,
-.app-shell > .game-nav .game-nav-right > button.active::after{opacity:1}
+.app-shell > .bottom-nav.game-nav > button.active::after{opacity:1}
