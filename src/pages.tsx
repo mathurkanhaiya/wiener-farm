@@ -3,6 +3,7 @@ import {api,cleanUserText,date,money,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {DailyBioClaimGate} from './DailyBioClaimGate';
 import {useI18n} from './i18n';
+import {LanguagePicker} from './ui';
 
 const today=()=>new Date().toISOString().slice(0,10);
 function nextDaily(data:Snapshot){
@@ -34,9 +35,12 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
         <span>WELCOME BACK</span>
         <strong>{cleanUserText(u.first_name||u.username||'WIENER')}</strong>
       </div>
-      <button className="wf-theme-toggle" type="button" aria-label="Toggle appearance" onClick={()=>document.documentElement.classList.toggle('wf-soft-theme')}>
-        <span>☾</span>
-      </button>
+      <div className="wf-home-tools">
+        <LanguagePicker/>
+        <button className="wf-theme-toggle" type="button" aria-label="Toggle appearance" onClick={()=>document.documentElement.classList.toggle('wf-soft-theme')}>
+          <span>☾</span>
+        </button>
+      </div>
     </section>
 
     <section className="wf-balance-card">
