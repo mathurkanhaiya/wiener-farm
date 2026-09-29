@@ -265,3 +265,33 @@ body #root .app-shell > .content{
     width:27px!important;font-size:10px!important;padding:4px 3px!important;
   }
 }
+
+
+/* FINAL HOME SPACING + BALANCE CLEANUP */
+body .app-shell > .brand.wf-header{
+  margin:0 0 8px!important;
+}
+body .app-shell .home-stack{
+  gap:10px!important;
+}
+/* Keep the W coin, remove the duplicate W unit on the right. */
+body .app-shell .hero.card > .hero-balance > b{
+  display:none!important;
+}
+body .app-shell .hero.card > .hero-balance{
+  grid-template-columns:34px minmax(0,1fr)!important;
+  gap:8px!important;
+}
+body .app-shell .hero.card > .hero-balance > strong{
+  text-align:center!important;
+}
+/* Less dead space reserved below the final home card. */
+body #root .app-shell > .content{
+  padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;
+}
+@media(max-width:390px){
+  body .app-shell .hero.card > .hero-balance{
+    grid-template-columns:30px minmax(0,1fr)!important;
+    gap:6px!important;
+  }
+}
