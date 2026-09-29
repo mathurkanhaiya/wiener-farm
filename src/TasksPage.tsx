@@ -38,36 +38,90 @@ export function Tasks({data,run,say}:{data:Snapshot;run:any;say:(s:string)=>void
   useEffect(()=>{const bots=visibleTasks.filter(tk=>tk.verification==='bot_forward'&&!done.has(tk.id));Promise.all(bots.map(async tk=>{try{const s=await botTask('status',tk.id);return [tk.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [tk.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
   const normalTask=async(task:any)=>{if(busy)return;const opened=normalStates[task.id]==='opened',external=task.verification==='external_visit',mini=task.task_type==='mini_app';try{if(!opened){setBusy(task.id);if(external)await taskApi(task.id,'begin_external');if(task.url){if(mini)window.Telegram?.WebApp?.openTelegramLink?.(task.url);else window.Telegram?.WebApp?.openLink?.(task.url)}setNormalStates(v=>({...v,[task.id]:'opened'}));say(mini?'Mini App opened. Stay at least 15 seconds, then return and tap CLAIM.':external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':task.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(task.id);await taskApi(task.id,'claim');say(`+${task.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){const m=String(e.message||'Task verification failed');say(/^wait_\d+_seconds$/.test(m)?`Please wait ${m.match(/\d+/)?.[0]||'a few'} more seconds.`:m)}finally{setBusy('')}};
   const botAction=async(task:any)=>{if(busy)return;const state=botStates[task.id]||'not_started';try{setBusy(task.id);if(state==='not_started'){const x=await botTask('begin',task.id);setBotStates(v=>({...v,[task.id]:'pending'}));say(`Forward one message from @${x.bot_username} to WIENER bot, then tap CHECK`);const url=String(x.url||task.url||'');if(url)window.Telegram?.WebApp?.openTelegramLink?.(url);return}if(state==='pending'){const x=await botTask('status',task.id);if(x.verified){setBotStates(v=>({...v,[task.id]:'verified'}));say('✅ Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward one message from the required bot to WIENER, then check again.');return}await taskApi(task.id,'claim');say(`+${task.reward} W`);window.setTimeout(()=>window.location.reload(),450)}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
-
-  const [view,setView]=useState<'tasks'|'mine'>('tasks');
-  const [createOpen,setCreateOpen]=useState(false);
-  const [draft,setDraft]=useState({title:'',url:'',reward:'10',type:'telegram'});
-  const myTasks=[{label:'LIVE TASKS',value:'0',icon:'🟢'},{label:'PENDING',value:'0',icon:'🟡'},{label:'COMPLETED',value:String(count),icon:'✓'}];
   return <>
     <style>{`
-      .wf-tasks-page{width:100%;max-width:540px;margin:0 auto;padding:6px 0 112px;box-sizing:border-box}
-      .wf-task-hero{padding:17px;border:1px solid rgba(91,231,158,.14);border-radius:21px;background:linear-gradient(145deg,rgba(20,79,51,.72),rgba(6,39,28,.86));box-shadow:inset 0 1px 0 rgba(220,255,235,.035),0 12px 30px rgba(0,0,0,.12)}
-      .wf-task-hero-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-      .wf-task-kicker{font-size:10px;letter-spacing:.17em;font-weight:900;color:#66e4a2}
-      .wf-task-hero h2{margin:4px 0 3px;font-size:25px;line-height:1.05;color:#effff7}
-      .wf-task-hero p{margin:0;font-size:11px;line-height:1.45;color:rgba(228,255,241,.56)}
-      .wf-create-btn{height:43px;padding:0 15px;border:0;border-radius:13px;background:#0ca653;color:#fff;font-size:11px;font-weight:950;letter-spacing:.08em;white-space:nowrap}
-      .wf-task-view-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0;padding:5px;border-radius:16px;background:rgba(3,30,21,.62);border:1px solid rgba(91,231,158,.1)}
-      .wf-task-view-tabs button{height:40px;border:0;border-radius:12px;background:transparent;color:rgba(228,255,241,.5);font-size:11px;font-weight:900}
-      .wf-task-view-tabs button.active{background:rgba(50,208,128,.15);color:#74e8ad;border:1px solid rgba(91,231,158,.14)}
-      .wf-task-section{margin-top:13px}.wf-task-section-head{display:flex;align-items:center;justify-content:space-between;margin:0 3px 8px}.wf-task-section-head b{font-size:11px;letter-spacing:.15em;color:#e9fff3}.wf-task-section-head small{font-size:10px;color:rgba(228,255,241,.43)}
-      .wf-task-category{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}.wf-task-category button{height:44px;border-radius:14px;border:1px solid rgba(91,231,158,.1);background:rgba(8,48,33,.62);color:rgba(228,255,241,.55);font-size:11px;font-weight:900}.wf-task-category button.active{background:linear-gradient(145deg,rgba(50,208,128,.2),rgba(15,82,53,.65));border-color:rgba(91,231,158,.3);color:#74e8ad}
-      .wf-task-list-shell{padding:7px 14px;border:1px solid rgba(91,231,158,.13);border-radius:20px;background:linear-gradient(145deg,rgba(12,52,37,.78),rgba(4,28,20,.88));box-shadow:inset 0 1px 0 rgba(220,255,235,.025)}
-      .wf-task-list-shell .premium-task-row{border-bottom-color:rgba(91,231,158,.075)!important}
-      .wf-mine-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.wf-mine-stat{padding:13px 10px;border:1px solid rgba(91,231,158,.12);border-radius:17px;background:linear-gradient(145deg,rgba(20,79,51,.68),rgba(6,39,28,.84));text-align:center}.wf-mine-stat .ico{font-size:15px}.wf-mine-stat b{display:block;margin-top:5px;font-size:18px;color:#effff7}.wf-mine-stat small{display:block;margin-top:2px;font-size:8.5px;letter-spacing:.08em;color:rgba(228,255,241,.46)}
-      .wf-create-panel{margin-top:11px;padding:15px;border:1px solid rgba(91,231,158,.14);border-radius:20px;background:linear-gradient(145deg,rgba(20,79,51,.72),rgba(6,39,28,.86))}.wf-create-panel h3{margin:0;font-size:17px;color:#effff7}.wf-create-panel p{margin:4px 0 14px;font-size:10px;color:rgba(228,255,241,.52);line-height:1.4}.wf-create-fields{display:grid;gap:9px}.wf-create-field label{display:block;margin:0 0 5px 2px;font-size:9px;font-weight:900;letter-spacing:.1em;color:rgba(228,255,241,.55)}.wf-create-field input,.wf-create-field select{width:100%;height:43px;box-sizing:border-box;padding:0 12px;border-radius:12px;border:1px solid rgba(91,231,158,.1);outline:none;background:rgba(3,30,21,.78);color:#effff7;font-size:12px}.wf-create-row{display:grid;grid-template-columns:1.4fr .8fr;gap:8px}.wf-create-actions{display:flex;gap:8px;margin-top:11px}.wf-create-actions button{flex:1;height:42px;border-radius:12px;font-size:10px;font-weight:900}.wf-create-cancel{border:1px solid rgba(91,231,158,.1);background:rgba(255,255,255,.035);color:rgba(228,255,241,.58)}.wf-create-submit{border:0;background:#0ca653;color:#fff}
-      .wf-empty-mine{padding:24px 14px;text-align:center;border:1px dashed rgba(91,231,158,.14);border-radius:16px;margin-top:10px;color:rgba(228,255,241,.5);font-size:11px}
-      @media(max-width:390px){.wf-tasks-page{padding-bottom:108px}.wf-task-hero{padding:14px;border-radius:18px}.wf-task-hero h2{font-size:22px}.wf-create-btn{height:40px;padding:0 12px}.wf-mine-stat{padding:11px 7px}.wf-task-list-shell{padding:5px 10px}.wf-create-panel{padding:13px}.wf-create-row{grid-template-columns:1fr 1fr}}
+      .task-tabs{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;padding:6px;margin:14px 0 16px;border:1px solid rgba(255,255,255,.08);border-radius:20px;background:rgba(0,24,14,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+      .task-tabs button{min-width:0!important;width:100%!important;height:48px!important;margin:0!important;border:1px solid transparent!important;border-radius:15px!important;background:transparent!important;color:rgba(255,255,255,.58)!important;font-size:14px!important;font-weight:850!important;letter-spacing:.1px!important;box-shadow:none!important;transition:.18s ease}
+      .task-tabs button.active{background:linear-gradient(180deg,#fff16a,#ffd21a)!important;color:#251f00!important;border-color:rgba(255,255,255,.38)!important;box-shadow:0 8px 20px rgba(255,210,26,.16),inset 0 1px 0 rgba(255,255,255,.65)!important}
+      .task-tabs button:not(.active):active{background:rgba(255,255,255,.06)!important}
+      .task-list{overflow:hidden;padding:6px 14px!important;width:100%!important;box-sizing:border-box!important}
+      .premium-task-row{display:flex!important;align-items:center!important;gap:12px!important;min-height:76px;padding:14px 0!important;border-bottom:1px solid rgba(255,255,255,.065);width:100%!important;box-sizing:border-box!important}
+      .premium-task-row:last-child{border-bottom:0}
+      .premium-task-row.target-task{margin:0 -8px;padding-left:8px!important;padding-right:8px!important;border-radius:16px;background:rgba(255,220,60,.06)}
+      .task-avatar{flex:0 0 46px!important;width:46px!important;height:46px!important;display:grid;place-items:center;overflow:hidden;border-radius:15px;border:1px solid rgba(255,255,255,.11);background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.15)}
+      .task-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+      .task-avatar svg{width:26px;height:26px}
+      .task-info{flex:1 1 0%!important;min-width:0!important;padding-right:4px}
+      .task-title-line{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;min-width:0}
+      .task-title-line h3{margin:0;font-size:14px;font-weight:850;line-height:1.35;color:#fff;word-break:break-word;white-space:normal}
+      .task-desc{margin:3px 0 0;font-size:11.5px;line-height:1.4;color:rgba(255,255,255,.62);word-break:break-word;white-space:normal}
+      .task-type-pill{display:inline-block;padding:2px 6px;border-radius:6px;background:rgba(255,205,45,.09);border:1px solid rgba(255,205,45,.14);color:#ffd85a;font-size:8.5px;font-weight:900;letter-spacing:.4px;white-space:nowrap}
+      .task-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;margin-top:5px;font-size:11px;font-weight:800;color:rgba(255,255,255,.54)}
+      .task-reward{color:#ffe45e;font-weight:950}
+      .task-dot-sep{opacity:.35}
+      .task-limit{white-space:nowrap}
+      .task-status-mini{display:block;margin-top:4px;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.45);word-break:break-word}
+      .task-status-mini.ready{color:#82e9a2}
+      .task-action{flex:0 0 auto!important;min-width:74px!important;height:38px!important;padding:0 12px!important;border-radius:12px!important;font-size:11px!important;font-weight:950!important;letter-spacing:.2px!important;white-space:nowrap!important}
+      .task-action:disabled{opacity:.52!important;filter:saturate(.55)}
+      @media(max-width:375px){
+        .premium-task-row{gap:9px!important;padding:11px 0!important}
+        .task-avatar{flex:0 0 40px!important;width:40px!important;height:40px!important;border-radius:12px}
+        .task-avatar svg{width:22px;height:22px}
+        .task-action{min-width:64px!important;height:35px!important;padding:0 8px!important;font-size:10.5px!important}
+        .task-title-line h3{font-size:13px}
+        .task-desc{font-size:10.5px}
+      }
     `}</style>
-    <div className="wf-tasks-page">
-      <section className="wf-task-hero"><div className="wf-task-hero-top"><div><div className="wf-task-kicker">WIENER TASK CENTER</div><h2>Tasks</h2><p>Complete tasks to earn WIENER, or create your own campaign.</p></div><button className="wf-create-btn" onClick={()=>{setView('mine');setCreateOpen(true)}}>＋ CREATE TASK</button></div></section>
-      <div className="wf-task-view-tabs"><button className={view==='tasks'?'active':''} onClick={()=>setView('tasks')}>TASKS</button><button className={view==='mine'?'active':''} onClick={()=>setView('mine')}>MY TASKS</button></div>
-      {view==='tasks' ? <section className="wf-task-section"><div className="wf-task-section-head"><b>AVAILABLE TASKS</b><small>{items.length} available</small></div><div className="wf-task-category"><button className={cat==='official'?'active':''} onClick={()=>setCat('official')}>OFFICIAL</button><button className={cat==='partner'?'active':''} onClick={()=>setCat('partner')}>PARTNER</button></div><section className="wf-task-list-shell">{items.length ? items.map(task=>{const isBot=task.verification==='bot_forward',isExternal=task.verification==='external_visit',isMini=task.task_type==='mini_app',state=botStates[task.id]||'not_started',normalOpened=normalStates[task.id]==='opened',completed=done.has(task.id);const label=completed?t('common.done','DONE'):busy===task.id?t('common.wait','WAIT'):isBot?(state==='verified'?t('common.claim','CLAIM'):state==='pending'?'CHECK':'START'):(normalOpened?t('common.claim','CLAIM'):isMini?'OPEN':isExternal?'OPEN':t('common.join','JOIN'));const doneCount=Number(task.completed_count||0),limit=Number(task.max_completions||0),remaining=limit?Math.max(0,limit-doneCount):0;const limitText=limit?(remaining>0&&remaining<=10?remaining+' spots left':doneCount+' / '+limit):'Open task';const typeLabel=isMini?'MINI APP':isBot?'BOT':task.verification==='telegram_member'?'TELEGRAM':isExternal?'LINK':'TASK';const status=isBot&&state==='pending'?'Waiting for verification':isBot&&state==='verified'?'Reward ready':normalOpened?(isExternal?'Return after 15 sec · reward ready':'Ready to claim'):'';return <div className="premium-task-row" id={'task-'+task.id} key={task.id}><TaskAvatar task={task} active={completed||state==='verified'}/><div className="task-info"><div className="task-title-line"><h3>{task.title}</h3><span className="task-type-pill">{typeLabel}</span></div>{task.description&&<p className="task-desc">{task.description}</p>}<div className="task-meta"><span className="task-reward">+{task.reward} W</span><span className="task-dot-sep">•</span><span className="task-limit">{limitText}</span></div>{status&&<small className={'task-status-mini '+(state==='verified'||normalOpened?'ready':'')}>{status}</small>}</div><button className="primary small task-action" disabled={completed||busy===task.id} onClick={()=>isBot?botAction(task):normalTask(task)}>{label}</button></div>}) : <div className="wf-empty-mine">No {cat} tasks available right now.</div>}</section></section> :
-      <section className="wf-task-section"><div className="wf-task-section-head"><b>MY TASKS</b><small>Campaign overview</small></div><div className="wf-mine-grid">{myTasks.map(s=><div className="wf-mine-stat" key={s.label}><div className="ico">{s.icon}</div><b>{s.value}</b><small>{s.label}</small></div>)}</div><div className="wf-create-panel"><h3>Create your own task</h3><p>Set a title, destination and reward. The creation flow is ready for backend connection.</p>{!createOpen?<button className="wf-create-submit" style={{width:'100%',height:43,borderRadius:12}} onClick={()=>setCreateOpen(true)}>＋ START NEW TASK</button>:<div className="wf-create-fields"><div className="wf-create-field"><label>TASK TITLE</label><input value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})} placeholder="e.g. Join Wiener Farm Channel"/></div><div className="wf-create-field"><label>TELEGRAM / DESTINATION LINK</label><input value={draft.url} onChange={e=>setDraft({...draft,url:e.target.value})} placeholder="https://t.me/yourchannel"/></div><div className="wf-create-row"><div className="wf-create-field"><label>REWARD · WIENER</label><input inputMode="numeric" value={draft.reward} onChange={e=>setDraft({...draft,reward:e.target.value.replace(/\D/g,'')})}/></div><div className="wf-create-field"><label>TYPE</label><select value={draft.type} onChange={e=>setDraft({...draft,type:e.target.value})}><option value="telegram">Telegram</option><option value="link">Link visit</option><option value="mini_app">Mini App</option></select></div></div><div className="wf-create-actions"><button className="wf-create-cancel" onClick={()=>setCreateOpen(false)}>CANCEL</button><button className="wf-create-submit" onClick={()=>{setCreateOpen(false);say('Task form ready — creation backend will be connected next.')}}>CREATE TASK</button></div></div>}</div><div className="wf-empty-mine">No live campaigns yet. Your created tasks will appear here after approval.</div></section>}
+    <section className="card progress-card">
+      <div className="section-head">
+        <div className="square check"><AnimatedIcon name="tasks" active/></div>
+        <div>
+          <h3>{t('tasks.progress','Your Progress')}</h3>
+          <p>{count} {t('tasks.completed','current tasks completed')}</p>
+        </div>
+      </div>
+      <div className="progress">
+        <span style={{width:`${visibleTasks.length?Math.min(100,count/visibleTasks.length*100):0}%`}}/>
+      </div>
+    </section>
+    <div className="tabs task-tabs">
+      <button className={cat==='official'?'active':''} onClick={()=>setCat('official')}>
+        {t('tasks.official','Official')}
+      </button>
+      <button className={cat==='partner'?'active':''} onClick={()=>setCat('partner')}>
+        {t('tasks.partner','Partner')}
+      </button>
     </div>
-  </>
+    <section className="card task-list">
+      {items.length ? items.map(task=>{
+        const isBot=task.verification==='bot_forward',isExternal=task.verification==='external_visit',isMini=task.task_type==='mini_app',state=botStates[task.id]||'not_started',normalOpened=normalStates[task.id]==='opened',completed=done.has(task.id);
+        const label=completed?t('common.done','DONE'):busy===task.id?t('common.wait','WAIT'):isBot?(state==='verified'?t('common.claim','CLAIM'):state==='pending'?'CHECK':'START'):(normalOpened?t('common.claim','CLAIM'):isMini?'OPEN':isExternal?'OPEN':t('common.join','JOIN'));
+        const doneCount=Number(task.completed_count||0),limit=Number(task.max_completions||0),remaining=limit?Math.max(0,limit-doneCount):0;
+        const limitText=limit?(remaining>0&&remaining<=10?`${remaining} spots left`:`${doneCount} / ${limit}`):'Open task';
+        const typeLabel=isMini?'MINI APP':isBot?'BOT':task.verification==='telegram_member'?'TELEGRAM':isExternal?'LINK':'TASK';
+        const status=isBot&&state==='pending'?'Waiting for verification':isBot&&state==='verified'?'Reward ready':normalOpened?(isExternal?'Return after 15 sec · reward ready':'Ready to claim'):'';
+        return <div className={`premium-task-row ${targetId===task.id?'target-task':''}`} id={`task-${task.id}`} key={task.id}>
+          <TaskAvatar task={task} active={completed||state==='verified'}/>
+          <div className="task-info">
+            <div className="task-title-line">
+              <h3>{task.title}</h3>
+              <span className="task-type-pill">{typeLabel}</span>
+            </div>
+            {task.description && <p className="task-desc">{task.description}</p>}
+            <div className="task-meta">
+              <span className="task-reward">+{task.reward} W</span>
+              <span className="task-dot-sep">•</span>
+              <span className="task-limit">{limitText}</span>
+            </div>
+            {status&&<small className={`task-status-mini ${state==='verified'||normalOpened?'ready':''}`}>{status}</small>}
+          </div>
+          <button className="primary small task-action" disabled={completed||busy===task.id} onClick={()=>isBot?botAction(task):normalTask(task)}>
+            {label}
+          </button>
+        </div>
+      }) : cat==='official' ? null : <div className="empty">{t('tasks.none','No tasks right now.')}</div>}
+    </section>
+  </>;
+}
+
