@@ -52,3 +52,216 @@
   border-radius:50%!important;background:#242129!important;border:1px solid #66502d!important;
   display:grid!important;place-items:center!important;
 }
+
+
+/* ==========================================================================
+   WIENER FARM — FINAL MOBILE HOME / NAV POLISH
+   This block intentionally outranks the older grid navigation rules.
+   ========================================================================== */
+
+/* Compact, non-overlapping app header */
+body .app-shell > .brand.wf-header{
+  width:100%!important;
+  height:58px!important;
+  min-height:58px!important;
+  margin:2px 0 14px!important;
+  padding:5px 7px!important;
+  border-radius:22px!important;
+  box-sizing:border-box!important;
+  gap:8px!important;
+}
+body .app-shell > .brand.wf-header .wf-brand-lockup{
+  flex:1 1 auto!important;
+  min-width:0!important;
+  gap:8px!important;
+}
+body .app-shell > .brand.wf-header .wf-brand-logo{
+  width:40px!important;height:40px!important;min-width:40px!important;
+}
+body .app-shell > .brand.wf-header .wf-brand-logo img{
+  width:34px!important;height:34px!important;
+}
+body .app-shell > .brand.wf-header .brand-copy{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+body .app-shell > .brand.wf-header .brand-copy b{
+  font-size:13px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body .app-shell > .brand.wf-header .brand-copy span{
+  font-size:9px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body .app-shell > .brand.wf-header .wf-header-actions{
+  flex:0 0 auto!important;
+  gap:5px!important;
+}
+body .app-shell > .brand.wf-header .balance-pill{
+  max-width:154px!important;
+  min-width:0!important;
+  padding:4px 8px 4px 5px!important;
+  gap:5px!important;
+  font-size:11px!important;
+  line-height:1!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+}
+body .app-shell > .brand.wf-header .balance-pill .mini-coin{
+  width:21px!important;height:21px!important;min-width:21px!important;
+  font-size:10px!important;
+}
+body .app-shell > .brand.wf-header .language-trigger{
+  width:32px!important;height:32px!important;min-width:32px!important;
+}
+
+/* Keep the main balance inside the card on small screens. */
+body .app-shell .hero.card > .hero-balance{
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr) 30px!important;
+  align-items:center!important;
+  justify-content:initial!important;
+  gap:5px!important;
+  overflow:hidden!important;
+}
+body .app-shell .hero.card > .hero-balance > .coin{
+  width:34px!important;height:34px!important;min-width:34px!important;
+  font-size:16px!important;
+}
+body .app-shell .hero.card > .hero-balance > strong{
+  min-width:0!important;
+  width:100%!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  font-size:clamp(30px,9.6vw,42px)!important;
+  letter-spacing:-.045em!important;
+}
+body .app-shell .hero.card > .hero-balance > b{
+  width:30px!important;
+  box-sizing:border-box!important;
+  padding:4px 5px!important;
+  font-size:11px!important;
+  text-align:center!important;
+  overflow:hidden!important;
+}
+
+/* FINAL bottom dock: one row, five equal destinations. */
+body #root .app-shell > .bottom-nav.game-nav{
+  position:fixed!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:max(8px,env(safe-area-inset-bottom))!important;
+  transform:translateX(-50%)!important;
+  width:calc(100% - 24px)!important;
+  max-width:480px!important;
+  height:72px!important;
+  min-height:72px!important;
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  grid-template-columns:none!important;
+  grid-template-rows:none!important;
+  grid-auto-flow:unset!important;
+  align-items:stretch!important;
+  justify-content:space-between!important;
+  gap:2px!important;
+  padding:6px!important;
+  box-sizing:border-box!important;
+  border-radius:26px!important;
+  overflow:visible!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button{
+  position:relative!important;
+  flex:1 1 0!important;
+  width:20%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:5px 1px 4px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:3px!important;
+  box-sizing:border-box!important;
+  border-radius:18px!important;
+  background:transparent!important;
+  border:0!important;
+  overflow:hidden!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button > .aicon{
+  width:23px!important;height:23px!important;
+  flex:0 0 23px!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button > span:not(.aicon){
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+  font-size:10px!important;
+  line-height:1.15!important;
+  font-weight:800!important;
+  text-transform:none!important;
+  letter-spacing:0!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active{
+  background:rgba(245,158,11,.10)!important;
+  color:#ffd36b!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active:after{
+  bottom:2px!important;
+  width:20px!important;
+  height:3px!important;
+  border-radius:99px!important;
+  opacity:1!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > .admin-fab{
+  width:38px!important;
+  min-width:38px!important;
+  height:38px!important;
+  top:-46px!important;
+  right:8px!important;
+  position:absolute!important;
+  flex:none!important;
+  border-radius:50%!important;
+}
+
+/* Don't let the dock cover the last home card. */
+body #root .app-shell > .content{
+  padding-bottom:calc(105px + env(safe-area-inset-bottom,0px))!important;
+}
+
+@media(max-width:390px){
+  body .app-shell > .brand.wf-header .balance-pill{
+    max-width:137px!important;
+    font-size:10px!important;
+  }
+  body .app-shell > .brand.wf-header .brand-copy span{display:none!important;}
+  body .app-shell .hero.card > .hero-balance{
+    grid-template-columns:30px minmax(0,1fr) 27px!important;
+    gap:4px!important;
+  }
+  body .app-shell .hero.card > .hero-balance > .coin{
+    width:30px!important;height:30px!important;min-width:30px!important;font-size:14px!important;
+  }
+  body .app-shell .hero.card > .hero-balance > strong{
+    font-size:clamp(28px,9vw,38px)!important;
+  }
+  body .app-shell .hero.card > .hero-balance > b{
+    width:27px!important;font-size:10px!important;padding:4px 3px!important;
+  }
+}
