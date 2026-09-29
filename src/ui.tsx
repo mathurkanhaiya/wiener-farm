@@ -59,34 +59,10 @@ export function LanguagePicker(){
 }
 export function Brand({data}:{data:Snapshot}){ return null; }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
-  const{t}=useI18n();const[hidden,setHidden]=useState(false);
-  useEffect(()=>{
-    let last=window.scrollY;let ticking=false;
-    const onScroll=()=>{
-      if(ticking)return;ticking=true;
-      window.requestAnimationFrame(()=>{
-        const y=window.scrollY;
-        if(y<=24)setHidden(false);
-        else if(y>last+4)setHidden(true);
-        else if(y<last-4)setHidden(false);
-        last=y;ticking=false;
-      });
-    };
-    window.addEventListener('scroll',onScroll,{passive:true});
-    return()=>window.removeEventListener('scroll',onScroll);
-  },[]);
-  const items:[Tab,string,IconName][]=[
-    ['home',t('nav.home','Home'),'home'],
-    ['ads','Earn','bolt'],
-    ['tasks',t('nav.tasks','Tasks'),'tasks'],
-    ['invite',t('nav.invite','Invite'),'invite'],
-    ['profile','Me','wallet']
-  ];
+  const{t}=useI18n();
+  const items:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads','Earn','bolt'],['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['profile','Me','wallet']];
   const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><span className={k==='profile'?'me-nav-icon':''}>{k==='profile'?<img src="https://pixlinkhost.vercel.app/i/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
-  return <nav className={hidden?'bottom-nav game-nav nav-hidden':'bottom-nav game-nav'}>
-    {items.map(item)}
-    {admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}
-  </nav>;
+  return <nav className="bottom-nav game-nav">{items.map(item)}{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
 }
 
 
