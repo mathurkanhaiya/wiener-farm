@@ -1479,6 +1479,8 @@ body .app-shell .wf-earn-ambassador-section .amb-open{
  body .app-shell .wf-earn-promo-section .promo-v2{padding:12px!important}
 }
 
-/* ME TAB ICON */
-body #root .app-shell > .bottom-nav.game-nav button.wallet .me-nav-icon{width:30px!important;height:30px!important;display:grid!important;place-items:center!important}
-body #root .app-shell > .bottom-nav.game-nav button.wallet .me-nav-icon img{width:30px!important;height:30px!important;display:block!important;object-fit:contain!important;border-radius:0!important}
+/* ME TAB ICON — compact, same scale as other nav icons */
+body #root .app-shell > .bottom-nav.game-nav button.profile .me-nav-icon{width:20px!important;height:20px!important;display:grid!important;place-items:center!important}
+body #root .app-shell > .bottom-nav.game-nav button.profile .me-nav-icon img{width:20px!important;height:20px!important;display:block!important;object-fit:contain!important;border-radius:0!important}
+body #root .app-shell > .bottom-nav.game-nav > button .aicon{width:20px!important;height:20px!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile.active{color:#55e39a!important}
