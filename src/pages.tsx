@@ -26,8 +26,18 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
   const u:any=data.user;
   const settings=data.settings;
   const usd=Number(u.balance)/Number(settings.token_per_usdt||10000);
-  const featured=(data.tasks||[]).filter((x:any)=>!data.completed.some((c:any)=>c.task_id===x.id)).slice(0,3);
-  const openTasks=()=>setTab('tasks');
+
+  const homeTasks=(data.tasks||[])
+    .filter((task:any)=>{
+      const hay=[task.title,task.description,task.url,task.telegram_chat_id].map((v:any)=>String(v||'').toLowerCase()).join(' ');
+      const official=String(task.category||'official').toLowerCase()==='official';
+      const farmChannel=hay.includes('wienerfarm')||hay.includes('wiener farm');
+      const farmGroup=hay.includes('wienerfarmchat')||hay.includes('wiener farm community');
+      const payout=hay.includes('wienerpay')||hay.includes('wiener pay')||hay.includes('payout');
+      const bio=hay.includes('wiener')&&hay.includes('bio');
+      return official&&(farmChannel||farmGroup||payout||bio);
+    })
+    .slice(0,4);
 
   return <>
     <section className="wf-home-welcome">
@@ -64,17 +74,17 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
       </button>
     </div>
 
-    <button className="wf-feature-card" onClick={openTasks}>
-      <span className="wf-feature-icon">✦</span>
+    <button className="wf-feature-card" onClick={()=>setTab('tasks')}>
+      <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/stWqIolUtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
-        <b>Earn WIENER</b>
-        <small>Complete tasks and collect extra rewards</small>
+        <b>Mine Telegram Stars</b>
+        <small>Pick a gift, mine it → claim real Telegram gifts</small>
       </span>
       <span className="wf-feature-arrow">›</span>
     </button>
 
     <button className="wf-feature-card" onClick={()=>setTab('ads')}>
-      <span className="wf-feature-icon">⚡</span>
+      <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/ztSi1qACtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
         <b>Quick Tasks</b>
         <small>Watch ads and earn WIENER instantly</small>
@@ -97,8 +107,13 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
               <span>AD #{n}</span>
               <b>{Math.min(watched,limit)}/{limit}</b>
             </div>
-            <div className="wf-ad-icon"><AnimatedIcon name="ads" active/></div>
-            <div className="wf-ad-reward">◆ {i===0?reward*2:reward} W</div>
+            <div className="wf-ad-icon">
+              <img src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
+            </div>
+            <div className="wf-ad-reward">
+              <img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>
+              <span>{i===0?reward*2:reward} W</span>
+            </div>
             <span className="wf-watch-btn">WATCH</span>
           </button>
         })}
@@ -108,29 +123,20 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
     <section className="wf-home-section">
       <div className="wf-section-title">
         <span><i/>FEATURED TASKS</span>
-        <button onClick={openTasks}>See all ›</button>
+        <button onClick={()=>setTab('tasks')}>See all ›</button>
       </div>
       <div className="wf-task-list">
-        {featured.length ? featured.map((task:any)=>
-          <button className="wf-task-row" key={task.id} onClick={openTasks}>
+        {homeTasks.length ? homeTasks.map((task:any)=>
+          <button className="wf-task-row" key={task.id} onClick={()=>setTab('tasks')}>
             <span className="wf-task-icon"><AnimatedIcon name="tasks" active/></span>
             <span className="wf-task-copy">
               <b>{task.title}</b>
-              <small>{task.description||task.category||'Complete this task and earn WIENER'}</small>
+              <small>{task.description||'Complete this official Wiener task'}</small>
             </span>
             <strong>◆ {money(task.reward)}</strong>
             <span className="wf-task-arrow">›</span>
           </button>
-        ) : (
-          <button className="wf-task-row" onClick={openTasks}>
-            <span className="wf-task-icon"><AnimatedIcon name="check" active/></span>
-            <span className="wf-task-copy">
-              <b>All tasks completed</b>
-              <small>Check back soon for new rewards</small>
-            </span>
-            <span className="wf-task-arrow">›</span>
-          </button>
-        )}
+        ) : null}
       </div>
     </section>
   </>
