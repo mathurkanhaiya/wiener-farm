@@ -77,7 +77,7 @@ export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boole
   },[]);
   const items:[Tab,string,IconName][]=[
     ['home',t('nav.home','Home'),'home'],
-    ['ads',t('nav.ads','Ads'),'ads'],
+    ['ads','Earn','bolt'],
     ['tasks',t('nav.tasks','Tasks'),'tasks'],
     ['invite',t('nav.invite','Invite'),'invite'],
     ['wallet',t('nav.wallet','Wallet'),'wallet']
