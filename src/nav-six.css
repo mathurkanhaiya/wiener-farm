@@ -1558,3 +1558,12 @@ body #root .app-shell > .bottom-nav.game-nav > button.active{background:rgba(35,
 body #root .app-shell > .bottom-nav.game-nav > button.active .aicon,
 body #root .app-shell > .bottom-nav.game-nav > button.active .aicon svg{color:#69e8aa!important;stroke:#69e8aa!important}
 body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{filter:none!important}
+
+/* FINAL NAV ALIGNMENT — identical icon/text baseline for every tab */
+body #root .app-shell > .bottom-nav.game-nav > button{display:grid!important;grid-template-rows:24px 14px!important;align-content:center!important;justify-items:center!important;gap:2px!important;padding:0!important}
+body #root .app-shell > .bottom-nav.game-nav > button > span:first-child{width:22px!important;height:24px!important;display:flex!important;align-items:center!important;justify-content:center!important;position:relative!important;top:0!important}
+body #root .app-shell > .bottom-nav.game-nav > button > span:first-child .aicon{width:22px!important;height:22px!important;display:flex!important;align-items:center!important;justify-content:center!important;position:static!important}
+body #root .app-shell > .bottom-nav.game-nav > button > span:first-child .aicon svg{width:22px!important;height:22px!important;display:block!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile > span:first-child{height:24px!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{width:22px!important;height:22px!important;display:block!important;position:static!important}
+body #root .app-shell > .bottom-nav.game-nav > button > span:last-child{height:14px!important;line-height:14px!important;display:block!important;position:static!important;margin:0!important}
