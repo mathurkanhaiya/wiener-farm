@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
+import {createPortal} from 'react-dom';
 import type {Snapshot,Tab} from './lib';import {money} from './lib';import {AnimatedIcon,type IconName} from './icons';import {LANGUAGES,useI18n,type LangCode} from './i18n';
 import './nav-six.css';
 import './styles-language.css';
@@ -34,7 +35,7 @@ function LanguagePicker(){
     <button ref={triggerRef} aria-haspopup="dialog" aria-expanded={open} className="language-trigger" aria-label={t('language.title')} onClick={()=>setOpen(true)}>
       <span>🌐</span><small>{language.code.toUpperCase()}</small>
     </button>
-    {open && <div className="language-backdrop" onClick={()=>setOpen(false)}>
+    {open && createPortal(<div className="language-backdrop" onClick={()=>setOpen(false)}>
       <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="language-picker-title" tabIndex={-1} className="language-sheet" data-no-i18n="true" onClick={e=>e.stopPropagation()}>
         <div className="language-grabber"/>
         <div className="language-head">
@@ -53,7 +54,7 @@ function LanguagePicker(){
           </button>)}
         </div>
       </section>
-    </div>}
+    </div>, document.body)}
   </>;
 }
 export function Brand({data}:{data:Snapshot}){
