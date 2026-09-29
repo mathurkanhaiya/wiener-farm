@@ -1549,3 +1549,12 @@ body #root .app-shell > .bottom-nav.game-nav > button .aicon,
 body #root .app-shell > .bottom-nav.game-nav > button .me-nav-icon{position:relative!important;top:-2px!important}
 body #root .app-shell > .bottom-nav.game-nav > button > span:last-child{position:relative!important;top:2px!important}
 body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{position:relative!important;top:0!important}
+
+/* NAV — make every tab match the Me visual treatment */
+body #root .app-shell > .bottom-nav.game-nav > button{color:#69e8aa!important}
+body #root .app-shell > .bottom-nav.game-nav > button .aicon,
+body #root .app-shell > .bottom-nav.game-nav > button .aicon svg{color:#69e8aa!important;stroke:#69e8aa!important;fill:none!important}
+body #root .app-shell > .bottom-nav.game-nav > button.active{background:rgba(35,214,132,.10)!important;color:#69e8aa!important}
+body #root .app-shell > .bottom-nav.game-nav > button.active .aicon,
+body #root .app-shell > .bottom-nav.game-nav > button.active .aicon svg{color:#69e8aa!important;stroke:#69e8aa!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{filter:none!important}
