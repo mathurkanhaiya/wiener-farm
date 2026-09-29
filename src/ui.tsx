@@ -80,9 +80,9 @@ export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boole
     ['ads','Earn','bolt'],
     ['tasks',t('nav.tasks','Tasks'),'tasks'],
     ['invite',t('nav.invite','Invite'),'invite'],
-    ['wallet',t('nav.wallet','Wallet'),'wallet']
+    ['wallet','Me','wallet']
   ];
-  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><AnimatedIcon name={icon} active={tab===k}/><span>{l}</span></button>;
+  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><span className={k==='wallet'?'me-nav-icon':''}>{k==='wallet'?<img src="https://pixlinkhost.vercel.app/i/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
   return <nav className={hidden?'bottom-nav game-nav nav-hidden':'bottom-nav game-nav'}>
     {items.map(item)}
     {admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}
