@@ -1265,3 +1265,52 @@ body .app-shell .wf-earn-session{
   body .app-shell .wf-earn-task{grid-template-columns:36px minmax(0,1fr) auto 12px!important}
   body .app-shell .wf-earn-task>strong{font-size:10px!important}
 }
+
+
+/* Earn secondary sections */
+body .app-shell .wf-earn-special-section > .wf-earn-section-head{margin-bottom:10px!important}
+body .app-shell .wf-earn-special-section .promo-v2{
+  margin:0!important;
+  padding:15px!important;
+  border-radius:18px!important;
+  background:linear-gradient(145deg,rgba(20,78,51,.72),rgba(7,39,28,.82))!important;
+  border:1px solid rgba(103,232,169,.13)!important;
+}
+body .app-shell .wf-earn-special-section .promo-v2 .section-head{margin-bottom:12px!important}
+body .app-shell .wf-earn-special-section .promo-v2 .section-head .square{
+  width:42px!important;height:42px!important;border-radius:12px!important;
+}
+body .app-shell .wf-earn-special-section .promo-v2 h3{font-size:14px!important}
+body .app-shell .wf-earn-special-section .promo-v2 p{font-size:10px!important}
+body .app-shell .wf-earn-special-section .promo-v2 .promo-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 82px!important;
+  gap:8px!important;
+}
+body .app-shell .wf-earn-special-section .promo-v2 input{
+  min-width:0!important;
+  height:43px!important;
+  border-radius:12px!important;
+  box-sizing:border-box!important;
+}
+body .app-shell .wf-earn-special-section .promo-v2 button{
+  min-height:43px!important;
+  border-radius:12px!important;
+  font-size:10px!important;
+}
+body .app-shell .wf-earn-special-section .ambassador-home-card{
+  margin:0!important;
+  min-height:86px!important;
+  padding:12px!important;
+  border-radius:18px!important;
+  box-sizing:border-box!important;
+  background:linear-gradient(145deg,rgba(20,78,51,.72),rgba(7,39,28,.82))!important;
+  border:1px solid rgba(103,232,169,.13)!important;
+}
+body .app-shell .wf-earn-special-section .ambassador-home-card .amb-open{
+  flex:0 0 auto!important;
+}
+@media(max-width:390px){
+  body .app-shell .wf-earn-special-section .promo-v2{padding:12px!important}
+  body .app-shell .wf-earn-special-section .promo-v2 .promo-row{grid-template-columns:minmax(0,1fr) 74px!important}
+}
