@@ -46,7 +46,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
     <section className="wf-balance-card">
       <div className="wf-balance-copy">
         <div className="wf-balance-label">TOTAL BALANCE</div>
-        <div className="wf-balance-number">{money(u.balance)}</div>
+        <div className="wf-balance-number">{money(Math.floor(Number(u.balance)))}</div>
         <div className="wf-balance-meta">
           <span className="wf-leaf-dot">◆</span> WIENER
           <span className="wf-usd-pill">≈ {money(usd,4)} USDT</span>
