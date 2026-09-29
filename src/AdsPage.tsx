@@ -32,21 +32,26 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
  const mainAtLimit=used>=mainLimit,secondAtLimit=second.used>=second.limit;
  const mainDisabled=Boolean(busy)||mainAtLimit||cooldown>0,secondDisabled=Boolean(busy)||secondAtLimit||secondCooldown>0;
  if(!adsReady)return <><div className="page-title"><h2>EARN</h2></div><div className="ads-unified-loading"><div className="card ad-card ad-skeleton"/><div className="card ad-card ad-skeleton"/></div></>;
- const done=new Set((data.completed||[]).map((x:any)=>x.task_id));
- const tasks=(data.tasks||[]).filter((t:any)=>!done.has(t.id));
- const official=tasks.filter((t:any)=>String(t.category||'official').toLowerCase()==='official');
- const taskIcon=(t:any)=>{const h=String(t.title||'')+' '+String(t.description||'');const x=h.toLowerCase();return x.includes('group')?'👥':x.includes('bio')?'🪪':x.includes('pay')?'💸':x.includes('channel')?'📢':x.includes('x')||x.includes('twitter')?'𝕏':'✓'};
- const taskRow=(t:any)=><div className="wf-earn-task" key={t.id}><div className="wf-earn-task-icon">{taskIcon(t)}</div><div className="wf-earn-task-copy"><b>{t.title}</b><small>{t.description||'Complete this task to earn WIENER'}</small></div><strong><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>+{t.reward}</strong><button className="wf-earn-task-open" onClick={()=>{if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setTimeout(()=>refresh(),800)}} aria-label={'Open '+t.title}>›</button></div>;
  return <div className="wf-earn-page">
    <header className="wf-earn-head"><div><span>COMPLETE &amp; COLLECT</span><h2>Earn</h2></div><div className="wf-earn-counter"><b>{used}</b><small>/{mainLimit} ads</small></div></header>
-   <section className="wf-earn-section"><div className="wf-earn-section-head"><span><i/>WATCH &amp; EARN</span><small>{Math.max(0,mainLimit-used)} available</small></div><div className="wf-earn-ad-grid">
-     {[1,2,3].map((n,i)=>{const limit=[7,10,5][i];const watched=Math.min(used,limit);const reward=mainReward*(i===0?2:1);return <button className="wf-earn-ad" key={n} disabled={mainDisabled} onClick={()=>watch('main')}><div className="wf-earn-ad-top"><span>AD #{n}</span><b>{watched}/{limit}</b></div><img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/><div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div><span className="wf-earn-watch">{mainAtLimit?'DONE':busy==='main'?'WAIT':cooldown>0?cooldown+'s':'WATCH'}</span></button>})}
-   </div></section>
-   <section className="wf-earn-section"><div className="wf-earn-section-head"><span><i/>SOCIAL TASKS</span><small>{official.length} available</small></div><div className="wf-earn-task-list">{official.length?official.map(taskRow):<div className="wf-earn-empty">No official tasks available right now.</div>}</div></section>
-   <section className="wf-earn-section"><div className="wf-earn-section-head"><span><i/>SPIN &amp; EARN</span><small>Daily + bonus spins</small></div><SpinEarn refresh={refresh} say={say}/></section>
-   <section className="wf-earn-section"><div className="wf-earn-section-head"><span><i/>BONUS EARN</span><small>{Math.max(0,second.limit-second.used)} available</small></div><div className="wf-earn-task"><div className="wf-earn-task-icon">⚡</div><div className="wf-earn-task-copy"><b>Bonus Ads</b><small>{second.full_reward||10} WIENER each · {second.used}/{second.limit} today</small></div><strong><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>+{second.full_reward||10}</strong><button className="wf-earn-task-open" disabled={secondDisabled} onClick={()=>watch('secondary')} aria-label="Watch bonus ad">{secondAtLimit?'✓':secondCooldown?(secondCooldown+'s'):'›'}</button></div></section>
-   <section className="wf-earn-section wf-earn-special-section"><div className="wf-earn-section-head"><span><i/>PROMO CODE</span><small>Claim a reward</small></div><PromoBox data={data} refresh={refresh} say={say}/></section>
-   <section className="wf-earn-section wf-earn-special-section"><div className="wf-earn-section-head"><span><i/>AMBASSADOR PROGRAM</span><small>Earn USDT</small></div><AmbassadorHomeCard setTab={setTab}/></section>
+   <section className="wf-earn-section wf-earn-watch-section">
+     <div className="wf-earn-section-head"><span><i/>WATCH &amp; EARN</span><small>{Math.max(0,mainLimit-used)} available</small></div>
+     <div className="wf-earn-ad-grid">
+       {[1,2,3].map((n,i)=>{const limit=[7,10,5][i];const watched=Math.min(used,limit);const reward=mainReward*(i===0?2:1);return <button className="wf-earn-ad" key={n} disabled={mainDisabled} onClick={()=>watch('main')}><div className="wf-earn-ad-top"><span>AD #{n}</span><b>{watched}/{limit}</b></div><img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/><div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div><span className="wf-earn-watch">{mainAtLimit?'DONE':busy==='main'?'WAIT':cooldown>0?cooldown+'s':'WATCH'}</span></button>})}
+     </div>
+   </section>
+   <section className="wf-earn-section wf-earn-spin-section">
+     <div className="wf-earn-section-head"><span><i/>SPIN &amp; EARN</span><small>Daily + bonus spins</small></div>
+     <div className="wf-earn-module"><SpinEarn refresh={refresh} say={say}/></div>
+   </section>
+   <section className="wf-earn-section wf-earn-promo-section">
+     <div className="wf-earn-section-head"><span><i/>PROMO CODE</span><small>Claim a reward</small></div>
+     <div className="wf-earn-module"><PromoBox data={data} refresh={refresh} say={say}/></div>
+   </section>
+   <section className="wf-earn-section wf-earn-ambassador-section">
+     <div className="wf-earn-section-head"><span><i/>AMBASSADOR PROGRAM</span><small>Earn with your community</small></div>
+     <div className="wf-earn-module"><AmbassadorHomeCard setTab={setTab}/></div>
+   </section>
    <div className="wf-earn-note">Rewards are added after the task or ad is verified.</div>
    {busy&&<div className="ad-loading-backdrop"><div className="ad-loading-card"><div className="ad-loader"/><h3>OPENING AD</h3><p>Complete the sponsor ad to receive your reward.</p></div></div>}
  </div>;
