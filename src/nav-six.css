@@ -920,3 +920,37 @@ body .app-shell .wf-balance-copy{
   body #root .app-shell > .bottom-nav.game-nav > button > span,
   body #root .app-shell > .bottom-nav.game-nav > button .nav-label{font-size:10px!important}
 }
+
+
+/* FINAL FIX: keep navigation visible and shrink balance artwork */
+body #root .app-shell > .bottom-nav.game-nav{
+  position:fixed!important;
+  z-index:2147483000!important;
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  left:12px!important;
+  right:12px!important;
+  bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+  width:auto!important;
+  height:68px!important;
+  min-height:68px!important;
+  margin:0!important;
+  transform:none!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button{
+  position:relative!important;
+  z-index:1!important;
+  visibility:visible!important;
+}
+body .app-shell .wf-balance-art{
+  width:clamp(88px,27vw,135px)!important;
+  height:clamp(88px,27vw,135px)!important;
+  right:clamp(0px,2vw,10px)!important;
+  top:clamp(48px,12vw,58px)!important;
+}
+@media(max-width:390px){
+  body .app-shell .wf-balance-art{
+    width:96px!important;height:96px!important;right:2px!important;top:52px!important;
+  }
+}
