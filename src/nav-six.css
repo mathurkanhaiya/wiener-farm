@@ -1484,3 +1484,51 @@ body #root .app-shell > .bottom-nav.game-nav button.profile .me-nav-icon{width:2
 body #root .app-shell > .bottom-nav.game-nav button.profile .me-nav-icon img{width:20px!important;height:20px!important;display:block!important;object-fit:contain!important;border-radius:0!important}
 body #root .app-shell > .bottom-nav.game-nav > button .aicon{width:20px!important;height:20px!important}
 body #root .app-shell > .bottom-nav.game-nav > button.profile.active{color:#55e39a!important}
+
+/* FINAL NAV — neutral compact reference scale */
+body #root .app-shell > .bottom-nav.game-nav{
+  width:calc(100% - 28px)!important;
+  max-width:470px!important;
+  height:58px!important;
+  bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+  padding:4px 5px!important;
+  border-radius:22px!important;
+  box-sizing:border-box!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button{
+  height:50px!important;
+  min-width:0!important;
+  gap:2px!important;
+  padding:2px 4px!important;
+  position:relative!important;
+  color:rgba(225,255,241,.55)!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button > span:not(.aicon):not(.me-nav-icon){
+  font-size:8px!important;
+  line-height:1!important;
+  letter-spacing:1.1px!important;
+  font-weight:800!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button .aicon{
+  width:18px!important;height:18px!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active{
+  color:#69e8aa!important;
+  background:rgba(35,214,132,.08)!important;
+  border-radius:16px!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.active::after{display:none!important}
+body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon{
+  width:18px!important;height:18px!important;display:grid!important;place-items:center!important;
+}
+body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{
+  width:18px!important;height:18px!important;object-fit:contain!important;display:block!important;
+}
+@media(max-width:390px){
+  body #root .app-shell > .bottom-nav.game-nav{width:calc(100% - 24px)!important;height:56px!important;bottom:calc(7px + env(safe-area-inset-bottom,0px))!important;border-radius:21px!important}
+  body #root .app-shell > .bottom-nav.game-nav > button{height:48px!important;padding:2px!important}
+  body #root .app-shell > .bottom-nav.game-nav > button .aicon,
+  body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon,
+  body #root .app-shell > .bottom-nav.game-nav > button.profile .me-nav-icon img{width:17px!important;height:17px!important}
+  body #root .app-shell > .bottom-nav.game-nav > button > span:not(.aicon):not(.me-nav-icon){font-size:7.5px!important;letter-spacing:1px!important}
+}
