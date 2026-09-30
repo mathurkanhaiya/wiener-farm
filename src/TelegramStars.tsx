@@ -10,9 +10,9 @@ const num=(s:any,keys:string[],fallback=0)=>{for(const k of keys){const n=Number
 const txt=(s:any,keys:string[])=>{for(const k of keys){const v=String(s?.[k]??'').trim();if(v)return v}return ''};
 const duration=(sec:number)=>{if(!sec)return '—';const m=Math.floor(sec/60),h=Math.floor(m/60),mm=m%60;return h?(mm?h+'h '+String(mm).padStart(2,'0')+'m':h+'h'):m+'m'};
 const today=()=>new Date().toISOString().slice(0,10);
-const progressKey=()=>{const id=String((window.Telegram?.WebApp as any)?.initDataUnsafe?.user?.id||'guest');return 'wiener_stars_progress_v2_'+id};
-const readProgress=()=>{try{const x=JSON.parse(localStorage.getItem(progressKey())||'{}');return x?.day===today()?Number(x.progress||0):0}catch{return 0}};
-const saveProgress=(progress:number)=>{try{localStorage.setItem(progressKey(),JSON.stringify({day:today(),progress}))}catch{}};
+const progressKey=()=>{const id=String((window.Telegram?.WebApp as any)?.initDataUnsafe?.user?.id||'guest');return 'wiener_stars_cycle_v3_'+id};
+const readCycle=()=>{try{const x=JSON.parse(localStorage.getItem(progressKey())||'{}');return x?.day===today()?{progress:Number(x.progress||0),nextMineAt:Number(x.nextMineAt||0)}:{progress:0,nextMineAt:0}}catch{return {progress:0,nextMineAt:0}}};
+const saveCycle=(progress:number,nextMineAt:number)=>{try{localStorage.setItem(progressKey(),JSON.stringify({day:today(),progress,nextMineAt}))}catch{}};
 
 export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTab:any;refresh?:any;say?:any}){
  const s:any=data.settings||{},u:any=data.user||{},per=Number(s.token_per_usdt||0),balance=Math.floor(Number(u.balance||0));
@@ -26,7 +26,6 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
  const [progress,setProgress]=useState(initialCycle.progress),[busy,setBusy]=useState(false),[cooldownUntil,setCooldownUntil]=useState(initialCycle.nextMineAt),[now,setNow]=useState(Date.now());
  const cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000));
  const remaining=Math.max(0,Math.ceil((100-progress)/step));
- const minesDone=Math.min(taps,Math.ceil(progress/step));
  const configured=Boolean(blockId&&taps&&cooldownSeconds&&step);
  const cycleDone=progress>=100;
  const minesDone=Math.min(taps,Math.ceil(progress/step));
