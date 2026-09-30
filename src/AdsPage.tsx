@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import createAdHandler from 'monetag-tg-sdk';
-import {adApi,providerAdApi,type Snapshot} from './lib';
+import {adApi,adUsageApi,providerAdApi,type Snapshot} from './lib';
 import {AD_PROVIDERS,providerConfig,type AdProvider} from './economy';
 import {SpinEarn} from './SpinEarn';
 import {PromoBox} from './PromoClaim';
@@ -29,9 +29,10 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
 
  const sync=async()=>{
    try{
-     const x:any=await providerAdApi('status');
+     const [x,mainStatus]:any[]=await Promise.all([providerAdApi('status'),adUsageApi()]);
      const next=emptyStates();
      for(const key of Object.keys(next) as AdProvider[]) next[key]={used:Number(x?.providers?.[key]?.used||0),pending:Number(x?.providers?.[key]?.pending||0)};
+     next.adsgram.used=Number(mainStatus?.used||0);
      setStates(next);
    }catch{}
    finally{setReady(true)}
