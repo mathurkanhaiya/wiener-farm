@@ -2,6 +2,11 @@
 from pathlib import Path
 import sys,re
 p=Path(sys.argv[1]);s=p.read_text()
+# Remove legacy exchange-rate fallbacks from the live backend source.
+s=s.replace("token_per_usdt||10000","token_per_usdt||25000")
+s=s.replace("token_per_usdt||15000","token_per_usdt||25000")
+s=s.replace("token_per_usdt||40000","token_per_usdt||25000")
+s=s.replace("token_per_usdt || 10000","token_per_usdt || 25000")
 # Normalize the existing referral engine to one fixed two-stage reward while preserving
 # its existing active/anti-abuse qualification and required-ad logic.
 s=s.replace("const REF_JOIN_V98=100;","const REF_JOIN_V98=125;")
