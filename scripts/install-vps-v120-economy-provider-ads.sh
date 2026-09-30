@@ -29,6 +29,8 @@ node --check "$BACKEND"
 
 runuser -u postgres -- psql -d "$DB" -v ON_ERROR_STOP=1 -v monetag_zone="${MONETAG_ZONE_ID:-}" -v adexium_widget="${ADEXIUM_WIDGET_ID:-}" <<'SQL'
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS adsgram_ad_reward numeric(24,4) NOT NULL DEFAULT 50;
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS ad_reward numeric(24,4) NOT NULL DEFAULT 50;
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS daily_ad_limit integer NOT NULL DEFAULT 15;
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS adsgram_daily_limit integer NOT NULL DEFAULT 15;
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS monetag_ad_reward numeric(24,4) NOT NULL DEFAULT 30;
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS monetag_daily_limit integer NOT NULL DEFAULT 10;
@@ -40,7 +42,7 @@ ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS withdraw_minimum_usdt n
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS withdraw_fee_usdt numeric(24,8) NOT NULL DEFAULT 0.01;
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS referral_join_reward numeric(24,4) NOT NULL DEFAULT 125;
 ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS referral_total_reward numeric(24,4) NOT NULL DEFAULT 375;
-UPDATE public.app_settings SET token_per_usdt=25000,adsgram_ad_reward=50,adsgram_daily_limit=15,monetag_ad_reward=30,monetag_daily_limit=10,adexium_ad_reward=50,adexium_daily_limit=5,withdraw_minimum_usdt=0.03,withdraw_fee_usdt=0.01,referral_join_reward=125,referral_total_reward=375,monetag_zone_id=NULLIF(:'monetag_zone',''),adexium_widget_id=NULLIF(:'adexium_widget','') WHERE id=true;
+UPDATE public.app_settings SET token_per_usdt=25000,ad_reward=50,daily_ad_limit=15,adsgram_ad_reward=50,adsgram_daily_limit=15,monetag_ad_reward=30,monetag_daily_limit=10,adexium_ad_reward=50,adexium_daily_limit=5,withdraw_minimum_usdt=0.03,withdraw_fee_usdt=0.01,referral_join_reward=125,referral_total_reward=375,monetag_zone_id=NULLIF(:'monetag_zone',''),adexium_widget_id=NULLIF(:'adexium_widget','') WHERE id=true;
 
 CREATE TABLE IF NOT EXISTS public.provider_ad_sessions(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
