@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {hapticImpact,hapticNotify,money,type Snapshot} from './lib';
+import {WIENER_PER_USDT} from './economy';
 
 const BIG_TEDDY='https://pixlinkhost.vercel.app/i/H6gKj6gN2A';
 const SMALL_TEDDY='https://pixlinkhost.vercel.app/i/95rEFUqyrQ';
@@ -15,7 +16,7 @@ const readCycle=()=>{try{const x=JSON.parse(localStorage.getItem(progressKey())|
 const saveCycle=(progress:number,nextMineAt:number)=>{try{localStorage.setItem(progressKey(),JSON.stringify({day:today(),progress,nextMineAt}))}catch{}};
 
 export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTab:any;refresh?:any;say?:any}){
- const s:any=data.settings||{},u:any=data.user||{},per=Number(s.token_per_usdt||0),balance=Math.floor(Number(u.balance||0));
+ const s:any=data.settings||{},u:any=data.user||{},per=WIENER_PER_USDT,balance=Math.floor(Number(u.balance||0));
  const taps=num(s,['telegram_stars_mine_taps','stars_mine_taps','mine_taps'],26);
  const cooldownSeconds=num(s,['telegram_stars_mine_cooldown_seconds','stars_mine_cooldown_seconds','mine_cooldown_seconds'],2400);
  const step=num(s,['telegram_stars_mine_progress_percent','stars_mine_progress_percent','mine_progress_percent'],4);
