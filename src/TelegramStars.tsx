@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {adApi,adUsageApi,hapticImpact,hapticNotify,money,type Snapshot} from './lib';
+import {hapticImpact,hapticNotify,money,type Snapshot} from './lib';
 
 const BIG_TEDDY='https://pixlinkhost.vercel.app/i/H6gKj6gN2A';
 const SMALL_TEDDY='https://pixlinkhost.vercel.app/i/95rEFUqyrQ';
@@ -22,30 +22,32 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
  const gift=txt(s,['telegram_stars_gift_name','stars_gift_name','mine_gift_name'])||'Teddy Bear';
  const giftText=txt(s,['telegram_stars_gift_description','stars_gift_description','mine_gift_description']);
  const blockId=String(s.adsgram_block_id||'');
- const [progress,setProgress]=useState(readProgress),[busy,setBusy]=useState(false),[cooldownUntil,setCooldownUntil]=useState(0);
- const cooldown=Math.max(0,Math.ceil((cooldownUntil-Date.now())/1000));
+ const initialCycle=readCycle();
+ const [progress,setProgress]=useState(initialCycle.progress),[busy,setBusy]=useState(false),[cooldownUntil,setCooldownUntil]=useState(initialCycle.nextMineAt),[now,setNow]=useState(Date.now());
+ const cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000));
  const remaining=Math.max(0,Math.ceil((100-progress)/step));
  const minesDone=Math.min(taps,Math.ceil(progress/step));
  const configured=Boolean(blockId&&taps&&cooldownSeconds&&step);
  const cycleDone=progress>=100;
+ const minesDone=Math.min(taps,Math.ceil(progress/step));
+ const miningInProgress=progress>0&&!cycleDone;
 
- useEffect(()=>{saveProgress(progress)},[progress]);
- useEffect(()=>{let live=true;adUsageApi().then((st:any)=>{if(!live)return;const cd=Number(st?.cooldown_seconds||0);if(cd>0)setCooldownUntil(Date.now()+cd*1000)}).catch(()=>{});return()=>{live=false}},[]);
- useEffect(()=>{if(!cooldownUntil)return;const id=window.setInterval(()=>{if(Date.now()>=cooldownUntil)setCooldownUntil(0)},500);return()=>window.clearInterval(id)},[cooldownUntil]);
+ useEffect(()=>{saveCycle(progress,cooldownUntil)},[progress,cooldownUntil]);
+ useEffect(()=>{const id=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(id)},[]);
+ useEffect(()=>{if(cooldownUntil&&now>=cooldownUntil)setCooldownUntil(0)},[now,cooldownUntil]);
 
  const mine=async()=>{
    if(busy||cooldown>0||cycleDone||!configured)return;
    try{
      setBusy(true);hapticImpact('medium');
-     const session:any=await adApi('start',{source:'telegram_stars'} as any);
-     const controller=window.Adsgram?.init({blockId:String(session?.block_id||blockId)});
+     const controller=window.Adsgram?.init({blockId});
      if(!controller)throw Error('AdsGram is not ready. Please reload the app.');
      const result:any=await controller.show();
      if(!result?.done)throw Error(result?.description||'Please complete the rewarded ad.');
-     await adApi('complete',{session_id:session?.session_id,source:'telegram_stars'} as any);
      const next=Math.min(100,progress+step);
+     const nextMineAt=next>=100?0:Date.now()+cooldownSeconds*1000;
      setProgress(next);
-     setCooldownUntil(Date.now()+cooldownSeconds*1000);
+     setCooldownUntil(nextMineAt);
      hapticNotify('success');
      say?.(next>=100?'Gift mining complete. Claim is ready.':'Mining +'+step+'% complete.');
      await refresh?.();
@@ -67,13 +69,13 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
   </section>
   <section className="wf-stars-mine">
    <div className="wf-stars-mine-art"><img src={BIG_TEDDY} className="wf-stars-big-teddy" alt="" aria-hidden="true"/></div>
-   <h2>Mining {gift}</h2>
-   <div className="wf-stars-sub">{taps} taps · {duration(cooldownSeconds)} cooldown · ~{duration(taps*cooldownSeconds)} total</div>
+   <h2>{cycleDone?'Mining complete':miningInProgress?'Your mining is about to finish':'Mining '+gift}</h2>
+   <div className="wf-stars-sub">{minesDone}/{taps} mines · {duration(cooldownSeconds)} cooldown · ~{duration(taps*cooldownSeconds)} total</div>
    <div className="wf-stars-progress-head"><span>PROGRESS</span><b>{Math.min(100,progress)}%</b></div>
    <div className="wf-stars-track"><i style={{width:Math.min(100,progress)+'%'}}/></div>
-   <div className="wf-stars-remaining">{cycleDone?'100% complete · claim your gift':remaining+' mines left · +'+step+'% each'}</div>
-   <button className="wf-stars-action" disabled={!configured||busy||(cooldown>0&&!cycleDone)||cycleDone} onClick={mine}>
-    <img src={AXE} alt="" aria-hidden="true"/>{busy?'OPENING AD…':cooldown>0&&!cycleDone?'COOLDOWN '+cooldown+'s':cycleDone?'MINING COMPLETE':'WATCH AD · MINE +'+step+'%'}
+   <div className="wf-stars-remaining">{cycleDone?'100% complete · claim your gift':cooldown>0?`Mining in progress · next mine in ${String(Math.floor(cooldown/3600)).padStart(2,'0')}:${String(Math.floor(cooldown%3600/60)).padStart(2,'0')}:${String(cooldown%60).padStart(2,'0')}`:remaining+' mines left · +'+step+'% each'}</div>
+   <button className="wf-stars-action" disabled={!configured||busy||cooldown>0||cycleDone} onClick={mine}>
+    <img src={AXE} alt="" aria-hidden="true"/>{busy?'OPENING AD…':cooldown>0&&!cycleDone?'MINING IN PROGRESS':cycleDone?'MINING COMPLETE':'WATCH AD · MINE +'+step+'%'}
    </button>
    {cycleDone&&<button className="wf-stars-claim" disabled={busy} onClick={claim}>🎁 CLAIM {gift.toUpperCase()}</button>}
    {!blockId&&<div className="wf-stars-config">AdsGram rewarded block is not configured in backend settings.</div>}
