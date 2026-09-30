@@ -86,8 +86,8 @@ app.post("/functions/v1/wiener-provider-ad",async(req,res)=>{
 app.get("/functions/v1/wiener-monetag-postback",async(req,res)=>{
  try{
   const secret=String(process.env.MONETAG_POSTBACK_SECRET||"");if(secret&&String(req.query?.secret||"")!==secret)return res.status(403).send("forbidden");
-  const y=String(req.query?.ymid||""),v=String(req.query?.value||req.query?.reward_event_type||""),z=String(req.query?.zone||req.query?.zone_id||"");
-  if(!y||v!=="valued")return res.status(200).send("ignored");
+  const y=String(req.query?.ymid||""),e=String(req.query?.event||req.query?.event_type||""),v=String(req.query?.value||req.query?.reward_event_type||""),z=String(req.query?.zone||req.query?.zone_id||"");
+  if(!y||(e&&e!=="impression")||v!=="valued")return res.status(200).send("ignored");
   const q=await pool.query("select id,telegram_id,zone_id from public.provider_ad_sessions where ymid=$1 and provider='monetag'",[y]),row=q.rows[0];
   if(!row||String(row.zone_id)!==z)return res.status(200).send("ignored");
   await pool.query("update public.provider_ad_sessions set provider_verified_at=now(),updated_at=now() where id=$1 and credited_at is null",[row.id]);
