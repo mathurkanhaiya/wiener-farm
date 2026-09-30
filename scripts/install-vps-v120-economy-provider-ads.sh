@@ -72,7 +72,22 @@ BEGIN
    UPDATE public.withdraw_methods SET minimum_usdt=0.03,fee_usdt=0.01,network='BEP20',label='USDT (BEP20)' WHERE method_key ILIKE '%usdt%';
    UPDATE public.withdraw_methods SET minimum_usdt=0.03,fee_usdt=0.01,network='TON',label='Gram (TON)' WHERE method_key='gram_ton';
  END IF;
-END $$;
+END $;
+DO $
+BEGIN
+ IF to_regclass('public.withdrawal_methods') IS NOT NULL THEN
+   IF NOT EXISTS (SELECT 1 FROM public.withdrawal_methods WHERE method_key ILIKE '%usdt%') THEN
+     INSERT INTO public.withdrawal_methods(method_key,label,network,enabled,minimum_usdt,fee_usdt,sort_order)
+     VALUES ('usdt_bep20','USDT (BEP20)','BEP20',true,0.03,0.01,10);
+   END IF;
+ END IF;
+ IF to_regclass('public.withdraw_methods') IS NOT NULL THEN
+   IF NOT EXISTS (SELECT 1 FROM public.withdraw_methods WHERE method_key ILIKE '%usdt%') THEN
+     INSERT INTO public.withdraw_methods(method_key,label,network,enabled,minimum_usdt,fee_usdt,sort_order)
+     VALUES ('usdt_bep20','USDT (BEP20)','BEP20',true,0.03,0.01,10);
+   END IF;
+ END IF;
+END $;
 DROP TABLE IF EXISTS public.withdraw_ad_sessions;
 SQL
 
