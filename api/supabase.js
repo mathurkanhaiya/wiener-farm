@@ -65,11 +65,16 @@ export default async function handler(req,res){
       (fn==='wiener-ton-wallet' && String(body.action||'')==='withdraw');
     if(isWithdrawalPlacement){
       const usage=await callUpstream(`${WIENER_VPS_URL}/functions/v1/wiener-ad-usage`,buildHeaders(req),body);
-      let usageData={};
-      try{ usageData=JSON.parse(usage.text||'{}')?.data||JSON.parse(usage.text||'{}')||{}; }catch{}
-      const used=Number(usageData.used||0);
+      let parsed={};
+      try{ parsed=JSON.parse(usage.text||'{}'); }catch{}
+      const usageData=parsed?.data&&typeof parsed.data==='object'?parsed.data:parsed;
+      if(!usage.upstream.ok){
+        console.error('WIENER ad usage check failed',{status:usage.upstream.status,text:usage.text.slice(0,300)});
+        return res.status(502).json({ok:false,error:'ad_usage_unavailable',message:'Ad progress could not be verified. Please try again.'});
+      }
+      const used=Number(usageData?.used||0);
       const required=10;
-      if(!usage.upstream.ok || used<required){
+      if(used<required){
         const remaining=Math.max(0,required-used);
         return res.status(403).json({ok:false,error:'withdrawal_ads_required',message:`Watch ${remaining} more valid ad${remaining===1?'':'s'} today before placing a withdrawal.`,used,required,remaining});
       }
