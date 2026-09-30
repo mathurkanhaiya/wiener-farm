@@ -4,6 +4,7 @@ import {money,type Snapshot} from './lib';
 const BIG_TEDDY='https://pixlinkhost.vercel.app/i/H6gKj6gN2A';
 const SMALL_TEDDY='https://pixlinkhost.vercel.app/i/95rEFUqyrQ';
 const AXE='https://pixlinkhost.vercel.app/i/XKKUtWdxLQ';
+const DOG='https://pixlinkhost.vercel.app/i/DTBrE-73Ag';
 
 const num=(s:any,keys:string[])=>{for(const k of keys){const n=Number(s?.[k]);if(Number.isFinite(n)&&n>0)return n}return 0};
 const txt=(s:any,keys:string[])=>{for(const k of keys){const v=String(s?.[k]??'').trim();if(v)return v}return ''};
@@ -21,7 +22,7 @@ export function TelegramStarsPage({data,setTab}:{data:Snapshot;setTab:any}){
  const mine=()=>{if(!configured||busy||progress>=100)return;setBusy(true);setProgress(p=>Math.min(100,p+step));window.setTimeout(()=>setBusy(false),450)};
  return <div className="wf-stars-page">
   <div className="wf-stars-top"><button className="wf-stars-back" onClick={()=>setTab('home')} aria-label="Back">‹</button><div><span className="wf-stars-kicker">FARM GIFTS</span><h1>Mine Telegram Stars</h1></div></div>
-  <section className="wf-stars-balance"><div className="wf-stars-balance-label">TOTAL BALANCE</div><div className="wf-stars-balance-number">{money(balance)}</div><div className="wf-stars-balance-meta"><span>◆ WIENER</span><span className="wf-stars-usd">{per?'≈ '+money(balance/per,4)+' USDT':'—'}</span></div><img src={SMALL_TEDDY} className="wf-stars-balance-art" alt="" aria-hidden="true"/></section>
+  <section className="wf-stars-balance"><div className="wf-stars-balance-label">TOTAL BALANCE</div><div className="wf-stars-balance-number">{money(balance)}</div><div className="wf-stars-balance-meta"><span>◆ WIENER</span><span className="wf-stars-usd">{per?'≈ '+money(balance/per,4)+' USDT':'—'}</span></div><img src={DOG} className="wf-stars-balance-art" alt="" aria-hidden="true"/></section>
   <section className="wf-stars-mine">
    <div className="wf-stars-mine-art"><img src={BIG_TEDDY} className="wf-stars-big-teddy" alt="" aria-hidden="true"/></div>
    <h2>Mining {gift}</h2>
