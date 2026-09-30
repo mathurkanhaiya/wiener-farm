@@ -4,7 +4,7 @@ const WIENER_VPS_URL='https://api.viralaitools.xyz';
 const ALLOWED=new Set([
   'wiener-api','wiener-admin-api','wiener-ad','wiener-ad-usage','wiener-tads','wiener-adsgram-task','wiener-adsgram-reward',
   'wiener-task-api','wiener-bot-task','wiener-exclusive','wiener-mandatory','wiener-withdraw','wiener-withdraw-internal',
-  'wiener-ton-wallet','wiener-ton-payout','wiener-payout','wiener-ton-deposit-backfill','wiener-sponsored-task','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions',
+  'wiener-ton-wallet','wiener-provider-ad','wiener-ton-payout','wiener-payout','wiener-ton-deposit-backfill','wiener-sponsored-task','wiener-device','wiener-promo','wiener-promo-channel','wiener-share','wiener-missions',
   'wiener-referral-status','wiener-notify','wiener-broadcast-run','wiener-notification-worker',
   'wiener-ambassador','wiener-ambassador-publish','wiener-ambassador-board','wiener-ambassador-check-all','wiener-ambassador-retry','wiener-ambassador-retry-trigger','wiener-ambassador-weekly-notify',
   'wiener-auto-giveaway-worker','wiener-giveaway-reminder','wiener-giveaway-reminder-preview',
@@ -57,28 +57,6 @@ export default async function handler(req,res){
   if(fn==='wiener-admin-api'&&String(body.action||'')==='admin_settings_save') upstreamFn='wiener-admin-settings';
 
   try{
-    // Withdrawal placement is server-gated: the user must complete 10 valid
-    // sponsor ads for the current day before a withdrawal request can reach
-    // the payout backend. This keeps the rule enforced outside the client UI.
-    const isWithdrawalPlacement =
-      (fn==='wiener-withdraw' && String(body.action||'')==='request') ||
-      (fn==='wiener-ton-wallet' && String(body.action||'')==='withdraw');
-    if(isWithdrawalPlacement){
-      const usage=await callUpstream(`${WIENER_VPS_URL}/functions/v1/wiener-ad-usage`,buildHeaders(req),body);
-      let parsed={};
-      try{ parsed=JSON.parse(usage.text||'{}'); }catch{}
-      const usageData=parsed?.data&&typeof parsed.data==='object'?parsed.data:parsed;
-      if(!usage.upstream.ok){
-        console.error('WIENER ad usage check failed',{status:usage.upstream.status,text:usage.text.slice(0,300)});
-        return res.status(502).json({ok:false,error:'ad_usage_unavailable',message:'Ad progress could not be verified. Please try again.'});
-      }
-      const used=Number(usageData?.used||0);
-      const required=10;
-      if(used<required){
-        const remaining=Math.max(0,required-used);
-        return res.status(403).json({ok:false,error:'withdrawal_ads_required',message:`Watch ${remaining} more valid ad${remaining===1?'':'s'} today before placing a withdrawal.`,used,required,remaining});
-      }
-    }
     const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${upstreamFn}`,buildHeaders(req),body);
     if(!result.upstream.ok) console.error('WIENER upstream non-2xx',{fn,upstreamFn,action:String(body.action||''),status:result.upstream.status,text:result.text.slice(0,500)});
     res.status(result.upstream.status);
