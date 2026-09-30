@@ -17,7 +17,8 @@
     "pako": "^2.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "buffer": "^6.0.3"
+    "buffer": "^6.0.3",
+    "monetag-tg-sdk": "^1.0.4"
   },
   "devDependencies": {
     "@types/react": "^19.1.10",
