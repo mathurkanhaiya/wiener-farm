@@ -14,7 +14,7 @@ async function loadReferral(){
 }
 
 export function Invite({data,say}:{data:Snapshot;say:any}){
- const s=data.settings||{},u=data.user;const tokenPerUsdt=WIENER_PER_USDT,activeReward=Number(s.referral_active_reward||0),activeAdsRequired=Number(s.referral_active_ads_required||0),commissionPercent=Number(s.referral_commission_percent||0);const rewardUsd=tokenPerUsdt>0?activeReward/tokenPerUsdt:0;
+ const s=data.settings||{},u=data.user;const tokenPerUsdt=WIENER_PER_USDT,activeReward=Number(s.referral_active_reward||REFERRAL_REWARDS.active),activeAdsRequired=Number(s.referral_active_ads_required||0),commissionPercent=Number(s.referral_commission_percent||0);const rewardUsd=tokenPerUsdt>0?activeReward/tokenPerUsdt:0;
  const[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[refs,setRefs]=useState<any[]>([]),[stats,setStats]=useState<Stats>({invited:Number(u.referrals_count||0),qualified:0,pending:0,earned:Number(u.referral_earnings||0)}),[security,setSecurity]=useState<any>({});
  const link=`https://t.me/${String(s.bot_username||'@WienerDogeFarmBot').replace('@','')}?startapp=ref_${u.telegram_id}`;
  const shareText='🌭 Join WIENER Farm\n\n🎁 Earn WIENER by watching ads, completing tasks and inviting friends.\n🚀 Invite friends and earn the configured referral reward per qualified friend.\n\n👇 Open WIENER Farm';
