@@ -18,12 +18,26 @@ s=re.sub(r"\{tier:4,label:'Base',total:300,requiredAds:", "{tier:4,label:'Base',
 marker="// === WIENER WITHDRAW AD UNLOCK V24 ==="
 if marker in s:
     start=s.index(marker)
-    anchor="if(a==='withdraw'){const amount=num(b.amount_wiener);"
-    pos=s.find(anchor,start)
-    if pos<0: raise SystemExit("withdraw anchor missing")
+    pos=s.find("if(a==='withdraw'){", start)
+    if pos<0:
+        raise SystemExit("withdraw action anchor missing")
     s=s[:start]+s[pos:]
-s=re.sub(r"if\(a==='withdraw'\)\{const withdrawAdCount(?:V95|V24)?=.*?throw new Error\([^;]+;\s*\}\s*",
-         "if(a==='withdraw'){",s,count=1)
+
+# Remove the legacy 10-ad withdrawal enforcement prefix from the preserved action.
+legacy_prefix = "if(a==='withdraw'){// === WIENER WITHDRAW 10-AD ENFORCEMENT V95 ==="
+if legacy_prefix in s:
+    s=s.replace(
+        legacy_prefix +
+        "\nconst withdrawAdCountV95=await withdrawAdCountV24(id);" +
+        "if(withdrawAdCountV95<10){throw new Error(`withdraw_ads_required_${withdrawAdCountV95}_of_10`)}" +
+        "const amount=num(b.amount_wiener);",
+        "if(a==='withdraw'){const amount=num(b.amount_wiener);",
+        1
+    )
+
+if "withdraw_ad_sessions" in s:
+    raise SystemExit("legacy withdraw_ad_sessions reference remains after patch")
+
 
 if "WIENER PROVIDER ADS V120" not in s:
     pos=s.find("app.post('/functions/v1/wiener-ad'")
