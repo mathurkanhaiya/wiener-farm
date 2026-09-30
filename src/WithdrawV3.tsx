@@ -20,7 +20,7 @@ function GramIcon({animated=false}:{animated?:boolean}){
  </span>
 }
 
-export function WalletV2({data,setTab}:{data:Snapshot;setTab:any}){
+export function WalletV2({data,setTab,refresh,say}:{data:Snapshot;setTab:any;refresh?:any;say?:any}){
  const WIENER_RATE=WIENER_PER_USDT;
  const defaultUsdt:Method={method_key:'usdt_bep20',label:'USDT (BEP20)',network:'BEP20',enabled:true,minimum_usdt:WITHDRAWAL_MIN_USDT,fee_usdt:WITHDRAWAL_FEE_USDT,sort_order:10};
  const rawPreloaded=Array.isArray(data.withdrawal_methods)?data.withdrawal_methods as Method[]:[];
@@ -70,3 +70,6 @@ export function WalletV2({data,setTab}:{data:Snapshot;setTab:any}){
   {selected&&<div className="wf-wd-modal-back" onClick={()=>setSelected(null)}><div className="wf-wd-modal" onClick={e=>e.stopPropagation()}><div className="wf-wd-modal-head"><h2>Withdrawal details</h2><button onClick={()=>setSelected(null)}>×</button></div>{(()=>{const u=selected.method_key==='gram_ton'?'GRAM':'USDT';return [['WIENER deducted',money(Number(selected.amount_farm||0),1)+' WIENER'],['Requested',money(selected.gross_usdt,6)+' '+u],['Fee',money(selected.fee_usdt,6)+' '+u],['Received',money(selected.receive_usdt,6)+' '+u],['Network',selected.network],['Wallet',selected.wallet_address],['Status',statusView(String(selected.status)).label],['TX Hash',selected.tx_hash||'—']].map(([k,v])=><div className="wf-wd-review" key={String(k)}><div><span>{k}</span><b>{v}</b></div></div>)})()}{selected.explorer_url&&<button className="wf-wd-primary" onClick={()=>window.Telegram?.WebApp?.openLink?.(selected.explorer_url)}>OPEN EXPLORER</button>}</div></div>}
  </div>
 }
+
+// Backward-compatible export used by App and legacy gate wiring.
+export const WithdrawV3 = WalletV2;
