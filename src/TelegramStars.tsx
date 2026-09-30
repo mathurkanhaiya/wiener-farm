@@ -37,7 +37,7 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
    if(busy||cooldown>0||cycleDone||!configured)return;
    try{
      setBusy(true);hapticImpact('medium');
-     const session:any=await adApi('start');
+     const session:any=await adApi('start',{source:'telegram_stars'} as any);
      const controller=window.Adsgram?.init({blockId:String(session?.block_id||blockId)});
      if(!controller)throw Error('AdsGram is not ready. Please reload the app.');
      const result:any=await controller.show();
