@@ -38,6 +38,7 @@ async function creditProviderV120(id,sid,provider){
  const cfg=(await providerConfigV120())[provider],c=await pool.connect();
  try{
   await c.query("begin");
+  await c.query("select pg_advisory_xact_lock(hashtext($1))",[provider+":"+id]);
   const q=await c.query("select * from public.provider_ad_sessions where id=$1 for update",[sid]),row=q.rows[0];
   if(!row)throw new Error("provider_ad_session_invalid");
   if(row.credited_at){await c.query("commit");return{credited:true,already:true,reward:Number(row.reward_wiener)}}
