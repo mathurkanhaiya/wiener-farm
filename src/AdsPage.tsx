@@ -1,58 +1,125 @@
-import {useEffect,useState} from 'react';
-import {adApi,adUsageApi,secondaryAdApi,type Snapshot} from './lib';
+import {useEffect,useMemo,useRef,useState} from 'react';
+import createAdHandler from 'monetag-tg-sdk';
+import {adApi,providerAdApi,type Snapshot} from './lib';
+import {AD_PROVIDERS,providerConfig,type AdProvider} from './economy';
 import {SpinEarn} from './SpinEarn';
 import {PromoBox} from './PromoClaim';
 import {AmbassadorHomeCard} from './Ambassador';
-// Direct WATCH flow: no intermediate claim popup; ad opens after loading.
 
+type ProviderState={used:number;pending?:number};
+type States=Record<AdProvider,ProviderState>;
+const emptyStates=():States=>({adsgram:{used:0},monetag:{used:0},adexium:{used:0}});
+const uid=()=>String((window.Telegram?.WebApp as any)?.initDataUnsafe?.user?.id||'');
 const today=()=>new Date().toISOString().slice(0,10);
-const COOLDOWN_KEY='wiener_adsgram_cooldown_until_v1';
-const SECOND_COOLDOWN_KEY='wiener_bonus_ads_cooldown_until_v1';
-const saved=(key:string)=>{try{return Number(localStorage.getItem(key)||0)}catch{return 0}};
-type Source='main'|'secondary';
-type Result={source:'secondary';reward:number};
-
 
 export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any;setTab:(t:any)=>void}){
- const initialUsed=data.user?.ads_day===today()?Number(data.user?.ads_watched_today||0):0;
- const ECONOMY_AD_REWARD=10;
- const ECONOMY_DAILY_AD_LIMIT=15;
- const [busy,setBusy]=useState<Source|null>(null),[cooldownUntil,setCooldownUntil]=useState(()=>saved(COOLDOWN_KEY)),[secondCooldownUntil,setSecondCooldownUntil]=useState(()=>saved(SECOND_COOLDOWN_KEY)),[now,setNow]=useState(Date.now()),[used,setMainUsed]=useState(initialUsed),[second,setSecond]=useState({used:0,limit:10,reward:10,full_reward:10,block_id:'int-44228'}),[adsReady,setAdsReady]=useState(false),[result,setResult]=useState<Result|null>(null);
- const s=data.settings,cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000)),secondCooldown=Math.max(0,Math.ceil((secondCooldownUntil-now)/1000));
- const syncMain=async()=>{const st:any=await adUsageApi();setMainUsed(Number(st?.used||0));const left=Number(st?.cooldown_seconds||0);if(left>0){const until=Date.now()+left*1000;setCooldownUntil(until);try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}}else if(saved(COOLDOWN_KEY)<=Date.now()){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}return st};
- useEffect(()=>{let active=true;Promise.all([adUsageApi(),secondaryAdApi('stats')]).then(([mainStatus,bonus]:any[])=>{if(!active)return;setMainUsed(Number(mainStatus?.used||0));const left=Number(mainStatus?.cooldown_seconds||0);if(left>0){const until=Date.now()+left*1000;setCooldownUntil(until);try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}}else if(saved(COOLDOWN_KEY)<=Date.now()){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}setSecond(bonus);setAdsReady(true)}).catch(()=>{if(active){say('Unable to load ad progress');setAdsReady(true)}});return()=>{active=false}},[]);
- useEffect(()=>{if(!cooldownUntil&&!secondCooldownUntil)return;const id=setInterval(()=>{const t=Date.now();setNow(t);if(cooldownUntil&&t>=cooldownUntil){setCooldownUntil(0);try{localStorage.removeItem(COOLDOWN_KEY)}catch{}}if(secondCooldownUntil&&t>=secondCooldownUntil){setSecondCooldownUntil(0);try{localStorage.removeItem(SECOND_COOLDOWN_KEY)}catch{}}},500);return()=>clearInterval(id)},[cooldownUntil,secondCooldownUntil]);
- const setCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(COOLDOWN_KEY,String(until))}catch{}};
- const setSecondCooldown=(seconds=20)=>{const until=Date.now()+seconds*1000;setSecondCooldownUntil(until);setNow(Date.now());try{localStorage.setItem(SECOND_COOLDOWN_KEY,String(until))}catch{}};
- const finishSecondary=(st:any)=>setResult({source:'secondary',reward:Number(st?.reward||0)});
+ const settings:any=data.settings||{};
+ const [states,setStates]=useState<States>(emptyStates);
+ const [busy,setBusy]=useState<AdProvider|null>(null);
+ const [ready,setReady]=useState(false);
+ const [now,setNow]=useState(Date.now());
+ const monetagRef=useRef<any>(null);
+ const adexiumRef=useRef<any>(null);
+ const adexiumTaskRef=useRef<string>('');
+ const configs=useMemo(()=>({
+   adsgram:providerConfig(settings,'adsgram'),
+   monetag:providerConfig(settings,'monetag'),
+   adexium:providerConfig(settings,'adexium')
+ }),[settings]);
 
- const watch=async(src:Source)=>{if(busy)return;if(src==='main'&&!s.adsgram_block_id){say('Ads are temporarily unavailable');return}if(src==='main'&&cooldown>0){say(`Next ad in ${cooldown}s`);return}if(src==='secondary'&&secondCooldown>0){say(`Next ad in ${secondCooldown}s`);return}if(src==='secondary'&&second.used>=second.limit){say('Daily ad limit reached');return}try{setBusy(src);setResult(null);if(src==='main'){const x=await adApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||s.adsgram_block_id)});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');await adApi('complete',{session_id:x.session_id} as any);setCooldown(20);await syncMain().catch(()=>{});}else{const x=await secondaryAdApi('start');const c=window.Adsgram?.init({blockId:String(x.block_id||'int-44228')});if(!c)throw Error('AdsGram SDK unavailable');const shown=await c.show();if(shown&&shown.done===false)throw Error(shown.description||'Ad was not completed');const st:any=await secondaryAdApi('reward',{session_id:x.session_id} as any);const stats:any=await secondaryAdApi('stats');setSecond(stats);setSecondCooldown(20);finishSecondary(st);}await refresh()}catch(e:any){say(String(e?.message||'Ad was not completed'))}finally{setBusy(null)}};
- const mainLimit=Math.max(1,Number(s.daily_ad_limit||ECONOMY_DAILY_AD_LIMIT));
- const mainReward=ECONOMY_AD_REWARD;
- const mainAtLimit=used>=mainLimit,secondAtLimit=second.used>=second.limit;
- const mainDisabled=Boolean(busy)||mainAtLimit||cooldown>0,secondDisabled=Boolean(busy)||secondAtLimit||secondCooldown>0;
- if(!adsReady)return <><div className="page-title"><h2>EARN</h2></div><div className="ads-unified-loading"><div className="card ad-card ad-skeleton"/><div className="card ad-card ad-skeleton"/></div></>;
+ const sync=async()=>{
+   try{
+     const x:any=await providerAdApi('status');
+     const next=emptyStates();
+     for(const key of Object.keys(next) as AdProvider[]) next[key]={used:Number(x?.providers?.[key]?.used||0),pending:Number(x?.providers?.[key]?.pending||0)};
+     setStates(next);
+   }catch{}
+   finally{setReady(true)}
+ };
+ useEffect(()=>{sync();const id=window.setInterval(sync,12000);return()=>window.clearInterval(id)},[]);
+ useEffect(()=>{const id=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(id)},[]);
+
+ const watchAdsGram=async()=>{
+   const c=configs.adsgram;
+   if(!c.blockId)throw Error('AdsGram is not configured.');
+   const session:any=await adApi('start',{provider:'adsgram'});
+   const controller=window.Adsgram?.init({blockId:String(session?.block_id||c.blockId)});
+   if(!controller)throw Error('AdsGram SDK unavailable.');
+   const result:any=await controller.show();
+   if(result&&result.done===false)throw Error(result.description||'Ad was not completed.');
+   await adApi('complete',{session_id:session?.session_id,provider:'adsgram'});
+ };
+
+ const watchMonetag=async()=>{
+   const zone=String(configs.monetag.blockId||'');
+   if(!zone)throw Error('Monetag zone is not configured.');
+   if(!monetagRef.current)monetagRef.current=createAdHandler(Number(zone));
+   const session:any=await providerAdApi('start',{provider:'monetag',zone_id:zone});
+   const ymid=String(session?.ymid||session?.session_id||'');
+   if(!ymid)throw Error('Monetag session could not be created.');
+   await monetagRef.current({ymid,requestVar:'earn_monetag'});
+   await providerAdApi('complete',{provider:'monetag',session_id:session.session_id,ymid});
+ };
+
+ const watchAdexium=async()=>{
+   const wid=String(configs.adexium.blockId||'');
+   if(!wid)throw Error('Adexium widget ID is not configured.');
+   if(!adexiumRef.current){
+     if(!(window as any).AdexiumWidget)throw Error('Adexium SDK unavailable.');
+     adexiumRef.current=new (window as any).AdexiumWidget({wid,adFormat:'interstitial',debug:false,isFullScreen:true});
+   }
+   const widget=adexiumRef.current;
+   adexiumTaskRef.current='';
+   await new Promise<void>((resolve,reject)=>{
+     const received=(ad:any)=>{adexiumTaskRef.current=String(ad?.id||'');widget.displayAd(ad)};
+     const completed=async()=>{try{if(!adexiumTaskRef.current)throw Error('Adexium task ID missing.');await providerAdApi('complete',{provider:'adexium',widget_id:wid,task_id:adexiumTaskRef.current});cleanup();resolve()}catch(e){cleanup();reject(e)}};
+     const noAd=()=>{cleanup();reject(Error('No Adexium ad is available right now.'))};
+     const cleanup=()=>{try{widget.off('adReceived',received);widget.off('adPlaybackCompleted',completed);widget.off('noAdFound',noAd)}catch{}};
+     widget.on('adReceived',received);widget.on('adPlaybackCompleted',completed);widget.on('noAdFound',noAd);
+     widget.requestAd('interstitial');
+   });
+ };
+
+ const watch=async(provider:AdProvider)=>{
+   if(busy)return;
+   const cfg=configs[provider],st=states[provider],limit=Math.max(0,Number(cfg.limit||AD_PROVIDERS[provider].limit));
+   if(st.used>=limit){say('ℹ️ Daily ad limit reached');return}
+   try{
+     setBusy(provider);
+     if(provider==='adsgram')await watchAdsGram();
+     else if(provider==='monetag')await watchMonetag();
+     else await watchAdexium();
+     say(`✅ Ad completed · +${cfg.reward} WIENER`);
+     await sync();await refresh?.();
+   }catch(e:any){say(String(e?.message||'Ad was not completed.'))}
+   finally{setBusy(null)}
+ };
+
+ const cards=(Object.keys(AD_PROVIDERS) as AdProvider[]).map(k=>({key:k,cfg:configs[k],meta:AD_PROVIDERS[k],state:states[k]}));
+ if(!ready)return <div className="wf-earn-page"><div className="ads-unified-loading"><div className="card ad-card ad-skeleton"/><div className="card ad-card ad-skeleton"/></div></div>;
+
  return <div className="wf-earn-page">
-   <header className="wf-earn-head"><div><span>COMPLETE &amp; COLLECT</span><h2>Earn</h2></div><div className="wf-earn-counter"><b>{used}</b><small>/{mainLimit} ads</small></div></header>
-   <section className="wf-earn-section wf-earn-watch-section">
-     <div className="wf-earn-section-head"><span><i/>WATCH &amp; EARN</span><small>{Math.max(0,mainLimit-used)} available</small></div>
-     <div className="wf-earn-ad-grid">
-       {[1,2,3].map((n,i)=>{const limit=[7,10,5][i];const watched=Math.min(used,limit);const reward=mainReward*(i===0?2:1);return <button className="wf-earn-ad" key={n} disabled={mainDisabled} onClick={()=>watch('main')}><div className="wf-earn-ad-top"><span>AD #{n}</span><b>{watched}/{limit}</b></div><img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/><div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div><span className="wf-earn-watch">{mainAtLimit?'DONE':busy==='main'?'WAIT':cooldown>0?cooldown+'s':'WATCH'}</span></button>})}
-     </div>
-   </section>
-   <section className="wf-earn-section wf-earn-spin-section">
-     <div className="wf-earn-section-head"><span><i/>SPIN &amp; EARN</span><small>Daily + bonus spins</small></div>
-     <div className="wf-earn-module"><SpinEarn refresh={refresh} say={say}/></div>
-   </section>
-   <section className="wf-earn-section wf-earn-promo-section">
-     <div className="wf-earn-section-head"><span><i/>PROMO CODE</span><small>Claim a reward</small></div>
-     <div className="wf-earn-module"><PromoBox data={data} refresh={refresh} say={say}/></div>
-   </section>
-   <section className="wf-earn-section wf-earn-ambassador-section">
-     <div className="wf-earn-section-head"><span><i/>AMBASSADOR PROGRAM</span><small>Earn with your community</small></div>
-     <div className="wf-earn-module"><AmbassadorHomeCard setTab={setTab}/></div>
-   </section>
-   <div className="wf-earn-note">Rewards are added after the task or ad is verified.</div>
-   {busy&&<div className="ad-loading-backdrop"><div className="ad-loading-card"><div className="ad-loader"/><h3>OPENING AD</h3><p>Complete the sponsor ad to receive your reward.</p></div></div>}
+  <header className="wf-earn-head"><div><span>COMPLETE &amp; COLLECT</span><h2>Earn</h2></div><div className="wf-earn-counter"><b>{cards.reduce((a,x)=>a+x.state.used,0)}</b><small>ads today</small></div></header>
+  <section className="wf-earn-section wf-earn-watch-section">
+   <div className="wf-earn-section-head"><span><i/>WATCH &amp; EARN</span><small>3 independent ad blocks</small></div>
+   <div className="wf-earn-ad-grid">
+    {cards.map(({key,cfg,meta,state})=>{
+      const limit=Math.max(0,Number(cfg.limit||meta.limit)),atLimit=state.used>=limit;
+      const label=atLimit?'LIMIT':busy===key?'OPENING…':'WATCH';
+      return <button className="wf-earn-ad" key={key} disabled={!!busy||atLimit||!cfg.blockId} onClick={()=>watch(key)}>
+       <div className="wf-earn-ad-top"><span>{meta.label.toUpperCase()}</span><b>{state.used}/{limit}</b></div>
+       <img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
+       <div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{cfg.reward}</b><small>WIENER</small></div>
+       <span className="wf-earn-watch">{label}</span>
+       <small className="wf-earn-provider-note">MAX {cfg.reward*limit} W / DAY</small>
+      </button>
+    })}
+   </div>
+   <div className="wf-earn-note">Each provider has its own reward, counter and daily limit. Watching one provider never consumes another provider's quota.</div>
+  </section>
+  <section className="wf-earn-section wf-earn-spin-section"><div className="wf-earn-section-head"><span><i/>SPIN &amp; EARN</span><small>Daily + bonus spins</small></div><div className="wf-earn-module"><SpinEarn refresh={refresh} say={say}/></div></section>
+  <section className="wf-earn-section wf-earn-promo-section"><div className="wf-earn-section-head"><span><i/>PROMO CODE</span><small>Claim a reward</small></div><div className="wf-earn-module"><PromoBox data={data} refresh={refresh} say={say}/></div></section>
+  <section className="wf-earn-section wf-earn-ambassador-section"><div className="wf-earn-section-head"><span><i/>AMBASSADOR PROGRAM</span><small>Earn with your community</small></div><div className="wf-earn-module"><AmbassadorHomeCard setTab={setTab}/></div></section>
+  {busy&&<div className="ad-loading-backdrop"><div className="ad-loading-card"><div className="ad-loader"/><h3>OPENING AD</h3><p>Complete the sponsor ad to receive your reward.</p></div></div>}
  </div>;
 }
