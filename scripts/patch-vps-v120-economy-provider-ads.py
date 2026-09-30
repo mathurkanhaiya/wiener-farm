@@ -2,6 +2,13 @@
 from pathlib import Path
 import sys,re
 p=Path(sys.argv[1]);s=p.read_text()
+# Normalize the existing referral engine to one fixed two-stage reward while preserving
+# its existing active/anti-abuse qualification and required-ad logic.
+s=s.replace("const REF_JOIN_V98=100;","const REF_JOIN_V98=125;")
+s=re.sub(r"\{tier:1,label:'Diamond',total:600,requiredAds:", "{tier:1,label:'Diamond',total:375,requiredAds:", s)
+s=re.sub(r"\{tier:2,label:'Premium',total:500,requiredAds:", "{tier:2,label:'Premium',total:375,requiredAds:", s)
+s=re.sub(r"\{tier:3,label:'Plus',total:400,requiredAds:", "{tier:3,label:'Plus',total:375,requiredAds:", s)
+s=re.sub(r"\{tier:4,label:'Base',total:300,requiredAds:", "{tier:4,label:'Base',total:375,requiredAds:", s)
 
 marker="// === WIENER WITHDRAW AD UNLOCK V24 ==="
 if marker in s:
