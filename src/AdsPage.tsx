@@ -77,7 +77,7 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
      const noAd=()=>{cleanup();reject(Error('No Adexium ad is available right now.'))};
      const cleanup=()=>{try{widget.off('adReceived',received);widget.off('adPlaybackCompleted',completed);widget.off('noAdFound',noAd)}catch{}};
      widget.on('adReceived',received);widget.on('adPlaybackCompleted',completed);widget.on('noAdFound',noAd);
-     widget.requestAd('interstitial');
+     (widget.requestRewardedAd||widget.requestAd).call(widget,'interstitial');
    });
  };
 
