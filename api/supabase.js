@@ -57,6 +57,23 @@ export default async function handler(req,res){
   if(fn==='wiener-admin-api'&&String(body.action||'')==='admin_settings_save') upstreamFn='wiener-admin-settings';
 
   try{
+    // Withdrawal placement is server-gated: the user must complete 10 valid
+    // sponsor ads for the current day before a withdrawal request can reach
+    // the payout backend. This keeps the rule enforced outside the client UI.
+    const isWithdrawalPlacement =
+      (fn==='wiener-withdraw' && String(body.action||'')==='request') ||
+      (fn==='wiener-ton-wallet' && String(body.action||'')==='withdraw');
+    if(isWithdrawalPlacement){
+      const usage=await callUpstream(`${WIENER_VPS_URL}/functions/v1/wiener-ad-usage`,buildHeaders(req),body);
+      let usageData={};
+      try{ usageData=JSON.parse(usage.text||'{}')?.data||JSON.parse(usage.text||'{}')||{}; }catch{}
+      const used=Number(usageData.used||0);
+      const required=10;
+      if(!usage.upstream.ok || used<required){
+        const remaining=Math.max(0,required-used);
+        return res.status(403).json({ok:false,error:'withdrawal_ads_required',message:`Watch ${remaining} more valid ad${remaining===1?'':'s'} today before placing a withdrawal.`,used,required,remaining});
+      }
+    }
     const result=await callUpstream(`${WIENER_VPS_URL}/functions/v1/${upstreamFn}`,buildHeaders(req),body);
     if(!result.upstream.ok) console.error('WIENER upstream non-2xx',{fn,upstreamFn,action:String(body.action||''),status:result.upstream.status,text:result.text.slice(0,500)});
     res.status(result.upstream.status);
