@@ -7,6 +7,7 @@ s=s.replace("token_per_usdt||10000","token_per_usdt||25000")
 s=s.replace("token_per_usdt||15000","token_per_usdt||25000")
 s=s.replace("token_per_usdt||40000","token_per_usdt||25000")
 s=s.replace("token_per_usdt || 10000","token_per_usdt || 25000")
+s=s.replace("num(s.rows[0]?.token_per_usdt)||15000","num(s.rows[0]?.token_per_usdt)||25000")
 # Normalize the existing referral engine to one fixed two-stage reward while preserving
 # its existing active/anti-abuse qualification and required-ad logic.
 s=s.replace("const REF_JOIN_V98=100;","const REF_JOIN_V98=125;")
@@ -35,8 +36,10 @@ if legacy_prefix in s:
         1
     )
 
+# Remove any remaining legacy withdrawal-unlock/dashboard references from the live backend.
+s=re.sub(r"let gate='—';if\(await tableV25\('withdraw_ad_sessions'\)\)gate=String\(\(await pool\.query\(`select count\(\*\)::int c from public\.withdraw_ad_sessions[^`]*`[^;]*\)\.rows\[0\]\?\.c\|\|0\)\+'/5';", "let gate='—';", s)
 if "withdraw_ad_sessions" in s:
-    raise SystemExit("legacy withdraw_ad_sessions reference remains after patch")
+    raise SystemExit("legacy withdraw_ad_sessions reference remains after cleanup")
 
 
 if "WIENER PROVIDER ADS V120" not in s:
