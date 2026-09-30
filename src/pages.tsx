@@ -74,7 +74,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
       </button>
     </div>
 
-    <button className="wf-feature-card" onClick={()=>setTab('tasks')}>
+    <button className="wf-feature-card" onClick={()=>setTab('stars')}>
       <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/stWqIolUtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
         <b>Mine Telegram Stars</b>
