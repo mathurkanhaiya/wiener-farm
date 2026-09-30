@@ -1610,3 +1610,72 @@ body #root .app-shell > .bottom-nav.game-nav > button > span:last-child{height:1
 @media(max-width:390px){
  .wf-stars-page{gap:12px;padding-bottom:118px}.wf-stars-top h1{font-size:25px}.wf-stars-balance{min-height:205px;padding:23px 20px}.wf-stars-balance-number{font-size:57px}.wf-stars-balance-art{width:118px;height:118px;right:2px;top:34px}.wf-stars-mine{min-height:530px;padding:22px 18px 20px}.wf-stars-mine-art{height:265px}.wf-stars-big-teddy{height:265px}.wf-stars-mine h2{font-size:24px}.wf-stars-action{min-height:68px;font-size:14px;letter-spacing:2px}
 }
+/* MINE TELEGRAM STARS — COMPACT LEAF-STYLE OVERRIDE */
+body .app-shell .wf-stars-page{
+  width:100%!important;max-width:760px!important;margin:0 auto!important;
+  gap:12px!important;padding:8px 0 128px!important;
+}
+body .app-shell .wf-stars-top{grid-template-columns:54px minmax(0,1fr)!important;gap:12px!important;padding:0 2px!important}
+body .app-shell .wf-stars-back{width:54px!important;height:54px!important;border-radius:17px!important;font-size:31px!important;background:rgba(10,53,37,.62)!important;border:1px solid rgba(67,214,137,.18)!important}
+body .app-shell .wf-stars-top h1{font-size:30px!important;letter-spacing:-1.1px!important}
+body .app-shell .wf-stars-balance{
+  min-height:190px!important;padding:25px 24px!important;border-radius:0 0 28px 0!important;
+  background:radial-gradient(circle at 79% 44%,rgba(29,226,127,.18),transparent 31%),linear-gradient(145deg,rgba(9,77,48,.96),rgba(3,48,31,.98))!important;
+  border:1px solid rgba(103,229,165,.2)!important;clip-path:polygon(7% 0,100% 0,100% 84%,92% 100%,0 100%,0 10%)!important;
+}
+body .app-shell .wf-stars-balance-number{font-size:64px!important;margin-top:8px!important}
+body .app-shell .wf-stars-balance-art{width:112px!important;height:112px!important;right:24px!important;top:35px!important}
+body .app-shell .wf-stars-balance-meta{margin-top:22px!important}
+body .app-shell .wf-stars-mine{
+  min-height:0!important;padding:20px 24px 24px!important;border-radius:0 0 28px 0!important;
+  background:linear-gradient(145deg,rgba(7,76,45,.94),rgba(3,53,34,.98))!important;
+  border:1px solid rgba(102,229,165,.16)!important;clip-path:polygon(7% 0,100% 0,100% 93%,93% 100%,0 100%,0 7%)!important;
+}
+body .app-shell .wf-stars-mine-art{height:245px!important;margin:-8px 0 0!important}
+body .app-shell .wf-stars-big-teddy{width:min(68%,260px)!important;height:245px!important;opacity:.94!important}
+body .app-shell .wf-stars-mine h2{font-size:27px!important;margin:5px 0 7px!important}
+body .app-shell .wf-stars-sub{font-size:14px!important;color:rgba(235,255,245,.55)!important}
+body .app-shell .wf-stars-progress-head{margin:22px 0 9px!important}
+body .app-shell .wf-stars-track{height:14px!important}
+body .app-shell .wf-stars-remaining{font-size:15px!important;margin:13px 0 17px!important}
+body .app-shell .wf-stars-action{
+  min-height:66px!important;border-radius:32px!important;font-size:15px!important;letter-spacing:2.4px!important;
+  background:linear-gradient(105deg,#078f46,#16bc65 50%,#20d57c)!important;
+}
+body .app-shell .wf-stars-action img{width:30px!important;height:30px!important}
+body .app-shell .wf-stars-claim{
+  width:100%!important;margin-top:9px!important;min-height:58px!important;border:1px solid rgba(86,231,156,.3)!important;
+  border-radius:25px!important;background:rgba(11,102,61,.52)!important;color:#eafff3!important;font-weight:950!important;letter-spacing:1.7px!important;
+}
+body .app-shell .wf-stars-config{
+  margin-top:10px!important;padding:9px 12px!important;border-radius:12px!important;
+  font-size:10px!important;line-height:1.35!important;color:#ffdd8a!important;background:rgba(111,75,19,.18)!important;
+}
+body .app-shell .wf-stars-reward{
+  min-height:118px!important;padding:16px 18px!important;grid-template-columns:82px minmax(0,1fr)!important;gap:14px!important;
+  border-radius:0 0 22px 0!important;clip-path:polygon(6% 0,100% 0,100% 84%,93% 100%,0 100%,0 10%)!important;
+}
+body .app-shell .wf-stars-reward>img{width:76px!important;height:76px!important}
+body .app-shell .wf-stars-reward h3{font-size:11px!important;letter-spacing:2px!important}
+body .app-shell .wf-stars-reward p{font-size:11px!important;margin-top:6px!important}
+body .app-shell .wf-stars-how-title{padding:2px 6px!important}
+body .app-shell .wf-stars-how{
+  border-radius:0 0 22px 0!important;clip-path:polygon(5% 0,100% 0,100% 92%,95% 100%,0 100%,0 8%)!important;
+}
+body .app-shell .wf-stars-how>div{padding:14px 17px!important;grid-template-columns:40px minmax(0,1fr)!important}
+body .app-shell .wf-stars-how span{font-size:11px!important}
+@media(max-width:390px){
+ body .app-shell .wf-stars-page{gap:10px!important;padding:6px 0 122px!important}
+ body .app-shell .wf-stars-top h1{font-size:25px!important}
+ body .app-shell .wf-stars-balance{min-height:176px!important;padding:22px 20px!important}
+ body .app-shell .wf-stars-balance-number{font-size:56px!important}
+ body .app-shell .wf-stars-balance-art{width:96px!important;height:96px!important;right:15px!important;top:34px!important}
+ body .app-shell .wf-stars-mine{padding:16px 18px 20px!important}
+ body .app-shell .wf-stars-mine-art{height:215px!important}
+ body .app-shell .wf-stars-big-teddy{height:215px!important;width:min(72%,225px)!important}
+ body .app-shell .wf-stars-mine h2{font-size:23px!important}
+ body .app-shell .wf-stars-sub{font-size:12px!important}
+ body .app-shell .wf-stars-action{min-height:60px!important;font-size:12px!important;letter-spacing:1.7px!important}
+ body .app-shell .wf-stars-reward{grid-template-columns:68px minmax(0,1fr)!important;min-height:104px!important}
+ body .app-shell .wf-stars-reward>img{width:62px!important;height:62px!important}
+}
