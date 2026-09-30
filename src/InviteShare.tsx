@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import {REFERRAL_REWARDS,WIENER_PER_USDT} from './economy';
 import {getInitData,money,PUBLISHABLE_KEY,shareApi,SUPABASE_URL,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 
@@ -13,7 +14,7 @@ async function loadReferral(){
 }
 
 export function Invite({data,say}:{data:Snapshot;say:any}){
- const s=data.settings||{},u=data.user;const tokenPerUsdt=Number(s.token_per_usdt||0),activeReward=Number(s.referral_active_reward||0),activeAdsRequired=Number(s.referral_active_ads_required||0),commissionPercent=Number(s.referral_commission_percent||0);const rewardUsd=tokenPerUsdt>0?activeReward/tokenPerUsdt:0;
+ const s=data.settings||{},u=data.user;const tokenPerUsdt=WIENER_PER_USDT,activeReward=Number(s.referral_active_reward||0),activeAdsRequired=Number(s.referral_active_ads_required||0),commissionPercent=Number(s.referral_commission_percent||0);const rewardUsd=tokenPerUsdt>0?activeReward/tokenPerUsdt:0;
  const[busy,setBusy]=useState(false),[ready,setReady]=useState(false),[refs,setRefs]=useState<any[]>([]),[stats,setStats]=useState<Stats>({invited:Number(u.referrals_count||0),qualified:0,pending:0,earned:Number(u.referral_earnings||0)}),[security,setSecurity]=useState<any>({});
  const link=`https://t.me/${String(s.bot_username||'@WienerDogeFarmBot').replace('@','')}?startapp=ref_${u.telegram_id}`;
  const shareText='🌭 Join WIENER Farm\n\n🎁 Earn WIENER by watching ads, completing tasks and inviting friends.\n🚀 Invite friends and earn the configured referral reward per qualified friend.\n\n👇 Open WIENER Farm';
@@ -25,7 +26,7 @@ export function Invite({data,say}:{data:Snapshot;say:any}){
  const copy=async()=>{try{await navigator.clipboard.writeText(link);say('Invite link copied')}catch{const ta=document.createElement('textarea');ta.value=link;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();say(ok?'Invite link copied':'Copy failed')}};
  const state=(r:any)=>{if(r.status==='banned'||r.referral_reward_eligible===false)return{label:'NOT ELIGIBLE',tone:'bad'};if(r.vpn_blocked||r.status==='vpn_blocked')return{label:'PAUSED',tone:'warn'};if(r.completion_rewarded_at||r.status==='rewarded')return{label:'COMPLETED',tone:'good'};if(r.join_rewarded_at)return{label:'IN PROGRESS',tone:'live'};return{label:'JOINED',tone:'live'}};
  const settingNum=(...keys:string[])=>{for(const k of keys){const n=Number((s as any)?.[k]);if(Number.isFinite(n)&&n>0)return n}return 0};
- const joinReward=settingNum('referral_join_reward','referral_join_bonus','referral_signup_reward','referral_reward_on_join');
+ const joinReward=Number(settingNum('referral_join_reward','referral_join_bonus','referral_signup_reward','referral_reward_on_join')||REFERRAL_REWARDS.join);
  return <><style>{`
 .iv{display:grid;gap:14px;padding:10px 0 120px;color:#effff6}
 .iv *{box-sizing:border-box}
