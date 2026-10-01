@@ -117,7 +117,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
           <button className="verify-close" type="button" disabled={verifyRunning} onClick={closeVerify}>×</button>
           <h2>Verify Mini App Task</h2>
           <div className="verify-task-card">
-            <span className="verify-pill">🎮 @{telegramUsername(verifyTask)||'Mini App'}</span>
+            <span className="verify-pill">🎮 {String(verifyTask?.title||'Mini App').slice(0,28)}</span>
             <span className="verify-reward">+{verifyTask.reward} W</span>
             <div className="verify-title">{verifyTask.title}</div>
             <div className="verify-desc">{verifyTask.description||'Be active'}</div>
