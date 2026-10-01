@@ -33,7 +33,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
   const [mode,setMode]=useState<'tasks'|'create'|'pending'|'live'|'manage'>('tasks');
   const [botStates,setBotStates]=useState<Record<string,BotState>>({}),[normalStates,setNormalStates]=useState<Record<string,NormalState>>({}),[busy,setBusy]=useState('');
   const [verifyTask,setVerifyTask]=useState<any>(null),[verifyElapsed,setVerifyElapsed]=useState(0),[verifyRunning,setVerifyRunning]=useState(false);
-  const verifyStartedRef=useRef(0),verifyAccumRef=useRef(0),verifyHiddenAtRef=useRef<number|null>(null);
+  const verifyAccumRef=useRef(0),verifyHiddenAtRef=useRef<number|null>(null);
   const VERIFY_SECONDS=15;
   const [title,setTitle]=useState(''),[url,setUrl]=useState(''),[reward,setReward]=useState('');
   const done=new Set(data.completed.map(x=>x.task_id)),visibleTasks=data.tasks.filter(tk=>tk.category!=='exclusive');
@@ -55,7 +55,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
     document.addEventListener('visibilitychange',onVisibility);
     return()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility)};
   },[verifyTask]);
-  const openVerify=async(task:any)=>{setVerifyTask(task);setVerifyElapsed(0);setVerifyRunning(false);verifyStartedRef.current=Date.now();verifyAccumRef.current=0;verifyHiddenAtRef.current=null};
+  const openVerify=async(task:any)=>{setVerifyTask(task);setVerifyElapsed(0);setVerifyRunning(false);verifyAccumRef.current=0;verifyHiddenAtRef.current=null};
   const launchVerify=async()=>{const task=verifyTask;if(!task||busy)return;try{setBusy(task.id);await taskApi('check',{task_id:task.id,stage:'begin_external'});setVerifyRunning(true);verifyAccumRef.current=0;verifyHiddenAtRef.current=Date.now();setVerifyElapsed(0);const ok=await openTaskUrl(task);if(!ok){verifyHiddenAtRef.current=null;setVerifyRunning(false);say('Could not open this Mini App. Please try again.');return}say('Mini App opened. Keep it open for 15 seconds, then return here.')}catch(e:any){verifyHiddenAtRef.current=null;setVerifyRunning(false);say(String(e?.message||'Could not start Mini App verification.'))}finally{setBusy('')}};
   const closeVerify=()=>{if(verifyElapsed>=VERIFY_SECONDS){setVerifyTask(null);return}if(verifyRunning)return;setVerifyTask(null);verifyHiddenAtRef.current=null};
   const claimVerify=async()=>{const task=verifyTask;if(!task||verifyElapsed<VERIFY_SECONDS||busy)return;try{setBusy(task.id);await taskApi('claim',{task_id:task.id});setNormalStates(v=>({...v,[task.id]:'opened'}));setVerifyTask(null);say('+'+task.reward+' W');await refresh?.()}catch(e:any){const m=String(e?.message||'Task verification failed');say(m)}finally{setBusy('')}};
