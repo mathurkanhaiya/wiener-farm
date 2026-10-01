@@ -10,6 +10,9 @@ import './styles.css';
 import './styles-spin-card-clean.css';
 import './styles-spin-notifications.css';
 import './nav-six.css';
+import {preloadWienerAnimations} from './assetPreload';
+
+preloadWienerAnimations();
 import './styles-rich-pro.css';
 
 createRoot(document.getElementById('root')!).render(
