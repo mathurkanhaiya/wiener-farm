@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {hapticImpact,hapticNotify,money,type Snapshot} from './lib';
+import {hapticImpact,hapticNotify,money,giftClaimApi,type Snapshot} from './lib';
 import {WIENER_PER_USDT} from './economy';
 
 const BIG_TEDDY='https://pixlinkhost.vercel.app/i/H6gKj6gN2A';
@@ -24,7 +24,7 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
  const giftText=txt(s,['telegram_stars_gift_description','stars_gift_description','mine_gift_description']);
  const blockId=String(s.adsgram_block_id||'');
  const initialCycle=readCycle();
- const [progress,setProgress]=useState(initialCycle.progress),[busy,setBusy]=useState(false),[cooldownUntil,setCooldownUntil]=useState(initialCycle.nextMineAt),[now,setNow]=useState(Date.now());
+ const [progress,setProgress]=useState(initialCycle.progress),[busy,setBusy]=useState(false),[claimBusy,setClaimBusy]=useState(false),[claim,setClaim]=useState<any>(null),[cooldownUntil,setCooldownUntil]=useState(initialCycle.nextMineAt),[now,setNow]=useState(Date.now());
  const cooldown=Math.max(0,Math.ceil((cooldownUntil-now)/1000));
  const remaining=Math.max(0,Math.ceil((100-progress)/step));
  const configured=Boolean(blockId&&taps&&cooldownSeconds&&step);
@@ -33,6 +33,7 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
  const miningInProgress=progress>0&&!cycleDone;
 
  useEffect(()=>{saveCycle(progress,cooldownUntil)},[progress,cooldownUntil]);
+ useEffect(()=>{giftClaimApi('status',{cycle_id:today()}).then(setClaim).catch(()=>{})},[]);
  useEffect(()=>{const id=window.setInterval(()=>setNow(Date.now()),1000);return()=>window.clearInterval(id)},[]);
  useEffect(()=>{if(cooldownUntil&&now>=cooldownUntil)setCooldownUntil(0)},[now,cooldownUntil]);
 
@@ -54,7 +55,7 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
    }catch(e:any){hapticNotify('error');say?.(String(e?.message||'Ad could not be completed.'))}
    finally{setBusy(false)}
  };
- const claim=()=>{if(cycleDone&&!busy)say?.('Gift claim is ready for the configured backend delivery flow.')};
+ const submitClaim=async()=>{if(!cycleDone||busy||claimBusy||claim?.status==='pending'||claim?.status==='paid')return;try{setClaimBusy(true);const r:any=await giftClaimApi('claim',{cycle_id:today(),gift_name:gift,progress:100,mines_done:taps});setClaim(r);say?.('🎁 Gift claim submitted. Admin will process it.');hapticNotify('success')}catch(e:any){hapticNotify('error');say?.(String(e?.message||'Gift claim could not be submitted.'))}finally{setClaimBusy(false)}};
 
  return <div className="wf-stars-page">
   <div className="wf-stars-top">
@@ -77,7 +78,10 @@ export function TelegramStarsPage({data,setTab,refresh,say}:{data:Snapshot;setTa
    <button className="wf-stars-action" disabled={!configured||busy||cooldown>0||cycleDone} onClick={mine}>
     <img src={AXE} alt="" aria-hidden="true"/>{busy?'OPENING AD…':cooldown>0&&!cycleDone?'MINING IN PROGRESS':cycleDone?'MINING COMPLETE':'WATCH AD · MINE +'+step+'%'}
    </button>
-   {cycleDone&&<button className="wf-stars-claim" disabled={busy} onClick={claim}>🎁 CLAIM {gift.toUpperCase()}</button>}
+   {cycleDone&&claim?.status!=='paid'&&<button className="wf-stars-claim" disabled={busy||claimBusy||claim?.status==='pending'} onClick={submitClaim}>{claimBusy?'SUBMITTING…':claim?.status==='pending'?'CLAIM PENDING':'🎁 CLAIM '+gift.toUpperCase()}</button>}
+   {claim?.status==='pending'&&<div className="wf-stars-config">🎁 Claim submitted · waiting for admin payment.</div>}
+   {claim?.status==='paid'&&<div className="wf-stars-config">✅ Gift marked as paid by admin.</div>}
+   {claim?.status==='rejected'&&<div className="wf-stars-config">❌ Claim rejected{claim.rejection_reason?': '+claim.rejection_reason:''}. Contact support if needed.</div>}
    {!blockId&&<div className="wf-stars-config">AdsGram rewarded block is not configured in backend settings.</div>}
   </section>
   <section className="wf-stars-reward"><img src={SMALL_TEDDY} alt="" aria-hidden="true"/><div><h3>YOU'LL GET THIS {gift.toUpperCase()}</h3><p>{giftText||'Sent to you on Telegram once you finish this cycle.'}</p></div></section>
