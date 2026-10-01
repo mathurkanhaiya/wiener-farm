@@ -2,7 +2,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {api,date,money} from './lib';
 import {Splash} from './ui';
 
-type Section='overview'|'settings'|'users'|'tasks'|'promos'|'withdrawals'|'admins'|'audit';
+type Section='overview'|'settings'|'users'|'tasks'|'promos'|'withdrawals'|'giftClaims'|'admins'|'audit';
 const nav:{key:Section;emoji:string;title:string;desc:string}[]=[
   {key:'overview',emoji:'📊',title:'Overview',desc:'System health and quick actions'},
   {key:'settings',emoji:'⚙️',title:'Settings',desc:'Rewards, ads, referrals and modules'},
@@ -10,6 +10,7 @@ const nav:{key:Section;emoji:string;title:string;desc:string}[]=[
   {key:'tasks',emoji:'🎯',title:'Tasks',desc:'Create tasks step by step'},
   {key:'promos',emoji:'🎟️',title:'Promo Codes',desc:'Create, review and manage promos'},
   {key:'withdrawals',emoji:'💸',title:'Withdrawals',desc:'Payout status and processing guidance'},
+  {key:'giftClaims',emoji:'🎁',title:'Gift Claims',desc:'Review and pay Telegram gift claims'},
   {key:'admins',emoji:'🛡️',title:'Admins',desc:'Admin access and permissions'},
   {key:'audit',emoji:'📋',title:'Audit',desc:'Sensitive action history'}
 ];
@@ -33,6 +34,7 @@ export function Admin({say}:{say:any}){
       {section==='tasks'&&<Tasks tasks={d.tasks||[]} say={say} reload={load}/>} 
       {section==='promos'&&<Promos promos={d.promos||[]} say={say} reload={load}/>} 
       {section==='withdrawals'&&<Withdrawals rows={d.withdrawals||[]}/>} 
+      {section==='giftClaims'&&<GiftClaims rows={d.gift_claims||[]} say={say} reload={load}/>} 
       {section==='admins'&&<Admins rows={d.admins||[]} say={say} reload={load}/>} 
       {section==='audit'&&<Audit rows={d.audit||[]}/>} 
     </>}
@@ -81,6 +83,27 @@ function Promos({promos,say,reload}:{promos:any[];say:any;reload:any}){
   const gen=()=>setW({...w,code:Math.random().toString(36).slice(2,10).toUpperCase()});
   const save=async()=>{try{setBusy(true);const code=String(w.code||'').trim().toUpperCase();if(code.length<4)throw Error('Promo code must be at least 4 characters');if(Number(w.reward)<=0)throw Error('Reward must be above 0');await api('admin_promo_save',{promo:{...w,code,reward:Number(w.reward),max_claims:w.max_claims===''||w.max_claims==null?null:Number(w.max_claims),expires_at:w.expires_at||null,enabled:w.enabled!==false}});say(`✅ Promo ${code} saved`);setW(null);reload()}catch(e:any){say(e.message)}finally{setBusy(false)}};
   return <section className="admin2-card"><div className="a2-toolbar"><div><b>Promo manager</b><small>Create with a review step before publishing.</small></div><button onClick={()=>start()}>+ NEW PROMO</button></div>{w&&<div className="a2-wizard"><Stepbar step={step} labels={['Code & Reward','Limits','Review']}/>{step===0&&<div className="a2-pane"><h4>1. Code & reward</h4><div className="a2-code-row"><Field label="Promo code" value={w.code} onChange={(v:any)=>setW({...w,code:v.toUpperCase()})}/><button onClick={gen}>GENERATE</button></div><Field label="Reward WIENER" type="number" value={w.reward} onChange={(v:any)=>setW({...w,reward:Number(v)})}/></div>}{step===1&&<div className="a2-pane"><h4>2. Limits & availability</h4><div className="a2-grid"><Field label="Total claim limit" type="number" value={w.max_claims??''} placeholder="Blank = unlimited" onChange={(v:any)=>setW({...w,max_claims:v})}/><Field label="Expiry" type="datetime-local" value={w.expires_at?String(w.expires_at).slice(0,16):''} onChange={(v:any)=>setW({...w,expires_at:v})}/></div><Toggle label="Promo enabled" checked={w.enabled!==false} onChange={(v:any)=>setW({...w,enabled:v})} note="Disabled promos cannot be claimed"/></div>}{step===2&&<div className="a2-pane"><h4>3. Review promo</h4><div className="a2-review"><div><span>Code</span><b>{w.code||'—'}</b></div><div><span>Reward</span><b>+{w.reward} WIENER</b></div><div><span>Claims</span><b>{w.max_claims===''||w.max_claims==null?'Unlimited':w.max_claims}</b></div><div><span>Expiry</span><b>{w.expires_at?new Date(w.expires_at).toLocaleString():'No expiry'}</b></div><div><span>Status</span><b>{w.enabled!==false?'Active':'Disabled'}</b></div></div></div>}<div className="a2-actions"><button onClick={()=>step===0?setW(null):setStep(x=>x-1)}>{step===0?'CANCEL':'← BACK'}</button>{step<2?<button className="primary" onClick={()=>setStep(x=>x+1)}>CONTINUE →</button>:<button className="primary" disabled={busy} onClick={save}>{busy?'SAVING…':'SAVE PROMO'}</button>}</div></div>}<div className="a2-list">{!w&&promos.map(p=>{const full=p.max_claims!=null&&Number(p.claims_count)>=Number(p.max_claims),expired=p.expires_at&&new Date(p.expires_at)<=new Date();const status=!p.enabled?'Disabled':full?'Fully claimed':expired?'Expired':'Active';return <div className="a2-list-row static" key={p.code}><div><b>{p.code}</b><small>+{p.reward} WIENER · {p.claims_count}/{p.max_claims??'∞'} claims</small></div><div><span className={status==='Active'?'good':'bad'}>{status}</span><span className="a2-row-actions"><button onClick={()=>start(p)}>EDIT</button><button className="danger" onClick={async()=>{if(confirm(`Delete promo ${p.code}?`)){await api('admin_promo_delete',{code:p.code});reload()}}}>DELETE</button></span></div></div>})}</div></section>;
+}
+
+function GiftClaims({rows,say,reload}:{rows:any[];say:any;reload:any}){
+ const [busy,setBusy]=useState<string|null>(null);
+ const pending=rows.filter(x=>x.status==='pending');
+ const act=async(id:any,action:'paid'|'reject')=>{
+  let reason='';
+  if(action==='reject'){reason=String(prompt('Rejection reason','Gift claim could not be verified.')||'').trim();if(!reason)return}
+  if(!confirm(action==='paid'?'Mark this gift claim as PAID?':'Reject this gift claim?'))return;
+  try{setBusy(String(id));await api(action==='paid'?'admin_gift_paid':'admin_gift_reject',{id,...(reason?{reason}:{})});say(action==='paid'?'✅ Gift marked paid. Payout-channel log sent.':'❌ Gift claim rejected.');reload()}catch(e:any){say(e.message)}finally{setBusy(null)}
+ };
+ return <section className="admin2-card">
+  <div className="a2-pane"><h4>🎁 Telegram Gift Claims</h4><p>Completed Telegram gift mining requests awaiting manual delivery.</p>
+   <div className="a2-review"><div><span>Pending</span><b>{pending.length}</b></div><div><span>Paid</span><b>{rows.filter(x=>x.status==='paid').length}</b></div><div><span>Rejected</span><b>{rows.filter(x=>x.status==='rejected').length}</b></div></div>
+   <div className="a2-note">When an admin marks a claim paid, the backend records the payment and sends the delivery log to the configured payout channel.</div>
+  </div>
+  <div className="a2-list">{rows.map(g=><div className="a2-list-row static" key={g.id}>
+   <div><b>🎁 {g.gift_name||'Telegram Gift'}</b><small>{g.first_name||g.username||g.telegram_user_id}{g.username?' · @'+g.username:''} · UID {g.telegram_user_id} · {date(g.submitted_at||g.created_at)}</small><small>Mining: {g.mines_done||'—'} · Cycle: {g.cycle_id||'—'}</small></div>
+   <div><strong>{String(g.status||'').toUpperCase()}</strong>{g.status==='pending'?<span className="a2-row-actions"><button disabled={busy===String(g.id)} onClick={()=>act(g.id,'paid')}>✅ PAID</button><button className="danger" disabled={busy===String(g.id)} onClick={()=>act(g.id,'reject')}>REJECT</button></span>:<span className={g.status==='paid'?'good':'bad'}>{g.status}</span>}</div>
+  </div>)}</div>
+ </section>
 }
 
 function Withdrawals({rows}:{rows:any[]}){const pending=rows.filter(x=>x.status==='pending');return <section className="admin2-card"><div className="a2-pane"><h4>Secure payout control</h4><p>Actual payout actions are handled in the dedicated Secure Payout Control above this console.</p><div className="a2-review"><div><span>Pending</span><b>{pending.length}</b></div><div><span>Paid</span><b>{rows.filter(x=>x.status==='paid').length}</b></div><div><span>Rejected</span><b>{rows.filter(x=>x.status==='rejected').length}</b></div></div><div className="a2-note">Flow: Pending → enter TX hash → review → Mark Paid. Paid status triggers the user message and @WienerPay post.</div></div>{pending.slice(0,20).map(w=><div className="a2-list-row static" key={w.id}><div><b>{Number(w.gross_usdt||0).toFixed(4)} USDT · {w.network}</b><small>{w.username||w.telegram_id} · {date(w.created_at)}</small></div><div><strong>{Number(w.receive_usdt||0).toFixed(4)} USDT</strong><span className="bad">PENDING</span></div></div>)}</section>}
