@@ -10,12 +10,10 @@ import './styles.css';
 import './styles-spin-card-clean.css';
 import './styles-spin-notifications.css';
 import './nav-six.css';
-import {preloadWienerAnimations} from './assetPreload';
-
-preloadWienerAnimations();
 import './styles-rich-pro.css';
 
-createRoot(document.getElementById('root')!).render(
+const root = createRoot(document.getElementById('root')!);
+root.render(
   <React.StrictMode>
     <I18nProvider>
       <StabilityLayer>
@@ -26,3 +24,18 @@ createRoot(document.getElementById('root')!).render(
     </I18nProvider>
   </React.StrictMode>
 );
+
+// Do not block the first app render on remote animated WebP downloads.
+// Start warming the animation cache only after the UI is mounted.
+if (typeof window !== 'undefined') {
+  const warm = () => {
+    import('./assetPreload')
+      .then(({preloadWienerAnimations}) => preloadWienerAnimations())
+      .catch(() => {});
+  };
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(warm, {timeout: 1800});
+  } else {
+    window.setTimeout(warm, 900);
+  }
+}
