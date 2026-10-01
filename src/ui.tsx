@@ -35,6 +35,7 @@ export function MaintenanceScreen({message}:{message?:string}){
       <small className="maintenance-footer">Thanks for your patience · Wiener Farm</small>
     </section>
   </main>
+}
 export function LanguagePicker(){
   const {language,lang,setLang,t}=useI18n(),[open,setOpen]=useState(false),[q,setQ]=useState('');
   const filtered=useMemo(()=>{const s=q.trim().toLowerCase();return s?LANGUAGES.filter(x=>`${x.name} ${x.native} ${x.code}`.toLowerCase().includes(s)):LANGUAGES},[q]);
