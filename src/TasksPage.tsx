@@ -46,14 +46,41 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
 
   useEffect(()=>{if(!verifyTask)return;
     const markAway=()=>{if(verifyHiddenAtRef.current==null)verifyHiddenAtRef.current=Date.now()};
-    const markBack=()=>{if(verifyHiddenAtRef.current!=null){verifyAccumRef.current+=Math.max(0,Date.now()-verifyHiddenAtRef.current);verifyHiddenAtRef.current=null}
-      const elapsed=Math.min(VERIFY_SECONDS,Math.floor(verifyAccumRef.current/1000));setVerifyElapsed(elapsed);if(elapsed>=VERIFY_SECONDS)setVerifyRunning(false)};
+    const markBack=()=>{
+      if(verifyHiddenAtRef.current!=null){
+        verifyAccumRef.current+=Math.max(0,Date.now()-verifyHiddenAtRef.current);
+        verifyHiddenAtRef.current=null;
+      }
+      const elapsed=Math.min(VERIFY_SECONDS,Math.floor(verifyAccumRef.current/1000));
+      setVerifyElapsed(elapsed);
+      // Returning from the Telegram layer pauses the session so the user can resume.
+      setVerifyRunning(false);
+    };
     const onVisibility=()=>{if(document.visibilityState==='hidden')markAway();else markBack()};
-    const onBlur=()=>{if(document.visibilityState==='visible')markAway()};
+    const onBlur=()=>markAway();
     const onFocus=()=>{if(document.visibilityState==='visible')markBack()};
     const onPageHide=()=>markAway(),onPageShow=()=>markBack();
-    document.addEventListener('visibilitychange',onVisibility);window.addEventListener('blur',onBlur);window.addEventListener('focus',onFocus);window.addEventListener('pagehide',onPageHide);window.addEventListener('pageshow',onPageShow);
-    return()=>{document.removeEventListener('visibilitychange',onVisibility);window.removeEventListener('blur',onBlur);window.removeEventListener('focus',onFocus);window.removeEventListener('pagehide',onPageHide);window.removeEventListener('pageshow',onPageShow)};
+    // Newer Telegram clients can expose explicit Mini App activation state. Use it
+    // when available because a Mini App opened as a Telegram layer may leave
+    // document.visibilityState === 'visible' underneath the layer.
+    const tg=(window as any).Telegram?.WebApp;
+    const onDeactivated=()=>markAway(),onActivated=()=>markBack();
+    document.addEventListener('visibilitychange',onVisibility);
+    window.addEventListener('blur',onBlur);
+    window.addEventListener('focus',onFocus);
+    window.addEventListener('pagehide',onPageHide);
+    window.addEventListener('pageshow',onPageShow);
+    tg?.onEvent?.('deactivated',onDeactivated);
+    tg?.onEvent?.('activated',onActivated);
+    return()=>{
+      document.removeEventListener('visibilitychange',onVisibility);
+      window.removeEventListener('blur',onBlur);
+      window.removeEventListener('focus',onFocus);
+      window.removeEventListener('pagehide',onPageHide);
+      window.removeEventListener('pageshow',onPageShow);
+      tg?.offEvent?.('deactivated',onDeactivated);
+      tg?.offEvent?.('activated',onActivated);
+    };
   },[verifyTask]);
   const openTaskUrl=(task:any)=>{const url=String(task?.url||'').trim();if(!url)return false;try{const tg=(window as any).Telegram?.WebApp;let isTelegram=false;try{const u=new URL(url);isTelegram=['t.me','www.t.me','telegram.me','www.telegram.me'].includes(u.hostname.toLowerCase())}catch{}if(task?.task_type==='mini_app'||isTelegram){if(tg?.openTelegramLink){tg.openTelegramLink(url);return true}}if(tg?.openLink){tg.openLink(url);return true}window.open(url,'_blank','noopener,noreferrer');return true}catch{try{window.open(url,'_blank','noopener,noreferrer');return true}catch{return false}}};
   const openVerify=(task:any)=>{setVerifyTask(task);setVerifyElapsed(0);setVerifyRunning(false);setVerifyError('');verifyAccumRef.current=0;verifyHiddenAtRef.current=null};
@@ -62,10 +89,17 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
     try{
       // Register the external-open state BEFORE leaving the app. The backend claim guard expects this.
       await taskApi('check',{task_id:task.id,stage:'begin_external'});
-      const ok=openTaskUrl(task);
-      if(!ok)throw new Error('Could not open this Mini App. Please try again.');
+      // Start the session immediately before opening the Telegram layer.
+      // Some Telegram clients keep the parent Mini App "visible" underneath the layer,
+      // so we cannot wait for visibilitychange/blur before starting the stopwatch.
       verifyHiddenAtRef.current=Date.now();
       setVerifyRunning(true);
+      const ok=openTaskUrl(task);
+      if(!ok){
+        verifyHiddenAtRef.current=null;
+        setVerifyRunning(false);
+        throw new Error('Could not open this Mini App. Please try again.');
+      }
     }catch(e:any){
       verifyHiddenAtRef.current=null;setVerifyRunning(false);
       setVerifyError(String(e?.message||'Could not start verification. Please try again.'));
