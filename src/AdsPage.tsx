@@ -5,6 +5,7 @@ import {AD_PROVIDERS,providerConfig,type AdProvider} from './economy';
 import {SpinEarn} from './SpinEarn';
 import {PromoBox} from './PromoClaim';
 import {AmbassadorHomeCard} from './Ambassador';
+import './styles-earn-cards.css';
 
 type ProviderState={used:number;pending?:number};
 type States=Record<AdProvider,ProviderState>;
