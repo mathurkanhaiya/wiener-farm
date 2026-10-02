@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useState} from 'react';
 import {botTaskApi,taskApi,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {useI18n} from './i18n';
