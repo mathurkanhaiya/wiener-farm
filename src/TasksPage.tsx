@@ -32,9 +32,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
   const [cat,setCat]=useState<'official'|'partner'>(initialCat);
   const [mode,setMode]=useState<'tasks'|'create'|'pending'|'live'|'manage'>('tasks');
   const [botStates,setBotStates]=useState<Record<string,BotState>>({}),[normalStates,setNormalStates]=useState<Record<string,NormalState>>({}),[busy,setBusy]=useState('');
-  const [verifyTask,setVerifyTask]=useState<any>(null),[verifyElapsed,setVerifyElapsed]=useState(0),[verifyRunning,setVerifyRunning]=useState(false),[verifyLaunched,setVerifyLaunched]=useState(false),[verifyError,setVerifyError]=useState('');
-  const verifyAccumRef=useRef(0),verifyHiddenAtRef=useRef<number|null>(null);
-  const VERIFY_SECONDS=15;
+  const [verifyTask,setVerifyTask]=useState<any>(null),[verifyLaunched,setVerifyLaunched]=useState(false),[verifyError,setVerifyError]=useState('');
   const [title,setTitle]=useState(''),[url,setUrl]=useState(''),[reward,setReward]=useState('');
   const done=new Set(data.completed.map(x=>x.task_id)),visibleTasks=data.tasks.filter(tk=>tk.category!=='exclusive');
   const items=visibleTasks.filter(tk=>(tk.category||'official')===cat).sort((a,b)=>Number(done.has(a.id))-Number(done.has(b.id)));
@@ -44,82 +42,43 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
   useEffect(()=>{if(target){setCat(target.category==='partner'?'partner':'official');setMode('tasks');setTimeout(()=>document.getElementById('wf-task-'+target.id)?.scrollIntoView({behavior:'smooth',block:'center'}),120)}},[targetId]);
   useEffect(()=>{const bots=visibleTasks.filter(tk=>tk.verification==='bot_forward'&&!done.has(tk.id));Promise.all(bots.map(async tk=>{try{const s=await botTaskApi('status',{task_id:tk.id});return [tk.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [tk.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
 
-  useEffect(()=>{if(!verifyTask)return;
-    const markAway=()=>{if(verifyHiddenAtRef.current==null)verifyHiddenAtRef.current=Date.now()};
-    const markBack=()=>{
-      if(verifyHiddenAtRef.current!=null){
-        verifyAccumRef.current+=Math.max(0,Date.now()-verifyHiddenAtRef.current);
-        verifyHiddenAtRef.current=null;
-      }
-      const elapsed=Math.min(VERIFY_SECONDS,Math.floor(verifyAccumRef.current/1000));
-      setVerifyElapsed(elapsed);
-      // Returning from the Telegram layer pauses the session so the user can resume.
-      setVerifyRunning(false);
-    };
-    const onVisibility=()=>{if(document.visibilityState==='hidden')markAway();else markBack()};
-    const onBlur=()=>markAway();
-    const onFocus=()=>{if(document.visibilityState==='visible')markBack()};
-    const onPageHide=()=>markAway(),onPageShow=()=>markBack();
-    // Newer Telegram clients can expose explicit Mini App activation state. Use it
-    // when available because a Mini App opened as a Telegram layer may leave
-    // document.visibilityState === 'visible' underneath the layer.
-    const tg=(window as any).Telegram?.WebApp;
-    const onDeactivated=()=>markAway(),onActivated=()=>markBack();
-    document.addEventListener('visibilitychange',onVisibility);
-    window.addEventListener('blur',onBlur);
-    window.addEventListener('focus',onFocus);
-    window.addEventListener('pagehide',onPageHide);
-    window.addEventListener('pageshow',onPageShow);
-    tg?.onEvent?.('deactivated',onDeactivated);
-    tg?.onEvent?.('activated',onActivated);
-    return()=>{
-      document.removeEventListener('visibilitychange',onVisibility);
-      window.removeEventListener('blur',onBlur);
-      window.removeEventListener('focus',onFocus);
-      window.removeEventListener('pagehide',onPageHide);
-      window.removeEventListener('pageshow',onPageShow);
-      tg?.offEvent?.('deactivated',onDeactivated);
-      tg?.offEvent?.('activated',onActivated);
-    };
-  },[verifyTask]);
   const openTaskUrl=(task:any)=>{const url=String(task?.url||'').trim();if(!url)return false;try{const tg=(window as any).Telegram?.WebApp;let isTelegram=false;try{const u=new URL(url);isTelegram=['t.me','www.t.me','telegram.me','www.telegram.me'].includes(u.hostname.toLowerCase())}catch{}if(task?.task_type==='mini_app'||isTelegram){if(tg?.openTelegramLink){tg.openTelegramLink(url);return true}}if(tg?.openLink){tg.openLink(url);return true}window.open(url,'_blank','noopener,noreferrer');return true}catch{try{window.open(url,'_blank','noopener,noreferrer');return true}catch{return false}}};
-  const openVerify=(task:any)=>{setVerifyTask(task);setVerifyElapsed(0);setVerifyRunning(false);setVerifyLaunched(false);setVerifyError('');verifyAccumRef.current=0;verifyHiddenAtRef.current=null};
-  const launchVerify=async()=>{const task=verifyTask;if(!task||busy||verifyElapsed>=VERIFY_SECONDS)return;
+  const openVerify=(task:any)=>{setVerifyTask(task);setVerifyLaunched(normalStates[task.id]==='opened');setVerifyError('')};
+  const launchVerify=async()=>{
+    const task=verifyTask;if(!task||busy||verifyLaunched)return;
     setBusy(task.id);setVerifyError('');
     try{
-      // Register the external-open state BEFORE leaving the app. The backend claim guard expects this.
+      // The server starts the authoritative 15-second verification window here.
+      // Telegram may keep Wiener Farm visible underneath the Mini App layer, so
+      // client visibility events are intentionally NOT used as the source of truth.
       await taskApi('check',{task_id:task.id,stage:'begin_external'});
-      // Start the session immediately before opening the Telegram layer.
-      // Some Telegram clients keep the parent Mini App "visible" underneath the layer,
-      // so we cannot wait for visibilitychange/blur before starting the stopwatch.
-      verifyHiddenAtRef.current=Date.now();
-      setVerifyRunning(true);
       setVerifyLaunched(true);
+      setNormalStates(v=>({...v,[task.id]:'opened'}));
       const ok=openTaskUrl(task);
       if(!ok){
-        verifyHiddenAtRef.current=null;
-        setVerifyRunning(false);
         setVerifyLaunched(false);
+        setNormalStates(v=>({...v,[task.id]:'idle'}));
         throw new Error('Could not open this Mini App. Please try again.');
       }
     }catch(e:any){
-      verifyHiddenAtRef.current=null;setVerifyRunning(false);
-      setVerifyError(String(e?.message||'Could not start verification. Please try again.'));
+      setVerifyError(String(e?.message||'Could not start verification. Please try again.').replace(/_/g,' '));
     }finally{setBusy('')}
   };
-  const closeVerify=()=>{if(verifyRunning)return;setVerifyTask(null);verifyHiddenAtRef.current=null;setVerifyError('')};
+  const closeVerify=()=>{setVerifyTask(null);setVerifyError('')};
   const claimVerify=async(retry=0)=>{
     const task=verifyTask;if(!task||!verifyLaunched||busy)return;
     setBusy(task.id);setVerifyError('');
     try{
       await taskApi('claim',{task_id:task.id});
-      setNormalStates(v=>({...v,[task.id]:'opened'}));setVerifyTask(null);await refresh?.();
+      setNormalStates(v=>({...v,[task.id]:'opened'}));
+      setVerifyTask(null);
+      await refresh?.();
     }catch(e:any){
       const m=String(e?.message||'Task verification failed. Please try again.');
       const wait=m.match(/^wait_(\d+)_seconds$/);
       if(wait&&retry<1){
-        setVerifyError('Finishing verification…');
-        window.setTimeout(()=>claimVerify(retry+1),Number(wait[1])*1000+250);
+        setVerifyError('Verification is still running…');
+        window.setTimeout(()=>claimVerify(retry+1),Number(wait[1])*1000+300);
         return;
       }
       setVerifyError(m.replace(/_/g,' '));
@@ -127,7 +86,6 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
       if(retry===0)setBusy('');
     }
   };
-
   const normalTask=async(task:any)=>{if(busy)return;const opened=normalStates[task.id]==='opened',external=task.verification==='external_visit',mini=task.task_type==='mini_app';try{if(!opened){if(mini){openVerify(task);return}setBusy(task.id);if(external)taskApi('check',{task_id:task.id,stage:'begin_external'}).catch(()=>{});const didOpen=openTaskUrl(task);if(!didOpen){setBusy('');say('Could not open this task. Please try again.');return}setNormalStates(v=>({...v,[task.id]:'opened'}));say(external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':task.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(task.id);await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');await refresh?.()}catch(e:any){const m=String(e?.message||'Task verification failed');say(/^wait_\\d+_seconds$/.test(m)?'Please wait '+(m.match(/\\d+/)?.[0]||'a few')+' more seconds.':m)}finally{setBusy('')}};
   const botAction=async(task:any)=>{if(busy)return;const state=botStates[task.id]||'not_started';try{setBusy(task.id);if(state==='not_started'){const x=await botTaskApi('begin',{task_id:task.id});setBotStates(v=>({...v,[task.id]:'pending'}));say('Forward one message from @'+x.bot_username+' to WIENER bot, then tap CHECK');if(x.url)window.Telegram?.WebApp?.openTelegramLink?.(String(x.url));return}if(state==='pending'){const x=await botTaskApi('status',{task_id:task.id});if(x.verified){setBotStates(v=>({...v,[task.id]:'verified'}));say('Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward the required message, then CHECK.');return}await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');await refresh?.()}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
   const saveDraft=()=>{if(!title.trim()||!url.trim()||!reward.trim()){say('Fill title, destination and reward first.');return}say('Task draft saved.');setTitle('');setUrl('');setReward('');setMode('tasks')};
@@ -165,6 +123,6 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
       <div className="wf-cats"><button className={cat==='official'?'active':''} onClick={()=>setCat('official')}>OFFICIAL</button><button className={cat==='partner'?'active':''} onClick={()=>setCat('partner')}>PARTNER</button></div>
       <section className="wf-list">{items.length?items.map(task=>{const isBot=task.verification==='bot_forward',isExternal=task.verification==='external_visit',isMini=task.task_type==='mini_app',state=botStates[task.id]||'not_started',opened=normalStates[task.id]==='opened',completed=done.has(task.id);const label=completed?'DONE':busy===task.id?'WAIT':isBot?(state==='verified'?'CLAIM':state==='pending'?'CHECK':'START'):(opened?'CLAIM':isMini?'OPEN':isExternal?'OPEN':t('common.join','JOIN'));const doneCount=Number(task.completed_count||0),limit=Number(task.max_completions||0),limitText=limit?Math.max(0,limit-doneCount)+' spots left':'Open task';const typeLabel=isMini?'MINI APP':isBot?'BOT':task.verification==='telegram_member'?'TELEGRAM':isExternal?'LINK':'TASK';const status=isBot&&state==='pending'?'Waiting for verification':isBot&&state==='verified'?'Reward ready':opened?'Ready to claim':'';return <div className={`wf-row ${targetId===task.id?'target':''}`} id={`wf-task-${task.id}`} key={task.id}><div className="wf-avatar"><TaskAvatar task={task} active={completed||state==='verified'}/></div><div className="wf-info"><div className="wf-title"><h3>{task.title}</h3><span className="wf-pill">{typeLabel}</span></div>{task.description&&<p className="wf-desc">{task.description}</p>}<div className="wf-meta"><span className="wf-reward">+{task.reward} W</span><span>•</span><span>{limitText}</span></div>{status&&<div className="wf-status">{status}</div>}</div><button className="wf-action" disabled={completed||busy===task.id} onClick={()=>isBot?botAction(task):normalTask(task)}>{label}</button></div>}) : <div style={{padding:'24px',textAlign:'center',color:'rgba(228,255,241,.4)',fontSize:11}}>No {cat} tasks right now.</div>}</section>
     </>}
-      {verifyTask&&<div className="wf-task-verify-backdrop" onClick={e=>{if(e.target===e.currentTarget&&!verifyRunning)closeVerify()}}><section className="wf-task-verify" role="dialog" aria-modal="true"><div className="grab"/><button className="verify-close" type="button" disabled={verifyRunning} onClick={closeVerify}>×</button><h2>Verify Mini App Task</h2><div className="verify-task-card"><span className="verify-pill">🎮 {String(verifyTask?.title||'Mini App').slice(0,28)}</span><span className="verify-reward">+{verifyTask.reward} W</span><div className="verify-title">{verifyTask.title}</div><div className="verify-desc">{verifyTask.description||'Be active'}</div></div><div className="verify-proof"><b>◷ Proof of Activity</b><p>Launch the Mini App once and spend at least 15 seconds there. After launch, you do not need to open it again. Return here and tap CLAIM.</p></div>{verifyError&&<div className="verify-error" role="alert">{verifyError.replace(/_/g,' ')}</div>}{!verifyLaunched?<><button className="verify-launch" type="button" disabled={busy===verifyTask.id||verifyRunning} onClick={launchVerify}>{busy===verifyTask.id?'STARTING…':'Launch Mini App · 15s'}</button><div className="verify-remaining">Launch once. Then return and claim.</div></>:<button className="verify-claim" type="button" disabled={busy===verifyTask.id} onClick={()=>claimVerify()}>{busy===verifyTask.id?'VERIFYING…':'CLAIM +'+verifyTask.reward+' W'}</button>}</section></div>}
+      {verifyTask&&<div className="wf-task-verify-backdrop" onClick={e=>{if(e.target===e.currentTarget)closeVerify()}}><section className="wf-task-verify" role="dialog" aria-modal="true"><div className="grab"/><button className="verify-close" type="button" onClick={closeVerify}>×</button><h2>Verify Mini App Task</h2><div className="verify-task-card"><span className="verify-pill">🎮 {String(verifyTask?.title||'Mini App').slice(0,28)}</span><span className="verify-reward">+{verifyTask.reward} W</span><div className="verify-title">{verifyTask.title}</div><div className="verify-desc">{verifyTask.description||'Be active'}</div></div><div className="verify-proof"><b>◷ Proof of Activity</b><p>Open the Mini App once and stay there for at least 15 seconds. When you return to Wiener Farm, tap CLAIM. You will never be asked to launch it again for this task.</p></div>{verifyError&&<div className="verify-error" role="alert">{verifyError}</div>}{!verifyLaunched?<><button className="verify-launch" type="button" disabled={busy===verifyTask.id} onClick={launchVerify}>{busy===verifyTask.id?'STARTING…':'Launch Mini App · 15s'}</button><div className="verify-remaining">Launch once. Then return here and tap CLAIM.</div></>:<><button className="verify-claim" type="button" disabled={busy===verifyTask.id} onClick={()=>claimVerify()}>{busy===verifyTask.id?'CHECKING…':'CLAIM +'+verifyTask.reward+' W'}</button><div className="verify-remaining">Mini App launched. Tap CLAIM when you return.</div></>}</section></div>}
   </main>;
 }
