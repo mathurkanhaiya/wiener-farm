@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import createAdHandler from 'monetag-tg-sdk';
-import {adApi,adUsageApi,providerAdApi,type Snapshot} from './lib';
+import {adApi,adUsageApi,providerAdApi,feedback,type Snapshot} from './lib';
 import {AD_PROVIDERS,providerConfig,type AdProvider} from './economy';
 import {SpinEarn} from './SpinEarn';
 import {PromoBox} from './PromoClaim';
@@ -18,7 +18,7 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
  const [states,setStates]=useState<States>(emptyStates);
  const [busy,setBusy]=useState<AdProvider|null>(null);
  const [ready,setReady]=useState(false);
- const [now,setNow]=useState(Date.now());
+ const [now,setNow]=useState(Date.now()),[cooldownUntil,setCooldownUntil]=useState(0);
  const monetagRef=useRef<any>(null);
  const adexiumRef=useRef<any>(null);
  const adexiumTaskRef=useRef<string>('');
@@ -85,15 +85,15 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
  const watch=async(provider:AdProvider)=>{
    if(busy)return;
    const cfg=configs[provider],st=states[provider],limit=Math.max(0,Number(cfg.limit||AD_PROVIDERS[provider].limit));
-   if(st.used>=limit){say('ℹ️ Daily ad limit reached');return}
+   if(st.used>=limit){feedback('error');say('ℹ️ Daily ad limit reached');return}if(now<cooldownUntil){feedback('error');say(`Please wait ${Math.ceil((cooldownUntil-now)/1000)}s before watching another ad.`);return}
    try{
      setBusy(provider);
      if(provider==='adsgram')await watchAdsGram();
      else if(provider==='monetag')await watchMonetag();
      else await watchAdexium();
-     say(`✅ Ad completed · +${cfg.reward} WIENER`);
+     setCooldownUntil(Date.now()+10000);feedback('success');say(`✅ Ad completed · +${cfg.reward} WIENER`);
      await sync();await refresh?.();
-   }catch(e:any){say(String(e?.message||'Ad was not completed.'))}
+   }catch(e:any){feedback('error');say(String(e?.message||'Ad was not completed.'))}
    finally{setBusy(null)}
  };
 
@@ -107,8 +107,8 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
    <div className="wf-earn-ad-grid">
     {cards.map(({key,cfg,meta,state})=>{
       const limit=Math.max(0,Number(cfg.limit||meta.limit)),atLimit=state.used>=limit;
-      const label=atLimit?'LIMIT':busy===key?'OPENING…':'WATCH';
-      return <button className="wf-earn-ad" key={key} disabled={!!busy||atLimit||!cfg.blockId} onClick={()=>watch(key)}>
+      const onCooldown=now<cooldownUntil;const label=atLimit?'LIMIT':onCooldown?`WAIT ${Math.ceil((cooldownUntil-now)/1000)}S`:busy===key?'OPENING…':'WATCH';
+      return <button className="wf-earn-ad" key={key} disabled={!!busy||atLimit||!cfg.blockId||onCooldown} onClick={()=>watch(key)}>
        <div className="wf-earn-ad-top"><span>{meta.label.toUpperCase()}</span><b>{state.used}/{limit}</b></div>
        <img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
        <div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{cfg.reward}</b><small>WIENER</small></div>
@@ -117,7 +117,7 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
       </button>
     })}
    </div>
-   <div className="wf-earn-note">Each provider has its own reward, counter and daily limit. Watching one provider never consumes another provider's quota.</div>
+   <div className="wf-earn-note">{cooldownUntil>now&&<b className="wf-earn-cooldown">Next ad in {Math.ceil((cooldownUntil-now)/1000)}s</b>}Each provider has its own reward, counter and daily limit. Watching one provider never consumes another provider's quota.</div>
   </section>
   <section className="wf-earn-section wf-earn-spin-section"><div className="wf-earn-section-head"><span><i/>SPIN &amp; EARN</span><small>Daily + bonus spins</small></div><div className="wf-earn-module"><SpinEarn refresh={refresh} say={say}/></div></section>
   <section className="wf-earn-section wf-earn-promo-section"><div className="wf-earn-section-head"><span><i/>PROMO CODE</span><small>Claim a reward</small></div><div className="wf-earn-module"><PromoBox data={data} refresh={refresh} say={say}/></div></section>
