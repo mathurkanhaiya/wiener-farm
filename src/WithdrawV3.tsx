@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {TonConnectUI} from '@tonconnect/ui';
-import {date,money,tonWalletApi,type Snapshot,withdrawApi} from './lib';
+import {date,money,tonWalletApi,type Snapshot,withdrawApi,feedback} from './lib';
 import {WIENER_PER_USDT,WITHDRAWAL_FEE_USDT,WITHDRAWAL_MIN_USDT} from './economy';
 
 type Method={method_key:string;label:string;network:'TON'|'BEP20'|'Polygon';enabled:boolean;minimum_usdt:number;fee_usdt:number;sort_order:number};
@@ -36,7 +36,7 @@ export function WalletV2({data,setTab,refresh,say}:{data:Snapshot;setTab:any;ref
  const connect=async()=>{try{setTonBusy(true);setMessage('');await getTonUI().openModal()}catch(e:any){setMessage(String(e.message||e))}finally{setTonBusy(false)}};
  const disconnect=async()=>{try{setTonBusy(true);await getTonUI().disconnect();await tonWalletApi('unbind');setTonWallet('');setTonProvider('');setStep('wallet');await load(false)}catch(e:any){setMessage(String(e.message||e).replace(/_/g,' '))}finally{setTonBusy(false)}};
  const quick=(v:'min'|'25'|'50'|'max')=>{if(!method)return;const minW=Math.ceil(minimumUsdt*WIENER_RATE),raw=v==='min'?minW:v==='25'?balance*.25:v==='50'?balance*.5:balance;setAmount(String(Math.max(0,Math.floor(raw))))};
- const submit=async()=>{if(!canAmount||busy)return;try{setBusy(true);setMessage('');const x=isGram?await tonWalletApi('withdraw',{amount_wiener:entered}):await withdrawApi('request',{method_key:method?.method_key,amount_usdt:usdValue,wallet:destination});setBalance(Number(x.balance??balance));setHistory(p=>x.withdrawal?[x.withdrawal,...p]:p);setHasPending(true);setAmount('');setWallet('');setStep('wallet');if(x.ton_usd)setTonUsd(Number(x.ton_usd));setMessage('✅ Gram (TON) withdrawal request created. Status: Pending')}catch(e:any){const raw=String(e.message||e);setMessage(raw.includes('ton_price_unavailable')?'Live TON price is temporarily unavailable. Please try again shortly.':raw.replace(/_/g,' '))}finally{setBusy(false)}};
+ const submit=async()=>{if(!canAmount||busy)return;try{setBusy(true);setMessage('');feedback('confirm');const x=isGram?await tonWalletApi('withdraw',{amount_wiener:entered}):await withdrawApi('request',{method_key:method?.method_key,amount_usdt:usdValue,wallet:destination});setBalance(Number(x.balance??balance));setHistory(p=>x.withdrawal?[x.withdrawal,...p]:p);setHasPending(true);setAmount('');setWallet('');setStep('wallet');if(x.ton_usd)setTonUsd(Number(x.ton_usd));setMessage(`✅ ${isGram?'Gram (TON)':'USDT BEP20'} withdrawal request created. Status: Pending`);feedback('success')}catch(e:any){const raw=String(e.message||e);setMessage(raw.includes('ton_price_unavailable')?'Live TON price is temporarily unavailable. Please try again shortly.':raw.replace(/_/g,' '));feedback('error')}finally{setBusy(false)}};
  const progress=['Wallet','WIENER','Review'],idx=step==='wallet'?0:step==='amount'?1:2;
 
  return <div className="wf-withdraw-new">
