@@ -143,3 +143,5 @@
 @media(prefers-reduced-motion:reduce){
   .wf-earn-spin-section .spin-earn-card:after{transform:translateY(-50%)!important;}
 }
+
+.wf-earn-cooldown{display:inline-flex;margin:0 6px 4px 0;padding:4px 7px;border-radius:999px;background:rgba(255,197,76,.08);border:1px solid rgba(255,197,76,.12);color:#ffd878;font-size:8px;letter-spacing:.04em}
