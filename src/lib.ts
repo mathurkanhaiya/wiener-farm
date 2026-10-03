@@ -38,6 +38,28 @@ function sanitizeAdminSettings(input:any){if(!input||typeof input!=='object'||Ar
 export function hapticImpact(style:'light'|'medium'|'heavy'|'rigid'|'soft'='light'){try{(window.Telegram?.WebApp as any)?.HapticFeedback?.impactOccurred?.(style)}catch{}}
 export function hapticSelection(){try{(window.Telegram?.WebApp as any)?.HapticFeedback?.selectionChanged?.()}catch{}}
 export function hapticNotify(type:'success'|'warning'|'error'){try{(window.Telegram?.WebApp as any)?.HapticFeedback?.notificationOccurred?.(type)}catch{}}
+type UiFeedback='tap'|'success'|'error'|'confirm';
+let audioCtx:AudioContext|null=null;
+function getAudioContext(){try{const Ctx=(window.AudioContext||(window as any).webkitAudioContext);if(!Ctx)return null;audioCtx=audioCtx||new Ctx();if(audioCtx.state==='suspended')void audioCtx.resume();return audioCtx}catch{return null}}
+export function playUiSound(kind:UiFeedback='tap'){
+  try{
+    const ctx=getAudioContext();if(!ctx)return;
+    const now=ctx.currentTime;
+    const notes=kind==='success'?[660,880]:kind==='error'?[220,165]:kind==='confirm'?[520,780]:[420];
+    notes.forEach((freq,i)=>{
+      const t=now+i*.055,o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.setValueAtTime(freq,t);
+      g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(kind==='tap'?.018:.026,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.07);
+      o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.08);
+    });
+  }catch{}
+}
+export function feedback(kind:UiFeedback='tap'){
+  if(kind==='success')hapticNotify('success');
+  else if(kind==='error')hapticNotify('error');
+  else hapticImpact(kind==='confirm'?'medium':'light');
+  playUiSound(kind);
+}
 export const date=(v:string)=>v?new Date(v).toLocaleString():'';export const token=()=> 'WIENER';
 export function cleanUserText(v:any){return String(v||'').replace(/\bFarming\b/gi,'WIENER').replace(/\bFarm\b/gi,'WIENER').replace(/\bFARM\b/g,'WIENER')}
 export function getInitData(){return window.Telegram?.WebApp?.initData||''}
