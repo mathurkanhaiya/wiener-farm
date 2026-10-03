@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
-import type {Snapshot,Tab} from './lib';import {money} from './lib';import {AnimatedIcon,type IconName} from './icons';import {LANGUAGES,useI18n,type LangCode} from './i18n';
+import type {Snapshot,Tab} from './lib';import {money,feedback} from './lib';import {AnimatedIcon,type IconName} from './icons';import {LANGUAGES,useI18n,type LangCode} from './i18n';
 import './nav-six.css';
 import './styles-language.css';
 import './maintenance.css';
@@ -89,8 +89,8 @@ export function Brand({data}:{data:Snapshot}){ return null; }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
   const{t}=useI18n();
   const items:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads','Earn','bolt'],['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['profile','Me','wallet']];
-  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>setTab(k)}><span className={k==='profile'?'me-nav-icon':''}>{k==='profile'?<img src="https://pixlinkhost.vercel.app/i/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
-  return <nav className="bottom-nav game-nav">{items.map(item)}{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>setTab('admin')}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
+  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>{feedback('tap');setTab(k)}}><span className={k==='profile'?'me-nav-icon':''}>{k==='profile'?<img src="https://pixlinkhost.vercel.app/i/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
+  return <nav className="bottom-nav game-nav">{items.map(item)}{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>{feedback('tap');setTab('admin')}}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
 }
 
 
