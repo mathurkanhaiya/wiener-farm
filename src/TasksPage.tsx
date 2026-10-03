@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {botTaskApi,taskApi,type Snapshot} from './lib';
+import {botTaskApi,taskApi,feedback,hapticSelection,type Snapshot} from './lib';
 import {AnimatedIcon} from './icons';
 import {useI18n} from './i18n';
 
@@ -43,7 +43,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
   useEffect(()=>{const bots=visibleTasks.filter(tk=>tk.verification==='bot_forward'&&!done.has(tk.id));Promise.all(bots.map(async tk=>{try{const s=await botTaskApi('status',{task_id:tk.id});return [tk.id,(s.verified?'verified':s.status==='pending'?'pending':'not_started') as BotState] as const}catch{return [tk.id,'not_started' as BotState] as const}})).then(rows=>setBotStates(v=>({...v,...Object.fromEntries(rows)})))},[data.tasks.length,data.completed.length]);
 
   const openTaskUrl=(task:any)=>{const url=String(task?.url||'').trim();if(!url)return false;try{const tg=(window as any).Telegram?.WebApp;let isTelegram=false;try{const u=new URL(url);isTelegram=['t.me','www.t.me','telegram.me','www.telegram.me'].includes(u.hostname.toLowerCase())}catch{}if(task?.task_type==='mini_app'||isTelegram){if(tg?.openTelegramLink){tg.openTelegramLink(url);return true}}if(tg?.openLink){tg.openLink(url);return true}window.open(url,'_blank','noopener,noreferrer');return true}catch{try{window.open(url,'_blank','noopener,noreferrer');return true}catch{return false}}};
-  const openVerify=(task:any)=>{setVerifyTask(task);setVerifyLaunched(normalStates[task.id]==='opened');setVerifyError('')};
+  const openVerify=(task:any)=>{hapticSelection();setVerifyTask(task);setVerifyLaunched(normalStates[task.id]==='opened');setVerifyError('')};
   const launchVerify=async()=>{
     const task=verifyTask;if(!task||busy||verifyLaunched)return;
     setBusy(task.id);setVerifyError('');
@@ -52,7 +52,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
       // Telegram may keep Wiener Farm visible underneath the Mini App layer, so
       // client visibility events are intentionally NOT used as the source of truth.
       await taskApi('check',{task_id:task.id,stage:'begin_external'});
-      setVerifyLaunched(true);
+      setVerifyLaunched(true);feedback('confirm');
       setNormalStates(v=>({...v,[task.id]:'opened'}));
       const ok=openTaskUrl(task);
       if(!ok){
@@ -61,7 +61,7 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
         throw new Error('Could not open this Mini App. Please try again.');
       }
     }catch(e:any){
-      setVerifyError(String(e?.message||'Could not start verification. Please try again.').replace(/_/g,' '));
+      setVerifyError(String(e?.message||'Could not start verification. Please try again.').replace(/_/g,' '));feedback('error');
     }finally{setBusy('')}
   };
   const closeVerify=()=>{setVerifyTask(null);setVerifyError('')};
@@ -81,13 +81,13 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
         window.setTimeout(()=>claimVerify(retry+1),Number(wait[1])*1000+300);
         return;
       }
-      setVerifyError(m.replace(/_/g,' '));
+      setVerifyError(m.replace(/_/g,' '));feedback('error');
     }finally{
       if(retry===0)setBusy('');
     }
   };
-  const normalTask=async(task:any)=>{if(busy)return;const opened=normalStates[task.id]==='opened',external=task.verification==='external_visit',mini=task.task_type==='mini_app';try{if(!opened){if(mini){openVerify(task);return}setBusy(task.id);if(external)taskApi('check',{task_id:task.id,stage:'begin_external'}).catch(()=>{});const didOpen=openTaskUrl(task);if(!didOpen){setBusy('');say('Could not open this task. Please try again.');return}setNormalStates(v=>({...v,[task.id]:'opened'}));say(external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':task.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(task.id);await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');await refresh?.()}catch(e:any){const m=String(e?.message||'Task verification failed');say(/^wait_\\d+_seconds$/.test(m)?'Please wait '+(m.match(/\\d+/)?.[0]||'a few')+' more seconds.':m)}finally{setBusy('')}};
-  const botAction=async(task:any)=>{if(busy)return;const state=botStates[task.id]||'not_started';try{setBusy(task.id);if(state==='not_started'){const x=await botTaskApi('begin',{task_id:task.id});setBotStates(v=>({...v,[task.id]:'pending'}));say('Forward one message from @'+x.bot_username+' to WIENER bot, then tap CHECK');if(x.url)window.Telegram?.WebApp?.openTelegramLink?.(String(x.url));return}if(state==='pending'){const x=await botTaskApi('status',{task_id:task.id});if(x.verified){setBotStates(v=>({...v,[task.id]:'verified'}));say('Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward the required message, then CHECK.');return}await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');await refresh?.()}catch(e:any){say(e.message||'Verification failed')}finally{setBusy('')}};
+  const normalTask=async(task:any)=>{if(busy)return;hapticSelection();const opened=normalStates[task.id]==='opened',external=task.verification==='external_visit',mini=task.task_type==='mini_app';try{if(!opened){if(mini){openVerify(task);return}setBusy(task.id);if(external)taskApi('check',{task_id:task.id,stage:'begin_external'}).catch(()=>{});const didOpen=openTaskUrl(task);if(!didOpen){setBusy('');say('Could not open this task. Please try again.');return}setNormalStates(v=>({...v,[task.id]:'opened'}));say(external?'Task opened. Stay at least 15 seconds, then return and tap CLAIM.':task.verification==='telegram_member'?'Join the channel/group, then return and tap CLAIM':'Open the task, then tap CLAIM');return}setBusy(task.id);await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');feedback('success');await refresh?.()}catch(e:any){const m=String(e?.message||'Task verification failed');say(/^wait_\\d+_seconds$/.test(m)?'Please wait '+(m.match(/\\d+/)?.[0]||'a few')+' more seconds.':m)}finally{setBusy('')}};
+  const botAction=async(task:any)=>{if(busy)return;const state=botStates[task.id]||'not_started';try{setBusy(task.id);if(state==='not_started'){const x=await botTaskApi('begin',{task_id:task.id});setBotStates(v=>({...v,[task.id]:'pending'}));feedback('confirm');say('Forward one message from @'+x.bot_username+' to WIENER bot, then tap CHECK');if(x.url)window.Telegram?.WebApp?.openTelegramLink?.(String(x.url));return}if(state==='pending'){const x=await botTaskApi('status',{task_id:task.id});if(x.verified){setBotStates(v=>({...v,[task.id]:'verified'}));feedback('success');say('Verified — tap CLAIM to receive your reward')}else say('Not verified yet. Forward the required message, then CHECK.');return}await taskApi('claim',{task_id:task.id});say('+'+task.reward+' W');feedback('success');await refresh?.()}catch(e:any){feedback('error');say(e.message||'Verification failed')}finally{setBusy('')}};
   const saveDraft=()=>{if(!title.trim()||!url.trim()||!reward.trim()){say('Fill title, destination and reward first.');return}say('Task draft saved.');setTitle('');setUrl('');setReward('');setMode('tasks')};
 
   return <main className="wf-task-v2">
