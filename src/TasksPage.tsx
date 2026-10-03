@@ -59,6 +59,12 @@ export function Tasks({data,run,say,refresh}:{data:Snapshot;run:any;say:(s:strin
     catch(e:any){feedback('error');say(String(e?.message||e))}
     finally{setBusy('')}
   };
+  useEffect(()=>{
+    if(!detailTask||detailTask.verification!=='telegram_member')return;
+    const retry=()=>{if(document.visibilityState==='visible')void verifyChannel(detailTask)};
+    window.addEventListener('focus',retry);window.addEventListener('pageshow',retry);document.addEventListener('visibilitychange',retry);
+    return()=>{window.removeEventListener('focus',retry);window.removeEventListener('pageshow',retry);document.removeEventListener('visibilitychange',retry)};
+  },[detailTask?.id]);
   const claimDetail=async(task:any)=>{
     if(!task||busy)return;
     setBusy(task.id);
