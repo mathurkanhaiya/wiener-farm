@@ -1,11 +1,11 @@
 import {useEffect,useState} from 'react';
-import {date,money,withdrawApi} from './lib';
+import {date,money,bscTreasuryApi} from './lib';
 
 export function BscTreasuryAdmin({say}:{say:any}){
  const [status,setStatus]=useState<any>(null),[rows,setRows]=useState<any[]>([]),[busy,setBusy]=useState(false);
- const load=async()=>{try{setBusy(true);const [s,r]=await Promise.all([withdrawApi('bsc_treasury',{action:'status'}),withdrawApi('bsc_treasury',{action:'withdrawals'})]);setStatus(s);setRows(Array.isArray(r?.withdrawals)?r.withdrawals:[])}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
+ const load=async()=>{try{setBusy(true);const [s,r]=await Promise.all([bscTreasuryApi('status'),bscTreasuryApi('withdrawals')]);setStatus(s);setRows(Array.isArray(r?.withdrawals)?r.withdrawals:[])}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
  useEffect(()=>{void load()},[]);
- const retry=async(id:string)=>{try{setBusy(true);await withdrawApi('bsc_treasury',{action:'retry',withdrawal_id:id});say?.('BSC payout retry started');await load()}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
+ const retry=async(id:string)=>{try{setBusy(true);await bscTreasuryApi('retry',{withdrawal_id:id});say?.('BSC payout retry started');await load()}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
  const pending=rows.filter(x=>['pending','processing'].includes(String(x.status))).length;
  return <section className="adminx-panel">
   <div className="adminx-panel-head"><div><span>BSC TREASURY</span><h3>USDT · BEP20</h3><p>Independent BNB Smart Chain treasury. Gram/TON is never used here.</p></div><button onClick={()=>void load()} disabled={busy}>{busy?'…':'↻'}</button></div>
