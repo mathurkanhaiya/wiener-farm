@@ -1,0 +1,18 @@
+import {useEffect,useState} from 'react';
+import {date,money,bscTreasuryApi} from './lib';
+
+export function BscTreasuryAdmin({say}:{say:any}){
+ const [status,setStatus]=useState<any>(null),[rows,setRows]=useState<any[]>([]),[busy,setBusy]=useState(false);
+ const load=async()=>{try{setBusy(true);const [s,r]=await Promise.all([bscTreasuryApi('status'),bscTreasuryApi('withdrawals')]);setStatus(s);setRows(Array.isArray(r?.withdrawals)?r.withdrawals:[])}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
+ useEffect(()=>{void load()},[]);
+ const retry=async(id:string)=>{try{setBusy(true);await bscTreasuryApi('retry',{withdrawal_id:id});say?.('BSC payout retry started');await load()}catch(e:any){say?.(String(e?.message||e))}finally{setBusy(false)}};
+ const pending=rows.filter(x=>['pending','processing'].includes(String(x.status))).length;
+ return <section className="adminx-panel">
+  <div className="adminx-panel-head"><div><span>BSC TREASURY</span><h3>USDT · BEP20</h3><p>Independent BNB Smart Chain treasury. Gram/TON is never used here.</p></div><button onClick={()=>void load()} disabled={busy}>{busy?'…':'↻'}</button></div>
+  <div className="adminx-kpis mini"><Kpi label="Treasury" value={status?.ready?'🟢':'🔴'} note={status?.ready?'Ready':'Unavailable'}/><Kpi label="USDT" value={status?.usdt_balance==null?'—':money(status.usdt_balance,6)} note="treasury balance"/><Kpi label="BNB" value={status?.bnb_balance==null?'—':money(status.bnb_balance,6)} note="gas balance"/><Kpi label="Pending" value={pending} note={rows.filter(x=>x.status==='processing').length+' processing'}/></div>
+  <div className="adminx-grid">{[['Network',status?.network_name||'BSC Mainnet / BEP20'],['Chain ID',String(status?.chain_id??56)],['Treasury',status?.treasury_address||'Not configured'],['USDT contract',status?.usdt_contract||'Not configured'],['USDT decimals',String(status?.usdt_decimals??'—')]].map(([k,v])=><div key={String(k)} className="adminx-panel" style={{margin:0,padding:12}}><small style={{opacity:.5}}>{k}</small><b style={{display:'block',marginTop:4,fontSize:11,wordBreak:'break-all'}}>{String(v)}</b></div>)}</div>
+  {!status?.ready&&<div className="adminx-alerts"><div><i>!</i><span>BSC treasury unavailable: {String(status?.error||'Configure BSC RPC, treasury address and private key.')}</span></div></div>}
+  <h4 className="adminx-subtitle">Payouts · {rows.length}</h4><div className="adminx-list">{rows.length?rows.map(w=><div key={w.id} style={{display:'block'}}><div style={{display:'flex',justifyContent:'space-between',gap:10}}><div><b>{money(w.receive_usdt,6)} USDT</b><small>UID {w.telegram_id} · {date(w.created_at)}</small></div><span className={'aui-badge '+(w.status==='paid'?'good':w.status==='failed'?'bad':'')}>{String(w.status||'').toUpperCase()}</span></div><small style={{display:'block',marginTop:5,wordBreak:'break-all'}}>Recipient: {w.wallet_address}</small><small style={{display:'block',marginTop:3}}>Gateway: USDT (BEP20) · {w.network} · State: {w.payout_state||'—'}</small>{w.payout_error&&<small style={{display:'block',marginTop:3}}>Error: {w.payout_error}</small>}{w.tx_hash&&<button className="adminx-primary" style={{marginTop:7}} onClick={()=>window.Telegram?.WebApp?.openLink?.('https://bscscan.com/tx/'+w.tx_hash)}>OPEN BSC TX</button>}{w.status==='failed'&&<button className="adminx-primary" style={{marginTop:7}} disabled={busy} onClick={()=>void retry(w.id)}>RETRY PAYOUT</button>}</div>):<div className="adminx-empty">No BSC withdrawals yet.</div>}</div>
+ </section>
+}
+function Kpi({label,value,note}:{label:string;value:any;note:string}){return <div><small>{label}</small><b>{value}</b><span>{note}</span></div>}

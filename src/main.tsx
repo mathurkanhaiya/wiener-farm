@@ -2,6 +2,7 @@ import './adsgramGuard';
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App';
+import {triggerHaptic} from './lib';
 import {I18nProvider} from './i18n';
 import {LocalizedSurface} from './LocalizedSurface';
 import {StabilityLayer} from './StabilityLayer';
@@ -80,6 +81,17 @@ const boot=async()=>{
 };
 
 void boot();
+if(typeof window!=='undefined'){
+  const onPointerDown=(event:PointerEvent)=>{
+    const target=event.target as HTMLElement|null;
+    const control=target?.closest('button,a,[role="button"],input[type="checkbox"],input[type="radio"],select');
+    if(!control)return;
+    if(control.hasAttribute('disabled')||control.getAttribute('aria-disabled')==='true')return;
+    if(control.matches('input[type="text"],input[type="number"],input[type="email"],textarea,[contenteditable="true"]'))return;
+    triggerHaptic('light');
+  };
+  window.addEventListener('pointerdown',onPointerDown,{passive:true});
+}
 
 // Do not block the first app render on remote animated WebP downloads.
 // Start warming the animation cache only after the UI is mounted.
