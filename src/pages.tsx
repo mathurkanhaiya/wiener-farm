@@ -84,7 +84,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
       <span className="wf-feature-arrow">›</span>
     </button>
 
-    <button className="wf-feature-card" onClick={()=>setTab('ads')}>
+    <button className="wf-feature-card" onClick={()=>setTab('quick')}>
       <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/ztSi1qACtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
         <b>Quick Tasks</b>
