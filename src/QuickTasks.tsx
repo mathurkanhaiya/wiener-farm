@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {feedback,quickTaskApi} from './lib';
 
 type QType='website'|'ad_provider'|'comment';
@@ -7,7 +7,7 @@ type QTask={id:string;type:QType;title:string;description?:string;reward:number;
 type Attempt={attemptId:string;taskId:string;status:QStatus;generatedComment?:string|null;targetGroup?:string|null;verificationDuration?:number};
 
 const icon=(t:QType)=>t==='comment'?'💬':t==='ad_provider'?'📺':'🌐';
-const card:React.CSSProperties={border:'1px solid rgba(108,235,170,.13)',background:'linear-gradient(145deg,rgba(13,54,37,.68),rgba(5,24,18,.88))',borderRadius:18,padding:12};
+const card:CSSProperties={border:'1px solid rgba(108,235,170,.13)',background:'linear-gradient(145deg,rgba(13,54,37,.68),rgba(5,24,18,.88))',borderRadius:18,padding:12};
 const btn:React.CSSProperties={border:0,borderRadius:11,padding:'10px 12px',background:'linear-gradient(135deg,#62e69d,#9de56d)',color:'#052016',fontSize:9,fontWeight:900,letterSpacing:'.05em'};
 
 function openExternal(url:string){try{const tg:any=window.Telegram?.WebApp;const tgUrl=/^(https?:\/\/)?(www\.)?(t\.me|telegram\.me)\//i.test(url);if(tgUrl&&tg?.openTelegramLink){tg.openTelegramLink(url);return true}if(tg?.openLink){tg.openLink(url);return true}window.open(url,'_blank','noopener,noreferrer');return true}catch{return false}}
