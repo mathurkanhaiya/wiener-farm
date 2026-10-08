@@ -78,8 +78,6 @@ async function bscInitV121(){
 }
 async function bscStatusV121(){
  try{const x=await bscInitV121(),[bnb,tok,dec,sym]=await Promise.all([x.provider.getBalance(x.address),x.contract.balanceOf(x.address),x.contract.decimals(),x.contract.symbol()]);return{ready:true,network:"BEP20",network_name:"BSC Mainnet / BEP20",chain_id:56,treasury_address:x.address,usdt_contract:x.token,usdt_decimals:Number(dec),usdt_symbol:String(sym||"USDT"),bnb_balance:x.ethers.formatEther(bnb),usdt_balance:x.ethers.formatUnits(tok,Number(dec)),explorer_url:BSC_EXPLORER_V121}}catch(e){return{ready:false,network:"BEP20",network_name:"BSC Mainnet / BEP20",chain_id:56,treasury_address:String(process.env.BSC_TREASURY_ADDRESS||""),usdt_contract:String(process.env.BSC_USDT_CONTRACT||BSC_USDT_V121),explorer_url:BSC_EXPLORER_V121,error:String(e?.message||e)}}}
-async function bscStatusV121(){
- try{const x=await bscInitV121(),[bnb,tok,dec,sym]=await Promise.all([x.provider.getBalance(x.address),x.contract.balanceOf(x.address),x.contract.decimals(),x.contract.symbol()]);return{ready:true,network:"BEP20",network_name:"BSC Mainnet / BEP20",chain_id:56,treasury_address:x.address,usdt_contract:x.token,usdt_decimals:Number(dec),usdt_symbol:String(sym||"USDT"),bnb_balance:x.ethers.formatEther(bnb),usdt_balance:x.ethers.formatUnits(tok,Number(dec)),explorer_url:BSC_EXPLORER_V121}}catch(e){return{ready:false,network:"BEP20",network_name:"BSC Mainnet / BEP20",chain_id:56,treasury_address:String(process.env.BSC_TREASURY_ADDRESS||""),usdt_contract:String(process.env.BSC_USDT_CONTRACT||BSC_USDT_V121),explorer_url:BSC_EXPLORER_V121,error:String(e?.message||e)}}}
 function bscUnitsV121(raw,d){const s=String(raw).trim(),q=s.split(".");if(!/^\d+(\.\d+)?$/.test(s))throw new Error("invalid_usdt_amount");const f=q[1]||"";if(f.length>d&&/[^0]/.test(f.slice(d)))throw new Error("usdt_precision_too_high");return BigInt(q[0])*(10n**BigInt(d))+BigInt((f+"0".repeat(d)).slice(0,d)||"0")}
 async function bscCreateV121(req,res){
  const b=req.body||{},u=await edgeUser(b),uid=Number(u?.id||0);if(String(b.method_key||"")!=="usdt_bep20")return false;
@@ -121,6 +119,9 @@ s=s.replace(anchor,code+"\n"+anchor,1)
 p.write_text(s)
 PY
 python3 /tmp/wiener-v121-bsc.py "$BACKEND"
+# Refuse any accidental duplicate V121 declarations before restart.
+COUNT_STATUS=$(grep -c '^async function bscStatusV121' "$BACKEND" || true)
+[[ "$COUNT_STATUS" == "1" ]] || { echo "ERROR: expected exactly one bscStatusV121 declaration, found $COUNT_STATUS" >&2; exit 1; }
 node --check "$BACKEND"
 pm2 restart "$PM2_APP" --update-env
 sleep 3
