@@ -5,7 +5,7 @@ import './nav-six.css';
 import './styles-language.css';
 import './maintenance.css';
 
-const WIENER_LOGO='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" loading="eager" decoding="sync" fetchPriority="high" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
+const WIENER_LOGO='/api/host/uRiwapMRiQ';function WienerLogo({size=42}:{size?:number}){return <img src={WIENER_LOGO} alt="WIENER Farm" loading="eager" decoding="sync" fetchPriority="high" style={{width:size,height:size,objectFit:'cover',display:'block',borderRadius:'50%'}}/>}
 export {Splash} from './Splash';
 export function OpenTelegram(){const{t}=useI18n();return <div className="center-screen"><WienerLogo size={108}/><h1>WIENER</h1><p>This Mini App uses signed Telegram authentication. Open it from <b>@WienerDogeFarmBot</b>.</p><a className="primary linkbtn" href="https://t.me/WienerDogeFarmBot">{t('system.openTelegram')}</a></div>}
 export function StateScreen({icon,title,text}:{icon:string;title:string;text:string}){return <div className="center-screen"><div className="state-icon">{icon}</div><h2>{title}</h2><p>{text}</p></div>}
@@ -89,7 +89,7 @@ export function Brand({data}:{data:Snapshot}){ return null; }
 export function Nav({tab,setTab,admin}:{tab:Tab;setTab:(t:Tab)=>void;admin:boolean}){
   const{t}=useI18n();
   const items:[Tab,string,IconName][]=[['home',t('nav.home','Home'),'home'],['ads','Earn','bolt'],['tasks',t('nav.tasks','Tasks'),'tasks'],['invite',t('nav.invite','Invite'),'invite'],['profile','Me','wallet']];
-  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>{feedback('tap');setTab(k)}}><span className={k==='profile'?'me-nav-icon':''}>{k==='profile'?<img src="https://pixlinkhost.vercel.app/i/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
+  const item=([k,l,icon]:[Tab,string,IconName])=><button key={k} className={tab===k?'active '+k:k} onClick={()=>{feedback('tap');setTab(k)}}><span className={k==='profile'?'me-nav-icon':''}>{k==='profile'?<img src="/api/host/Ay2hCTiswA" alt="" aria-hidden="true"/>:<AnimatedIcon name={icon} active={tab===k}/>}</span><span>{l}</span></button>;
   return <nav className="bottom-nav game-nav">{items.map(item)}{admin&&<button className="admin-fab" aria-label="Open admin" onClick={()=>{feedback('tap');setTab('admin')}}><AnimatedIcon name="gear" active={tab==='admin'}/></button>}</nav>;
 }
 

@@ -63,7 +63,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
           <span className="wf-usd-pill">≈ {money(usd,4)} USDT</span>
         </div>
       </div>
-      <img className="wf-balance-art" src="https://pixlinkhost.vercel.app/i/DTBrE-73Ag" alt="" aria-hidden="true" loading="eager" decoding="async"/>
+      <img className="wf-balance-art" src="/api/host/DTBrE-73Ag" alt="" aria-hidden="true" loading="eager" decoding="async"/>
     </section>
 
     <div className="wf-home-actions">
@@ -76,7 +76,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
     </div>
 
     <button className="wf-feature-card" onClick={()=>setTab('stars')}>
-      <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/stWqIolUtw" alt="" aria-hidden="true"/>
+      <img className="wf-feature-image" src="/api/host/stWqIolUtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
         <b>Mine Telegram Stars</b>
         <small>Pick a gift, mine it → claim real Telegram gifts</small>
@@ -85,7 +85,7 @@ export function Home({data,run,setTab}:{data:Snapshot;run:any;setTab:any}){
     </button>
 
     <button className="wf-feature-card" onClick={()=>setTab('quick')}>
-      <img className="wf-feature-image" src="https://pixlinkhost.vercel.app/i/ztSi1qACtw" alt="" aria-hidden="true"/>
+      <img className="wf-feature-image" src="/api/host/ztSi1qACtw" alt="" aria-hidden="true"/>
       <span className="wf-feature-copy">
         <b>Quick Tasks</b>
         <small>Watch ads and earn WIENER instantly</small>
@@ -164,7 +164,7 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
       <b>{t.title}</b>
       <small>{t.description||'Complete this task to earn WIENER'}</small>
     </div>
-    <strong><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/>+{money(t.reward)}</strong>
+    <strong><img src="/api/host/YZEVHOSCqA" alt="" aria-hidden="true"/>+{money(t.reward)}</strong>
     <button className="wf-earn-task-open" onClick={()=>{if(t.url)window.Telegram?.WebApp?.openLink?.(t.url);setTimeout(()=>refresh(),800)}} aria-label={`Open ${t.title}`}>›</button>
   </div>;
   return <div className="wf-earn-page">
@@ -181,8 +181,8 @@ export function Ads({data,refresh,say}:{data:Snapshot;refresh:any;say:any}){
           const reward=50;
           return <button className="wf-earn-ad" key={n} onClick={watch} disabled={busy||used>=s.daily_ad_limit}>
             <div className="wf-earn-ad-top"><span>AD #{n}</span><b>{watched}/{limit}</b></div>
-            <img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
-            <div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div>
+            <img className="wf-earn-eye" src="/api/host/dfzvtrmcvA" alt="" aria-hidden="true"/>
+            <div className="wf-earn-reward"><img src="/api/host/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{reward}</b><small>WIENER</small></div>
             <span className="wf-earn-watch">{used>=s.daily_ad_limit?'DONE':busy?'WAIT':'WATCH'}</span>
           </button>
         })}

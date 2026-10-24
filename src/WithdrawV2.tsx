@@ -5,8 +5,8 @@ import './styles-withdraw-v2.css';
 
 type Method={method_key:string;label:string;network:'TON'|'Polygon';enabled:boolean;minimum_usdt:number;fee_usdt:number;sort_order:number};
 type Step='method'|'amount'|'wallet'|'review';
-const TON_ICON='https://pixlinkhost.vercel.app/i/1AcOzN0LcQ';
-const USDT_ICON='https://pixlinkhost.vercel.app/i/DtKRX3jFfg';
+const TON_ICON='/api/host/1AcOzN0LcQ';
+const USDT_ICON='/api/host/DtKRX3jFfg';
 const stepIndex:Record<Step,number>={method:0,amount:1,wallet:2,review:3};
 const errText:Record<string,string>={withdraw_cooldown:'Please wait until your withdrawal cooldown ends.',withdrawal_already_pending:'You already have a pending withdrawal.',withdraw_method_disabled:'This withdrawal method is temporarily unavailable.',below_minimum:'Amount is below the current minimum.',insufficient_balance:'Insufficient WIENER balance.',invalid_polygon_wallet:'Enter a valid Polygon 0x wallet address.',invalid_ton_wallet:'Enter a valid TON wallet address.',invalid_amount:'Enter a valid withdrawal amount.',withdrawals_disabled:'Withdrawals are temporarily unavailable.',amount_below_fee:'Amount must be greater than the withdrawal fee.'};
 const humanError=(e:any)=>errText[String(e?.message||e)]||'Something went wrong. Please try again.';

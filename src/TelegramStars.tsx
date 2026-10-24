@@ -2,10 +2,10 @@ import {useEffect,useState} from 'react';
 import {hapticImpact,hapticNotify,money,giftClaimApi,type Snapshot} from './lib';
 import {WIENER_PER_USDT} from './economy';
 
-const BIG_TEDDY='https://pixlinkhost.vercel.app/i/H6gKj6gN2A';
-const SMALL_TEDDY='https://pixlinkhost.vercel.app/i/95rEFUqyrQ';
-const AXE='https://pixlinkhost.vercel.app/i/XKKUtWdxLQ';
-const DOG='https://pixlinkhost.vercel.app/i/DTBrE-73Ag';
+const BIG_TEDDY='/api/host/H6gKj6gN2A';
+const SMALL_TEDDY='/api/host/95rEFUqyrQ';
+const AXE='/api/host/XKKUtWdxLQ';
+const DOG='/api/host/DTBrE-73Ag';
 
 const num=(s:any,keys:string[],fallback=0)=>{for(const k of keys){const n=Number(s?.[k]);if(Number.isFinite(n)&&n>0)return n}return fallback};
 const txt=(s:any,keys:string[])=>{for(const k of keys){const v=String(s?.[k]??'').trim();if(v)return v}return ''};

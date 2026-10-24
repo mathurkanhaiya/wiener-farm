@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {getInitData,hapticImpact,PUBLISHABLE_KEY,type Tab} from './lib';
 
-const SPIN_ICON='https://pixlinkhost.vercel.app/i/UuSYd47wng';
+const SPIN_ICON='/api/host/UuSYd47wng';
 
 type SpinStatus={free_left?:number;available_spins?:number};
 

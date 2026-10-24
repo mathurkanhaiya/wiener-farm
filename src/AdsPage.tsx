@@ -110,8 +110,8 @@ export function Ads({data,refresh,say,setTab}:{data:Snapshot;refresh:any;say:any
       const onCooldown=now<cooldownUntil;const label=atLimit?'LIMIT':onCooldown?`WAIT ${Math.ceil((cooldownUntil-now)/1000)}S`:busy===key?'OPENING…':'WATCH';
       return <button className="wf-earn-ad" key={key} disabled={!!busy||atLimit||!cfg.blockId||onCooldown} onClick={()=>watch(key)}>
        <div className="wf-earn-ad-top"><span>{meta.label.toUpperCase()}</span><b>{state.used}/{limit}</b></div>
-       <img className="wf-earn-eye" src="https://pixlinkhost.vercel.app/i/dfzvtrmcvA" alt="" aria-hidden="true"/>
-       <div className="wf-earn-reward"><img src="https://pixlinkhost.vercel.app/i/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{cfg.reward}</b><small>WIENER</small></div>
+       <img className="wf-earn-eye" src="/api/host/dfzvtrmcvA" alt="" aria-hidden="true"/>
+       <div className="wf-earn-reward"><img src="/api/host/YZEVHOSCqA" alt="" aria-hidden="true"/><b>{cfg.reward}</b><small>WIENER</small></div>
        <span className="wf-earn-watch">{label}</span>
        <small className="wf-earn-provider-note">MAX {cfg.reward*limit} W / DAY</small>
       </button>
