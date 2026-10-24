@@ -4,13 +4,13 @@
 // when switching between Home, Earn, Stars and other screens.
 
 export const WIENER_ANIMATIONS = [
-  'https://pixlinkhost.vercel.app/i/DTBrE-73Ag',
-  'https://pixlinkhost.vercel.app/i/YZEVHOSCqA',
-  'https://pixlinkhost.vercel.app/i/dfzvtrmcvA',
-  'https://pixlinkhost.vercel.app/i/ztSi1qACtw',
-  'https://pixlinkhost.vercel.app/i/H6gKj6gN2A',
-  'https://pixlinkhost.vercel.app/i/95rEFUqyrQ',
-  'https://pixlinkhost.vercel.app/i/XKKUtWdxLQ',
+  '/api/host/DTBrE-73Ag',
+  '/api/host/YZEVHOSCqA',
+  '/api/host/dfzvtrmcvA',
+  '/api/host/ztSi1qACtw',
+  '/api/host/H6gKj6gN2A',
+  '/api/host/95rEFUqyrQ',
+  '/api/host/XKKUtWdxLQ',
 ] as const;
 
 let started = false;

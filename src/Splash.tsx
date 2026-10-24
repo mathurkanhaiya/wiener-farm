@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import './splash.css';
 
-const DOG='https://pixlinkhost.vercel.app/i/YZEVHOSCqA';
+const DOG='/api/host/YZEVHOSCqA';
 
 export function Splash({text}:{text:string}){
  const [slow,setSlow]=useState(false);

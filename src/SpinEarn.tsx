@@ -2,9 +2,9 @@ import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {getInitData,hapticImpact,hapticNotify,feedback,pageFromUrl,PUBLISHABLE_KEY} from './lib';
 
-const TON_ICON='https://pixlinkhost.vercel.app/i/1AcOzN0LcQ';
-const SPIN_ICON='https://pixlinkhost.vercel.app/i/UuSYd47wng';
-const WIENER_ICON='https://pixlinkhost.vercel.app/i/uRiwapMRiQ';
+const TON_ICON='/api/host/1AcOzN0LcQ';
+const SPIN_ICON='/api/host/UuSYd47wng';
+const WIENER_ICON='/api/host/uRiwapMRiQ';
 const SPIN_API='/functions/v1/wiener-spin';
 const TON_WALLET_API='/functions/v1/wiener-ton-wallet';
 
